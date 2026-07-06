@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>End-to-End Lineage Explorer (file → screen)</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dagre/0.8.5/dagre.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js"></script>
+<style>
+  :root { --bg:#0f1115; --panel:#181b22; --border:#2a2f3a; --text:#e6e8ee;
+          --muted:#9aa3b2; }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--bg); color:var(--text);
+         font:14px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;
+         display:flex; height:100vh; overflow:hidden; }
+  #side { width:340px; min-width:340px; background:var(--panel);
+          border-right:1px solid var(--border); padding:16px;
+          display:flex; flex-direction:column; gap:12px; overflow-y:auto; }
+  h1 { font-size:16px; font-weight:600; }
+  .sub { color:var(--muted); font-size:12px; }
+  input,select { width:100%; padding:8px 10px; background:var(--bg);
+          color:var(--text); border:1px solid var(--border); border-radius:8px;
+          font-size:13px; outline:none; }
+  input:focus { border-color:#4c8dff; }
+  #hits { max-height:180px; overflow-y:auto; }
+  .hit { padding:6px 8px; border-radius:6px; cursor:pointer; font-size:13px;
+         display:flex; gap:8px; align-items:center; }
+  .hit:hover { background:#232833; }
+  .dot { width:9px; height:9px; border-radius:50%; flex:none; }
+  .legend { display:flex; gap:12px; flex-wrap:wrap; font-size:12px;
+            color:var(--muted); }
+  .legend span { display:flex; align-items:center; gap:5px; }
+  #detail { border-top:1px solid var(--border); padding-top:12px;
+            font-size:13px; }
+  #detail h2 { font-size:14px; word-break:break-all; }
+  #detail .kv { color:var(--muted); font-size:12px; margin:4px 0 10px; }
+  .edgegrp { margin:8px 0; }
+  .edgegrp b { font-size:12px; color:var(--muted); text-transform:uppercase;
+               letter-spacing:.04em; }
+  .erow { padding:4px 6px; border-radius:6px; cursor:pointer; font-size:12.5px;
+          word-break:break-all; }
+  .erow:hover { background:#232833; }
+  .prov { color:var(--muted); font-size:11px; }
+  #cy { flex:1; }
+  .row { display:flex; gap:8px; align-items:center; }
+  .row label { font-size:12px; color:var(--muted); white-space:nowrap; }
+  #stats { font-size:11.5px; color:var(--muted); border-top:1px solid var(--border);
+           padding-top:10px; margin-top:auto; }
+  button { background:#232833; color:var(--text); border:1px solid var(--border);
+           border-radius:8px; padding:6px 10px; font-size:12.5px; cursor:pointer; }
+  button:hover { border-color:var(--muted); }
+  #toast { position:fixed; right:14px; top:12px; background:#232833;
+           border:1px solid var(--border); border-radius:8px; padding:8px 12px;
+           font-size:12.5px; color:var(--muted); display:none; z-index:5; }
+</style>
+</head>
+<body>
+<div id="side">
+  <div>
+    <h1>End-to-End Lineage Explorer (file → screen)</h1>
+    <div class="sub" id="meta"></div>
+  </div>
+  <input id="q" type="search" placeholder="Search table or file… (e.g. trd_eohdata)" autofocus>
+  <div id="hits"></div>
+  <div class="row">
+    <label>Depth</label>
+    <select id="depth">
+      <option selected>1</option><option>2</option><option>3</option>
+    </select>
+    <label>Direction</label>
+    <select id="dir">
+      <option value="both" selected>both</option>
+      <option value="up">upstream</option>
+      <option value="down">downstream</option>
+    </select>
+    <button id="fit">Fit</button>
+  </div>
+  <div class="legend">
+    <span><i class="dot" style="background:#4c8dff"></i>Vertica</span>
+    <span><i class="dot" style="background:#3fb68b"></i>Postgres</span>
+    <span><i class="dot" style="background:#e8a33d"></i>ClickHouse</span>
+    <span><i class="dot" style="background:#8b93a7"></i>File</span>
+    <span><i class="dot" style="background:#b07fe8"></i>Pivot</span>
+    <span><i class="dot" style="background:#e07fb0"></i>Model</span>
+    <span><i class="dot" style="background:#5bc0c8"></i>View</span>
+    <span><i class="dot" style="background:#e0655c"></i>Screen</span>
+  </div>
+  <div id="detail"><div class="sub">Search a table to start. Single-click a
+    node = details &amp; re-focus. <b>Double-click = expand</b> its direct
+    neighbors in place (progressive exploration — keeps things fast).</div></div>
+  <div id="stats">Tip: regenerate with&nbsp;<code>python3 lineage/extract.py</code></div>
+</div>
+<div id="cy"></div>
+<div id="toast"></div>
+
+<script id="graph-data" type="application/json">/*__GRAPH_JSON__*/</script>
+<script>
+const GRAPH = JSON.parse(document.getElementById('graph-data').textContent);
+const COLORS = { vertica:'#4c8dff', postgres:'#3fb68b', clickhouse:'#e8a33d',
+                 file:'#8b93a7', pivot:'#b07fe8', model:'#e07fb0',
+                 view:'#5bc0c8', screen:'#e0655c' };
+const NODE_CAP = 150;
+const nodesById = Object.fromEntries(GRAPH.nodes.map(n => [n.id, n]));
+const outAdj = {}, inAdj = {};
+GRAPH.edges.forEach(e => {
+  (outAdj[e.src] = outAdj[e.src] || []).push(e);
+  (inAdj[e.dst] = inAdj[e.dst] || []).push(e);
+});
+document.getElementById('meta').textContent =
+  `${GRAPH.meta.repo} · ${GRAPH.meta.node_count} nodes · ` +
+  `${GRAPH.meta.edge_count} edges · ${GRAPH.meta.generated_at}`;
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  clearTimeout(t._h); t._h = setTimeout(() => t.style.display = 'none', 3500);
+}
+
+// class-based styles: no per-element style functions (they are slow)
+const styles = [
+  { selector:'node', style:{ 'label':'data(label)', 'color':'#e6e8ee',
+      'font-size':'10px', 'text-valign':'bottom', 'text-margin-y':'4px',
+      'width':'16px', 'height':'16px', 'text-wrap':'ellipsis',
+      'text-max-width':'130px', 'min-zoomed-font-size':'7' }},
+];
+for (const [eng, col] of Object.entries(COLORS))
+  styles.push({ selector:`node.${eng}`, style:{ 'background-color':col,
+    'shape': eng === 'file' ? 'round-rectangle' : 'ellipse' }});
+styles.push({ selector:'node.focus', style:{ 'border-width':3,
+  'border-color':'#fff' }});
+styles.push({ selector:'node.expandable', style:{ 'border-width':2,
+  'border-color':'#5a637a', 'border-style':'dotted' }});
+styles.push({ selector:'edge', style:{ 'width':1, 'line-color':'#3a4150',
+  'target-arrow-color':'#3a4150', 'target-arrow-shape':'triangle',
+  'arrow-scale':0.7, 'curve-style':'straight' }});
+styles.push({ selector:'edge.xfer', style:{ 'line-style':'dashed',
+  'line-color':'#6b7488', 'target-arrow-color':'#6b7488' }});
+
+const cy = cytoscape({ container: document.getElementById('cy'),
+                       style: styles, wheelSensitivity: 0.2,
+                       textureOnViewport: true, pixelRatio: 1 });
+
+const XFER = new Set(['export', 'load', 'inbound_load']);
+const shown = () => new Set(cy.nodes().map(n => n.id()));
+
+function degree(id) {
+  return (outAdj[id]||[]).length + (inAdj[id]||[]).length;
+}
+function hasHidden(id, present) {
+  return (outAdj[id]||[]).some(e => !present.has(e.dst)) ||
+         (inAdj[id]||[]).some(e => !present.has(e.src));
+}
+
+function neighborhood(rootId, depth, dir) {
+  const nodes = new Set([rootId]); const edges = [];
+  let frontier = [rootId], truncated = false;
+  for (let d = 0; d < depth && !truncated; d++) {
+    const next = [];
+    for (const id of frontier) {
+      const step = [];
+      if (dir !== 'up')  (outAdj[id]||[]).forEach(e => step.push([e, e.dst]));
+      if (dir !== 'down') (inAdj[id]||[]).forEach(e => step.push([e, e.src]));
+      for (const [e, other] of step) {
+        if (nodes.size >= NODE_CAP && !nodes.has(other)) { truncated = true; continue; }
+        edges.push(e);
+        if (!nodes.has(other)) { nodes.add(other); next.push(other); }
+      }
+    }
+    frontier = next;
+  }
+  return { nodes:[...nodes], edges, truncated };
+}
+
+function elems(nodeIds, edges, present, focusId) {
+  const els = [];
+  for (const id of nodeIds) {
+    const n = nodesById[id] || { name:id, engine:'file' };
+    els.push({ group:'nodes', data:{ id, label:n.name },
+               classes: n.engine + (id === focusId ? ' focus' : '') });
+  }
+  const seen = new Set();
+  for (const e of edges) {
+    const k = e.src + '|' + e.dst + '|' + e.type;
+    if (seen.has(k) || !present.has(e.src) || !present.has(e.dst)) continue;
+    seen.add(k);
+    els.push({ group:'edges', data:{ id:'e'+seen.size+Math.random(),
+      source:e.src, target:e.dst },
+      classes: XFER.has(e.type) ? 'xfer' : '' });
+  }
+  return els;
+}
+
+function relayout() {
+  const n = cy.nodes().length;
+  cy.layout(n <= 220
+    ? { name:'dagre', rankDir:'LR', nodeSep:14, rankSep:80, animate:false }
+    : { name:'breadthfirst', directed:true, spacingFactor:1.1, animate:false }
+  ).run();
+  cy.fit(undefined, 40);
+  markExpandable();
+}
+
+function markExpandable() {
+  const present = shown();
+  cy.batch(() => cy.nodes().forEach(n => {
+    n.toggleClass('expandable', hasHidden(n.id(), present));
+  }));
+}
+
+function focusNode(rootId) {
+  const depth = parseInt(document.getElementById('depth').value, 10);
+  const dir = document.getElementById('dir').value;
+  const sub = neighborhood(rootId, depth, dir);
+  const present = new Set(sub.nodes);
+  cy.batch(() => {
+    cy.elements().remove();
+    cy.add(elems(sub.nodes, sub.edges, present, rootId));
+  });
+  relayout();
+  if (sub.truncated)
+    toast(`Capped at ${NODE_CAP} nodes — double-click dotted nodes to expand further.`);
+  showDetail(rootId);
+  history.replaceState(null, '', '#' + encodeURIComponent(rootId));
+}
+
+function expandNode(id) {
+  const present = shown();
+  const add = new Set(), edges = [];
+  (outAdj[id]||[]).forEach(e => { edges.push(e); if (!present.has(e.dst)) add.add(e.dst); });
+  (inAdj[id]||[]).forEach(e => { edges.push(e); if (!present.has(e.src)) add.add(e.src); });
+  if (add.size > 80) { toast(`${add.size} neighbors — showing first 80.`); }
+  const keep = [...add].slice(0, 80);
+  keep.forEach(x => present.add(x));
+  cy.batch(() => cy.add(elems(keep, edges, present, null)));
+  relayout();
+  showDetail(id);
+}
+
+function showDetail(id) {
+  const n = nodesById[id]; if (!n) return;
+  const ups = inAdj[id] || [], downs = outAdj[id] || [];
+  const li = (e, other) => {
+    const p = (e.provenance && e.provenance[0]) || {};
+    const where = p.sql_file || p.script || '';
+    const eng = (nodesById[other] || {}).engine;
+    return `<div class="erow" onclick="focusNode('${other}')">` +
+      `<span class="dot" style="display:inline-block;background:${COLORS[eng]||'#888'}"></span> ` +
+      `${(nodesById[other]||{name:other}).name} <span class="prov">· ${e.type}` +
+      (where ? ` · ${where}${p.line ? ':'+p.line : ''}` : '') + `</span></div>`;
+  };
+  document.getElementById('detail').innerHTML =
+    `<h2>${n.name}</h2><div class="kv">${n.engine} ${n.kind||''} · ` +
+    `${ups.length} upstream · ${downs.length} downstream</div>` +
+    `<div class="edgegrp"><b>Upstream (feeds this)</b>` +
+      (ups.map(e => li(e, e.src)).join('') || '<div class="prov">none — origin node</div>') + `</div>` +
+    `<div class="edgegrp"><b>Downstream (consumes this)</b>` +
+      (downs.map(e => li(e, e.dst)).join('') || '<div class="prov">none — terminal node</div>') + `</div>`;
+}
+
+// search
+const q = document.getElementById('q'), hits = document.getElementById('hits');
+q.addEventListener('input', () => {
+  const v = q.value.trim().toLowerCase();
+  hits.innerHTML = '';
+  if (v.length < 2) return;
+  GRAPH.nodes.filter(n => n.id.includes(v))
+    .sort((a,b) => degree(b.id) - degree(a.id))
+    .slice(0, 30).forEach(n => {
+      const d = document.createElement('div');
+      d.className = 'hit';
+      d.innerHTML = `<span class="dot" style="background:${COLORS[n.engine]||'#888'}"></span>` +
+                    `${n.name} <span class="prov">${n.engine} · ${degree(n.id)} edges</span>`;
+      d.onclick = () => focusNode(n.id);
+      hits.appendChild(d);
+    });
+});
+let lastTap = 0, lastId = null;
+cy.on('tap', 'node', evt => {
+  const id = evt.target.id(), now = Date.now();
+  if (id === lastId && now - lastTap < 350) expandNode(id);   // double-tap
+  else showDetail(id);
+  lastTap = now; lastId = id;
+});
+document.getElementById('depth').onchange =
+document.getElementById('dir').onchange = () => {
+  const cur = decodeURIComponent(location.hash.slice(1));
+  if (cur && nodesById[cur]) focusNode(cur);
+};
+document.getElementById('fit').onclick = () => cy.fit(undefined, 40);
+
+// deep link only — no default render (keeps first paint instant)
+const initial = decodeURIComponent(location.hash.slice(1));
+if (initial && nodesById[initial]) focusNode(initial);
+</script>
+</body>
+</html>

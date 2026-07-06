@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "lineage": {
+      "command": "python3",
+      "args": ["tooling/lineage/mcp_server.py"]
+    }
+  }
+}

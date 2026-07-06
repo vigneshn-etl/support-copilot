@@ -1,0 +1,68 @@
+{
+ "generated_at": "2026-07-04 00:20:31",
+ "statements_total": 1920,
+ "statements_unparsed": 12,
+ "parse_rate_pct": 99.4,
+ "unparsed": [
+  {
+   "origin": "bash/weekly/03_insert_data.sh",
+   "line": 8,
+   "sql": "unresolved -f Insert_data.sql"
+  },
+  {
+   "origin": "bash/weekly/08_assortment_transforms.sh",
+   "line": 10,
+   "sql": "unresolved -f $SCRIPT_DIR/vsql/weekly/510_eoh_data.sql"
+  },
+  {
+   "origin": "load_onetime_data_vertica.sh",
+   "line": 1090,
+   "sql": "unresolved -f files_load_S5DemandActuals.sql"
+  },
+  {
+   "origin": "load_onetime_data_vertica.sh",
+   "line": 1091,
+   "sql": "unresolved -f files_load_S5SalesTransactions.sql"
+  },
+  {
+   "origin": "load_onetime_data_vertica.sh",
+   "line": 1092,
+   "sql": "unresolved -f files_load_S5DailyInvActuals.sql"
+  },
+  {
+   "origin": "load_onetime_data_vertica.sh",
+   "line": 1093,
+   "sql": "unresolved -f files_load_S5WeeklyInvActuals.sql"
+  },
+  {
+   "origin": "ch/allocation/21_Outbound_Prep.sql",
+   "line": 1,
+   "sql": "  \n*/\n\n\n-- FOR DC OH\n\nDROP TABLE IF EXISTS FOR_OUTBOUND_FINAL_ALLOCATION_WITH_OH_PREP NO DELAY"
+  },
+  {
+   "origin": "ch/allocation_v3/21_Outbound_Prep.sql",
+   "line": 1,
+   "sql": "  \n*/\n\n\n-- FOR DC OH\n\nDROP TABLE IF EXISTS FOR_OUTBOUND_FINAL_ALLOCATION_WITH_OH_PREP NO DELAY"
+  },
+  {
+   "origin": "ch/weekly/mfp/05_refresh_dimension_hierarchy.sql",
+   "line": 1,
+   "sql": "\nrefresh materialized view mfp.actuals_wide_denorm"
+  },
+  {
+   "origin": "ch/weekly/mfp/05_refresh_dimension_hierarchy.sql",
+   "line": 1,
+   "sql": "\nrefresh materialized view mfp.sys_gen_wide_denorm"
+  },
+  {
+   "origin": "ch/weekly/mfp/05_refresh_dimension_hierarchy.sql",
+   "line": 1,
+   "sql": "\nrefresh materialized view mfp_td.actuals_wide_denorm"
+  },
+  {
+   "origin": "ch/weekly/mfp/05_refresh_dimension_hierarchy.sql",
+   "line": 1,
+   "sql": "\nrefresh materialized view mfp_td.sys_gen_wide_denorm"
+  }
+ ]
+}

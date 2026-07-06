@@ -1,0 +1,437 @@
+{
+ "generated_at": "2026-07-04 00:10:20",
+ "files": {
+  "pivotdefn": 339,
+  "modeldefn": 288,
+  "id_filename_mismatch": 146,
+  "viewdefn": 586,
+  "confdefn": 10
+ },
+ "problem_count": 85,
+ "problems": [
+  {
+   "kind": "missing_include",
+   "ref": "/sessions/gracious-zen-planck/mnt/trd-configs/pivot/allocation_worklist_published.ftl"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/Hindsighting/MacroTrends/GeoTrends",
+   "view": "HistoryYearlyTrendRecapGeoTrends"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/Hindsighting/MacroTrends/GeoTrends",
+   "view": "HistoryYearlyTrendRecapGeoTrendsCharts"
+  },
+  {
+   "kind": "missing_model",
+   "ref": "Assortment/Assortment/Hindsighting/MacroTrends/MacroMix",
+   "model": "HistoryMacroMix"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/Hindsighting/MacroTrends/MacroMix",
+   "view": "HistoryMacroMix"
+  },
+  {
+   "kind": "missing_model",
+   "ref": "Assortment/Assortment/Hindsighting/MacroTrends/TopPerformers",
+   "model": "HistoryTopPerformers"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/Hindsighting/MacroTrends/TopPerformers",
+   "view": "HistoryYearlyTrendTopPerformers"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/Hindsighting/MacroTrends/TopPerformers",
+   "view": "HistoryYearlyTrendTopPerformersSortBy"
+  },
+  {
+   "kind": "missing_model",
+   "ref": "Assortment/Assortment/StoreClustering/LinePlan/ReviewClustersByDeptVen",
+   "model": "ClusteringDeptVen_Companion"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/StoreClustering/LinePlan/ReviewClustersByDeptVen",
+   "view": "ClusteringDeptVenWorklist"
+  },
+  {
+   "kind": "missing_model",
+   "ref": "Assortment/Assortment/StoreClustering/LinePlan/ReviewClustersByClassVen",
+   "model": "ClusteringClassVen_Companion"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/StoreClustering/LinePlan/ReviewClustersByClassVen",
+   "view": "ClusteringClassVenWorklist"
+  },
+  {
+   "kind": "missing_model",
+   "ref": "Assortment/Assortment/AssortmentBuild/StyleColorReview/GridView",
+   "model": "AssortmentBuildColorAttributesReview"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentBuild/StyleColorReview/GridView",
+   "view": "AssortmentBuildStyleColorAttributesReviewGrid"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentBuild/StyleColorReview/GridView",
+   "view": "AssortmentBuildStyleColorAttributesReviewListSort"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentBuild/StyleColorReview/GridView",
+   "view": "AssortmentBuildStyleColorAttributesReviewList"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentBuild/FlowSheet/FlowSheetByClass",
+   "view": "AssortmentBuildFlowSheetClassGrid"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentBuild/FlowSheet/FlowSheetByClass",
+   "view": "AssortmentBuildClassGridViewList"
+  },
+  {
+   "kind": "missing_model",
+   "ref": "Assortment/Assortment/AssortmentBuild/FlowSheet/ResolveWorklistView",
+   "model": "AssortmentFullListClass"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentBuild/FlowSheet/ResolveWorklistView",
+   "view": "AssortmentBuildWorklistResolveViewDetails_Class"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentAnalysis/AggregateViews/ProductDetails",
+   "view": "AssortmentAnalysisAggregateViewsProductDetailsGrid"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentAnalysis/AggregateViews/ProductDetails",
+   "view": "AssortmentAnalysisAggregateViewsProductDetailsMacro"
+  },
+  {
+   "kind": "missing_model",
+   "ref": "Assortment/Assortment/AssortmentAnalysis/StyleColorGrid/ListView",
+   "model": "AssortmentAnalysisGridListViewGrid"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentAnalysis/StyleColorGrid/ListView",
+   "view": "AssortmentAnalysisGridListViewGrid"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentAnalysis/StyleColorGrid/ListView",
+   "view": "AssortmentAnalysisGridListViewListSort"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentAnalysis/StyleColorGrid/ListView",
+   "view": "AssortmentAnalysisGridListViewList"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentAnalysis/StyleColorGrid/ListView",
+   "view": "AssortmentAnalysisGridListViewRollUp"
+  },
+  {
+   "kind": "missing_model",
+   "ref": "Assortment/Assortment/Allocation/AllocationResults/SizeRangeAllocReview",
+   "model": "SizeRangeWorklist_Companion"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/Allocation/AllocationResults/SizeRangeAllocReview",
+   "view": "AllocResults_AllocSizeRangeConstraints_Worklist"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/Hindsighting/MacroTrends/GeoTrends",
+   "view": "HistoryYearlyTrendRecapGeoTrends"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/Hindsighting/MacroTrends/GeoTrends",
+   "view": "HistoryYearlyTrendRecapGeoTrendsCharts"
+  },
+  {
+   "kind": "missing_model",
+   "ref": "Assortment/Assortment/Hindsighting/MacroTrends/MacroMix",
+   "model": "HistoryMacroMix"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/Hindsighting/MacroTrends/MacroMix",
+   "view": "HistoryMacroMix"
+  },
+  {
+   "kind": "missing_model",
+   "ref": "Assortment/Assortment/Hindsighting/MacroTrends/TopPerformers",
+   "model": "HistoryTopPerformers"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/Hindsighting/MacroTrends/TopPerformers",
+   "view": "HistoryYearlyTrendTopPerformers"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/Hindsighting/MacroTrends/TopPerformers",
+   "view": "HistoryYearlyTrendTopPerformersSortBy"
+  },
+  {
+   "kind": "missing_model",
+   "ref": "Assortment/Assortment/StoreClustering/LinePlan/ReviewClustersByDeptVen",
+   "model": "ClusteringDeptVen_Companion"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/StoreClustering/LinePlan/ReviewClustersByDeptVen",
+   "view": "ClusteringDeptVenWorklist"
+  },
+  {
+   "kind": "missing_model",
+   "ref": "Assortment/Assortment/StoreClustering/LinePlan/ReviewClustersByClassVen",
+   "model": "ClusteringClassVen_Companion"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/StoreClustering/LinePlan/ReviewClustersByClassVen",
+   "view": "ClusteringClassVenWorklist"
+  },
+  {
+   "kind": "missing_model",
+   "ref": "Assortment/Assortment/AssortmentBuild/StyleColorReview/GridView",
+   "model": "AssortmentBuildColorAttributesReview"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentBuild/StyleColorReview/GridView",
+   "view": "AssortmentBuildStyleColorAttributesReviewGrid"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentBuild/StyleColorReview/GridView",
+   "view": "AssortmentBuildStyleColorAttributesReviewListSort"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentBuild/StyleColorReview/GridView",
+   "view": "AssortmentBuildStyleColorAttributesReviewList"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentBuild/FlowSheet/FlowSheetByClass",
+   "view": "AssortmentBuildFlowSheetClassGrid"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentBuild/FlowSheet/FlowSheetByClass",
+   "view": "AssortmentBuildClassGridViewList"
+  },
+  {
+   "kind": "missing_model",
+   "ref": "Assortment/Assortment/AssortmentBuild/FlowSheet/ResolveWorklistView",
+   "model": "AssortmentFullListClass"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentBuild/FlowSheet/ResolveWorklistView",
+   "view": "AssortmentBuildWorklistResolveViewDetails_Class"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentAnalysis/AggregateViews/ProductDetails",
+   "view": "AssortmentAnalysisAggregateViewsProductDetailsGrid"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentAnalysis/AggregateViews/ProductDetails",
+   "view": "AssortmentAnalysisAggregateViewsProductDetailsMacro"
+  },
+  {
+   "kind": "missing_model",
+   "ref": "Assortment/Assortment/AssortmentAnalysis/StyleColorGrid/ListView",
+   "model": "AssortmentAnalysisGridListViewGrid"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentAnalysis/StyleColorGrid/ListView",
+   "view": "AssortmentAnalysisGridListViewGrid"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentAnalysis/StyleColorGrid/ListView",
+   "view": "AssortmentAnalysisGridListViewListSort"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentAnalysis/StyleColorGrid/ListView",
+   "view": "AssortmentAnalysisGridListViewList"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentAnalysis/StyleColorGrid/ListView",
+   "view": "AssortmentAnalysisGridListViewRollUp"
+  },
+  {
+   "kind": "missing_model",
+   "ref": "Assortment/Assortment/Allocation/AllocationResults/SizeRangeAllocReview",
+   "model": "SizeRangeWorklist_Companion"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/Allocation/AllocationResults/SizeRangeAllocReview",
+   "view": "AllocResults_AllocSizeRangeConstraints_Worklist"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/Hindsighting/MacroTrends/GeoTrends",
+   "view": "HistoryYearlyTrendRecapGeoTrends"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/Hindsighting/MacroTrends/GeoTrends",
+   "view": "HistoryYearlyTrendRecapGeoTrendsCharts"
+  },
+  {
+   "kind": "missing_model",
+   "ref": "Assortment/Assortment/Hindsighting/MacroTrends/MacroMix",
+   "model": "HistoryMacroMix"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/Hindsighting/MacroTrends/MacroMix",
+   "view": "HistoryMacroMix"
+  },
+  {
+   "kind": "missing_model",
+   "ref": "Assortment/Assortment/Hindsighting/MacroTrends/TopPerformers",
+   "model": "HistoryTopPerformers"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/Hindsighting/MacroTrends/TopPerformers",
+   "view": "HistoryYearlyTrendTopPerformers"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/Hindsighting/MacroTrends/TopPerformers",
+   "view": "HistoryYearlyTrendTopPerformersSortBy"
+  },
+  {
+   "kind": "missing_model",
+   "ref": "Assortment/Assortment/StoreClustering/LinePlan/ReviewClustersByDeptVen",
+   "model": "ClusteringDeptVen_Companion"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/StoreClustering/LinePlan/ReviewClustersByDeptVen",
+   "view": "ClusteringDeptVenWorklist"
+  },
+  {
+   "kind": "missing_model",
+   "ref": "Assortment/Assortment/StoreClustering/LinePlan/ReviewClustersByClassVen",
+   "model": "ClusteringClassVen_Companion"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/StoreClustering/LinePlan/ReviewClustersByClassVen",
+   "view": "ClusteringClassVenWorklist"
+  },
+  {
+   "kind": "missing_model",
+   "ref": "Assortment/Assortment/AssortmentBuild/StyleColorReview/GridView",
+   "model": "AssortmentBuildColorAttributesReview"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentBuild/StyleColorReview/GridView",
+   "view": "AssortmentBuildStyleColorAttributesReviewGrid"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentBuild/StyleColorReview/GridView",
+   "view": "AssortmentBuildStyleColorAttributesReviewListSort"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentBuild/StyleColorReview/GridView",
+   "view": "AssortmentBuildStyleColorAttributesReviewList"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentBuild/FlowSheet/FlowSheetByClass",
+   "view": "AssortmentBuildFlowSheetClassGrid"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentBuild/FlowSheet/FlowSheetByClass",
+   "view": "AssortmentBuildClassGridViewList"
+  },
+  {
+   "kind": "missing_model",
+   "ref": "Assortment/Assortment/AssortmentBuild/FlowSheet/ResolveWorklistView",
+   "model": "AssortmentFullListClass"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentBuild/FlowSheet/ResolveWorklistView",
+   "view": "AssortmentBuildWorklistResolveViewDetails_Class"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentAnalysis/AggregateViews/ProductDetails",
+   "view": "AssortmentAnalysisAggregateViewsProductDetailsGrid"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentAnalysis/AggregateViews/ProductDetails",
+   "view": "AssortmentAnalysisAggregateViewsProductDetailsMacro"
+  },
+  {
+   "kind": "missing_model",
+   "ref": "Assortment/Assortment/AssortmentAnalysis/StyleColorGrid/ListView",
+   "model": "AssortmentAnalysisGridListViewGrid"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentAnalysis/StyleColorGrid/ListView",
+   "view": "AssortmentAnalysisGridListViewGrid"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentAnalysis/StyleColorGrid/ListView",
+   "view": "AssortmentAnalysisGridListViewListSort"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentAnalysis/StyleColorGrid/ListView",
+   "view": "AssortmentAnalysisGridListViewList"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/AssortmentAnalysis/StyleColorGrid/ListView",
+   "view": "AssortmentAnalysisGridListViewRollUp"
+  },
+  {
+   "kind": "missing_model",
+   "ref": "Assortment/Assortment/Allocation/AllocationResults/SizeRangeAllocReview",
+   "model": "SizeRangeWorklist_Companion"
+  },
+  {
+   "kind": "missing_view",
+   "ref": "Assortment/Assortment/Allocation/AllocationResults/SizeRangeAllocReview",
+   "view": "AllocResults_AllocSizeRangeConstraints_Worklist"
+  }
+ ]
+}
