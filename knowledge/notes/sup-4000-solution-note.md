@@ -1,0 +1,54 @@
+---
+ticket: SUP-4000
+title: Receipt Units show 0 in Assortment by Floorset for items with no on-order/EOH/publish status
+client: EE
+type: investigation
+repos: [config]
+components: [GetRcptRollups.pivotdefn, GetRcptRollups.groovy, GetRcptRollupsSuperset.pivotdefn, GetRcptRollupsSuperset.groovy, IS_REMOVABLE_${SESSION_ID}, eve_p_rcpt_adj_calc, eve_p_dc_adj_size_tbl, eve_p_dc_adj_tbl, eve_p_eohdata_tbl, eve_ma_dptflrsetattributes, LinePlanFloorset_RcptOnly, AssortmentBuildAssortmentByFloorsetWorklist.viewdefn, AssortmentLinePlanByFloorset_Edit.viewdefn]
+symptom: "Receipt Units shows 0 instead of Final Rec U / override value in Assortment by Floorset (all 3 Rec-Only tabs); works correctly in Assortment by Quarter and Upgrade ABF; overrides typed into Receipt U never appear to save for the same items"
+resolved: 2026-07-06
+effort: 2d
+draft: false
+---
+
+## Problem
+
+Client EE (Evereve) reported that the Receipt Units column shows 0 in the "Assortment by Floorset" screen (Edit View, Quick View, and All Choices tabs) instead of the correct Final Rec U / user-override value, while the same style-colors display correctly in "Assortment by Quarter" and "Upgrade ABF." Repro item from ticket: stylecolor `4d205529-70fe-4063-8df9-05f5083dd68f` ("Daria Vegan Leather Jacket:ZZTBD101"), department DP-004, floorset `2026-07-Aug`, weeks `2026_W27`-`2026_W30`, environment QA. Users additionally could not get an override typed into Receipt U to visibly update for the same class of items.
+
+## Diagnosis path
+
+* Suspected config drift between QA and staging buckets (`internal-qa-config` vs `eve-eve-1-staging-config`) -> downloaded and `diff`'d `GetRcptRollups.groovy`, `LinePlanFloorset_RcptOnly.modeldefn`, `LinePlanFloorset_RcptOnly.pivotdefn` -> byte-identical -> ruled out.
+* Suspected `LinePlanFloorset_RcptOnly.pivotdefn`'s outer `GROUP BY product, channel` (no floorset/time column) trips the `hasFlrset` guard in `GetRcptRollups.groovy` line 20 (`if (!hasCGroup || !hasFlrset) { return }`) -> checked QA `App_logs.txt`, found `pivot.getPivot([defnId: 'GetRcptRollups', ...])` DID execute (`AGG_LEVEL_1=stylecolor` log lines present, full `PivotParams` block logged with correct `floorset_1=[2026-07-Aug]`, `LEAF_TIME_START='2026_W27'`, `LEAF_TIME_END='2026_W30'`) -> guard was not tripping -> ruled out.
+* Suspected `eve_ma_dptflrsetattributes` missing a row for department `DP-004` + floorset `2026-07-Aug` (would make `TIME_${SESSION_ID}` resolve empty) -> queried ClickHouse directly -> row exists, `rcptstart=2026_W27, rcptend=2026_W30`, matches the repro scope exactly -> ruled out.
+* Suspected Postgres -> ClickHouse sync lag on `eve_p_dc_adj` / `eve_p_dc_adj_size` -> queried both sides for the repro stylecolor -> `updated_at` timestamps matched exactly between Postgres and ClickHouse, both same-day -> ruled out stale replication.
+* Suspected `eve_p_rcpt_adj_calc` empty for the scope/time window -> queried -> 1520 rows present for the batch, fresh `updated_at` (`2026-07-04 16:56:11`) -> ruled out.
+* Compared all WARN/ERROR log lines between QA and staging app logs (deduped by message, IDs stripped) -> identical warning set in both environments, including `column dc_useradj_ttl_no_plan was not in the table` (a genuinely benign warning: `GetRcptRollups.groovy` line 42 `.select()`s a column the aggregationSQL never produces, but this is present in both envs and does not affect the join) -> ruled out any log-visible QA/staging difference; this also disproved the "QA vs staging" framing of the ticket.
+* New repro in a different department mixing zero-start and non-zero-start items -> compared the two `/listData` responses directly -> the non-zero item's row carried the full rollup field set (`adj_finalqty`, `stylecolor_source_join`, `dc_finrev`, `rollup_planqty`, `rollup_onorder`, `sz_cnt`, `is_sclr_flrset_locked`, `not_removable`); the zero item's row had **none** of these keys, not even as null -> proved the failure is per-stylecolor, not per-request (ruled out earlier "whole batch returns 0 rows" theories).
+* Mis-queried `eve_p_dc_adj_size_tbl` using the stylecolor UUID (got 0 rows for both broken and working item) -> wrong key; table is keyed by `product`/sku_id, not stylecolor (confirmed via `GetRcptRollups.pivotdefn` line 158, `product as sku_id`) -> re-pulled actual `product` values from `eve_p_rcpt_adj_calc.product` for the two stylecolors and re-queried -> both items had valid size-level rows, broken item's `dc_useradj` (3, 2, 2, 1, 2) was confirmed freshly written on every edit attempt -> ruled out write-path failure; the override IS being saved correctly.
+* Found the literal executed SQL for `IS_REMOVABLE_${SESSION_ID}` in raw app DEBUG logs (this table/join is NOT present anywhere in the `.pivotdefn` file text -- it is appended by the pivot engine at runtime): a triple full-outer-join requiring at least one of (`eve_p_eohdata_tbl.eohu > 0 AND location = 'MASTER_DC'`) OR (`eve_p_dc_adj_size_tbl.dc_onorder > 0`) OR (`eve_p_dc_adj_tbl.dc_publish > 0`).
+* Compared `dc_onorder` between broken and working item across all SKUs and every timestamp in `eve_p_dc_adj_size_tbl`: broken item = `NULL` on every row; working item = positive (40-390) on every row -> identified as the differentiator.
+* Root cause confirmed directly with session tables persisted in ClickHouse (isolated single-item sessions): `SELECT * FROM IS_REMOVABLE_P24B3F241346F42DEADC616E3DF7C3055` (broken item, isolated) -> **0 rows**. `SELECT * FROM SIZE_RCPT_P24B3F241346F42DEADC616E3DF7C3055` (same session) -> real computed `adj_finalqty_step_1 = 3, 2, 2, 1, 2` at `2026_W27` (sums to 10, matches the override just written). `SELECT * FROM IS_REMOVABLE_P0FB2F9E2F3864B3892FE926251EFF3DF` (working items, isolated) -> 2 rows, `dc_count=1` each.
+
+**Root cause:** the final aggregation SQL (also runtime-injected, not in the `.pivotdefn` text) does `rcpts INNER JOIN IS_REMOVABLE_${SESSION_ID} USING (stylecolor)`. A stylecolor with zero on-hand inventory, zero on-order quantity, and not yet published produces zero rows in `IS_REMOVABLE_${SESSION_ID}`. The `INNER JOIN` then drops that stylecolor from the entire rollup result even though `SIZE_RCPT_${SESSION_ID}` computed a correct, non-null `adj_finalqty` for it. `GetRcptRollups.groovy`'s `anyLeftOuterJoin` therefore has nothing on the right side to attach, so none of `adj_finalqty`, `dc_useradj`, `dc_finrev`, `rollup_planqty`, `rollup_onorder`, `sz_cnt`, `stylecolor_source_join`, `is_sclr_flrset_locked`, `not_removable` ever reach the row sent to the UI -- regardless of what override value was saved.
+
+## Fix
+
+No code change made in this investigation. Root cause lives in the pivot engine / application service layer that assembles the `IS_REMOVABLE_${SESSION_ID}` construction and the final `INNER JOIN` against it -- this logic is not present in `evereve-qa-config` (the `.pivotdefn`/`.groovy` files only contain the `prologueSQL`/`aggregationSQLs` that get wrapped by this runtime-injected join). Ticket handed to engineering with the trace above; no PR/commit exists yet.
+
+## Verification
+
+Verification was done via direct proof rather than a deployed fix, using isolated single-stylecolor pivot sessions with ClickHouse session-table persistence enabled:
+
+* `SELECT * FROM IS_REMOVABLE_P24B3F241346F42DEADC616E3DF7C3055;` -> expected: row for `b7844758-319f-4bc5-b286-8ef0218bb7d3` if it should display; actual: 0 rows.
+* `SELECT * FROM SIZE_RCPT_P24B3F241346F42DEADC616E3DF7C3055;` -> expected/actual: valid computed row, `adj_finalqty=3` at `2026_W27` for SKU `2f604770-ae7d-49c7-b338-291062572242` (and similarly for its other 4 SKUs, summing to 10), proving the calculation itself is correct.
+* `SELECT * FROM IS_REMOVABLE_P0FB2F9E2F3864B3892FE926251EFF3DF;` -> control case, working items `a96f0f28-5578-4b55-aba1-29602939e567` and `30fe5c5a-c5b3-4303-865d-5204d6811dcc` both present with `dc_count=1`, confirming the on-order gate is what separates the two outcomes.
+
+## Gotchas
+
+* **Reusable bug class:** any style-color with zero on-hand inventory (`eve_p_eohdata_tbl`), zero on-order quantity (`eve_p_dc_adj_size_tbl.dc_onorder`), and not yet published (`eve_p_dc_adj_tbl.dc_publish`) will silently lose its entire Receipt Units rollup in any view built on `GetRcptRollups`/`GetRcptRollupsSuperset`, independent of environment. This will recur for any brand-new item before its first PO/receipt exists. Check `IS_REMOVABLE_${SESSION_ID}` first for any future "receipt units blank/0 for some items only" report.
+* `IS_REMOVABLE_${SESSION_ID}` and the `INNER JOIN` against it do **not** appear anywhere in the `.pivotdefn`/`.groovy` config files -- they only show up in the literal executed SQL captured in application DEBUG logs (search for `CREATE TABLE IS_REMOVABLE` and `INNER JOIN IS_REMOVABLE`). Reading the config repo alone will not reveal this; live query logs or session-table inspection are required.
+* Config files (`.pivotdefn`, `.groovy`, `.modeldefn`) were byte-identical between QA and staging for this ticket. The "works in staging, fails in QA" framing in the original report was misleading -- the actual differentiator is per-item on-order/EOH/publish state, not the environment. Don't assume env parity implies no repro difference; check the specific test item's data state in each environment.
+* ClickHouse session-scoped Memory tables (`PRODLIST_*`, `SIZE_RCPT_*`, `IS_REMOVABLE_*`, `TIME_*`, `LOCK_STATUS_*`) are dropped immediately after each request by default (`DROP TABLE ... NO DELAY` in the pivot dispatcher). Querying them for a live repro requires a DB-side change to keep them alive (client made this change on 2026-07-06) -- confirm this is still enabled before assuming these tables exist for a fresh repro, and don't forget to disable it afterward if it affects prod-like resource usage.
+* `eve_p_dc_adj_size_tbl` is keyed by `product` = SKU/size-level id, NOT stylecolor. `eve_p_dc_adj_tbl` is keyed by `product` = stylecolor-level id (aliased `as stylecolor` in the join). Mixing these up gives false "0 rows" results for both -- always resolve the correct `product`/sku_id values from `eve_p_rcpt_adj_calc.product` before querying `eve_p_dc_adj_size_tbl`.
+* Symptom shape is diagnostic: if **every** row in a `/listData` response is missing the rollup fields, suspect a whole-batch failure (bad `TIME_${SESSION_ID}` window, entire aggregation empty). If only **some** rows are missing them while others are populated, suspect this per-stylecolor `IS_REMOVABLE` exclusion instead.
+* `GetRcptRollupsSuperset.pivotdefn` (used by Assortment by Quarter) has its own `IS_REMOVABLE`-style construction with the same three gates -- it was not fully traced in this investigation because the tested items happened to pass it, but the same bug class likely applies there too and should be checked if a similar report surfaces for the Quarter view.
