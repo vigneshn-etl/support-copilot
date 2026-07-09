@@ -69,3 +69,13 @@ Rules:
   config diff first (manual changes are common).
 - Every UI bug that gets fixed should leave behind a Playwright spec named
   SUP-XXXX.spec.ts in the assortmentui e2e harness.
+
+## Workflow contract (see knowledge/workflow.md)
+
+This skill executes stages 1–5: INTAKE → CLASSIFY → SCOPE → INVESTIGATE →
+ROOT-CAUSE GATE. Draft JIRA writes at each stage (labels cc-<type>,
+cc-layer:<x>, cc-triaged; evidence-request and root-cause comments) and
+ask the user to approve posting. The root-cause comment must include the
+validation plan sketch — hand off to the validate-fix skill for stages
+6–7 and ticket-retro for stage 8. No fix work before the root-cause gate
+passes with cited evidence.

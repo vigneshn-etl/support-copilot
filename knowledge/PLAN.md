@@ -1,5 +1,18 @@
 # AI-Assisted Support Engineering — Build Plan
 
+> **Status (2026-07):** Phase 1 complete and validated (SUP-4202 trial).
+> Prototype hub (`support-copilot`) created and pushed to git — customer
+> repos untouched. Delivered beyond original Phase 1: config-layer
+> lineage + end-to-end file→screen graph (84 CH tables joining ETL↔config),
+> batch-flow tagging on every edge, evidence-acquisition protocol +
+> runbooks (OCI live config, UI repro/Playwright, DB schema snapshots,
+> chat-capture prompt), config-layer cheat sheets ingested from the
+> training curriculum, read-only DB MCP over SSH (guardrails tested,
+> awaiting connections.json), customer profile structure (TRD seeded),
+> and the TRD weekly product-master lineage reference doc.
+> **Next:** fill TRD profile TODOs, DB schema dumps (+ MV lineage rule),
+> 10-ticket blind test, note backfill at scale, feedback metrics.
+
 **Vision:** every JIRA ticket gets triaged against the team's full memory
 (code, lineage, past solutions, client quirks) in minutes; every resolved
 ticket makes the system smarter. Built as composable git assets — skills,

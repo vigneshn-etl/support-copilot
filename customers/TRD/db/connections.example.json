@@ -1,0 +1,8 @@
+{
+  "_readme": "Copy to connections.json (gitignored) and fill in. 'ssh' can be any ~/.ssh/config alias (bastion/ProxyJump supported). Use a READ-ONLY db user in the remote command.",
+  "qa": {
+    "postgres":   { "ssh": "opc@<qa-pg-vm>",   "cmd": "psql -U readonly_user -d <dbname> -X -A -F'\t' -c {SQL}" },
+    "clickhouse": { "ssh": "opc@<qa-ch-vm>",   "cmd": "clickhouse-client --user readonly_user --format TabSeparatedWithNames --query {SQL}" },
+    "vertica":    { "ssh": "opc@<qa-vert-vm>", "cmd": "vsql -U readonly_user -A -F'\t' -c {SQL}" }
+  }
+}

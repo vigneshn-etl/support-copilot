@@ -1,3 +1,4 @@
 repos/
 *.pyc
 __pycache__/
+customers/*/db/connections.json
