@@ -89,15 +89,19 @@ def tool_query(args):
     if re.match(r"^\s*select\b", sql, re.I) and not re.search(r"\blimit\s+\d+", sql, re.I):
         sql = f"{sql} LIMIT {max_rows}"
     remote_cmd = conf["cmd"].replace("{SQL}", shlex.quote(sql))
-    cmd = ["ssh", "-o", "BatchMode=yes",
-           "-o", f"ConnectTimeout=10", conf["ssh"], remote_cmd]
+    cmd = ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10",
+           # hosts with a RemoteCommand in ssh_config refuse CLI commands
+           # ("Cannot execute command-line and remote command.") — override:
+           "-o", "RemoteCommand=none", "-T",
+           conf["ssh"], remote_cmd]
     try:
         r = subprocess.run(cmd, capture_output=True, text=True,
                            timeout=SSH_TIMEOUT)
     except subprocess.TimeoutExpired:
         return f"error: query timed out after {SSH_TIMEOUT}s"
     if r.returncode != 0:
-        return f"error (exit {r.returncode}):\n{r.stderr[-2000:]}"
+        return (f"error (exit {r.returncode}):\n"
+                f"stderr: {r.stderr[-1500:]!r}\nstdout: {r.stdout[-1500:]!r}")
     out = r.stdout
     lines = out.splitlines()
     if len(lines) > max_rows + 5:

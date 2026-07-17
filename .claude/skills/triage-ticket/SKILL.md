@@ -79,3 +79,33 @@ ask the user to approve posting. The root-cause comment must include the
 validation plan sketch — hand off to the validate-fix skill for stages
 6–7 and ticket-retro for stage 8. No fix work before the root-cause gate
 passes with cited evidence.
+
+## Intake dialogue (run FIRST, before any analysis)
+
+Behave like a guided bot. Collect these in AT MOST two question turns,
+prefilling everything derivable and asking only for confirmation:
+
+1. **Ticket** — the only free-text input. If the user's message already
+   contains SUP-####, don't ask.
+2. **Type** — options: Bug | Enhancement/Task. PREFILL from the Jira
+   issue type + description; ask user to confirm/correct.
+3. **Component** — options: ETL | Config | Software (UI/backend) |
+   Hybrid. PREFILL from system-map decision guide; confirm/correct.
+4. **Customer** — PREFILL from the summary tag ([TRD]...); only ask if
+   missing/ambiguous.
+5. **Code source** — read `customers/<CLIENT>/repos.json` (repo + branch
+   per layer). Then ask: "Use the git repo (branch <X> — may drift from
+   the environment) or environment-specific code from OCI?" If OCI:
+   check knowledge/runbooks/fetch-live-config.md — if the commands are
+   still TODO, say exactly: "OCI access commands are not configured yet
+   — proceeding with git ref; flag me if this issue is
+   environment-specific." Never silently pick.
+
+Then proceed to INVESTIGATE. During investigation, when evidence is
+needed that only the user has (runtime logs, screenshots, network
+responses, DB query output), ASK for the specific artifact — name the
+exact log file/host or the exact SQL — one batched request, not a drip.
+
+Rules: never re-ask something answered earlier in the session; never ask
+what Jira already says (confirm instead); if the user pre-answers
+everything in one message, skip straight to analysis.
