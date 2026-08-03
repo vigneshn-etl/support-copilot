@@ -4,23 +4,36 @@
 trusted for env-specific debugging. Always diff live vs repo before
 concluding anything about QA/staging behavior.
 
-## Commands
+## Commands (confirmed working, 2026-07)
 
-> TODO(Vignesh): paste the working OCI CLI commands here (from prior
-> download session). Template:
+The live config is served from an OCI Object Storage bucket per lower env.
+Sync it down with `oci os object sync`, then diff against the git repo.
 
 ```bash
-# auth (once per session)
-oci session authenticate --profile <PROFILE>
+# from a fresh working dir (e.g. tickets/<SUP-ID>/live-config/)
+# bucket = internal-<env>-config ; prefix = <tenant>/asst/override_configuration/
+oci os object sync \
+  -bn internal-qa-config \
+  --prefix aeo/asst/override_configuration/ \
+  --dest-dir .
 
-# download the config bundle for an env
-oci os object bulk-download \
-  --bucket-name <CONFIG_BUCKET> \
-  --prefix <env>/<tenant>/ \
-  --download-dir ./live-config/<env>/
+# → downloads the tenant's live override configs into ./aeo/asst/override_configuration/
+#   (includes a .delete marker file listing tombstoned objects)
+```
 
-# diff against repo
-diff -rq ./live-config/<env>/ <trd-configs-repo>/ \
+Fill per case:
+- `-bn internal-<env>-config` — env bucket (`internal-qa-config`,
+  `internal-staging-config`, …). Confirm the exact bucket name per env.
+- `--prefix <tenant>/asst/override_configuration/` — tenant = client
+  prefix (aeo, trd, blk…). `override_configuration/` holds the env's
+  live confdefn/viewdefn/modeldefn/pivotdefn OVERRIDES (only files that
+  were changed in the env; unchanged files still come from the repo).
+- Requires OCI CLI configured (`oci setup config` once) with access to
+  the bucket; run from the VM/host that has that access.
+
+```bash
+# diff the live overrides against the same paths in the git repo
+diff -rq ./aeo/asst/override_configuration/ <configs-repo>/ \
   --exclude .git --exclude lineage | head -50
 ```
 
