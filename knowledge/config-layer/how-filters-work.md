@@ -33,8 +33,13 @@ inferred from behavior and should be confirmed there.
     trd_d_cluster grade, trd_d_time)
   - rich: `SELECT id, name, description, levelid, indx FROM
     trd_d_prodlife WHERE levelid = ?`
-  - *Inferred from probe:* the options payload is built from the id-only
-    path — `FilterValue.name` arrives null even when PG `name` is set.
+  - **Confirmed in darwin source (2026-07):** level members are fetched
+    as **id only** — `memberAccess.getMembers(level).map(Member::getId)`
+    (`PivotFilterHandler.java:292-293`) — then built as
+    `new FilterValue(v, v, ...)` (line 316), i.e. the id is passed as
+    BOTH id and name. `FilterValue` keeps `name = requireNonNullElse(name,
+    id)` (`FilterValue.java:16`). So `name` is never the DB display name
+    for level filters. No longer inferred.
 - **attribute** → the backend RUNS A PIVOT against ClickHouse (session
   temp tables and all; **observed**:
   `BU_Hindsighting_FilteredLocationAttributes~str_store_banner` executing
@@ -81,11 +86,14 @@ UI renders `name ?? id` and backend never populates `name` for
 level-type options. **There is currently NO data-only or config-only way
 to alias level-filter display values.**
 
-Fix = small platform (backend) change: include `name` in the level-option
-query and map it into `FilterValue.name`. Then per-client aliases become a
-constant-table CSV edit (id stays, name changes), deployed via the
-standard "Deploy Constant Tables" process. Check the scope-bar chip for
-the same treatment when that ships.
+Fix = small platform (backend) change, **exact location known**:
+`PivotFilterHandler` getLevelMembers (~line 291) must fetch the member's
+display name (expose `Member::getName` via `MemberAccess`) and construct
+`new FilterValue(id, name, ...)` with it instead of `(v, v, ...)` at line
+316. Then per-client aliases become a constant-table CSV edit (id stays,
+name changes), deployed via the standard "Deploy Constant Tables" process.
+Check the scope-bar chip for the same treatment when that ships.
+(Backend repo: `s5-stratos/darwin` — see knowledge/backend/darwin-primer.md.)
 
 ## Triage cheat-sheet
 

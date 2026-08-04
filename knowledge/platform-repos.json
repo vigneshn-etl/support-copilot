@@ -1,0 +1,15 @@
+{
+  "_readme": "SHARED platform repos \u2014 one instance for ALL clients, not per-customer. Per-client repos (ETL, config) live in customers/<CLIENT>/repos.json.",
+  "frontend": {
+    "repo": "git@github.com:s5-stratos/assortmentui.git",
+    "branch": "main",
+    "local": "../assortmentui",
+    "note": "React/TS monorepo, config-driven UI (AG Grid). Same build serves every tenant; behavior differs by config, not code."
+  },
+  "backend": {
+    "repo": "git@github.com:s5-stratos/darwin.git",
+    "branch": "dev",
+    "local": "../darwin",
+    "note": "Java (Maven). Executes pivots, serves config, builds filter options, member resolution. See knowledge/backend/darwin-primer.md."
+  }
+}

@@ -1,8 +1,14 @@
 {
-  "_readme": "Per-layer repo + branch the copilot should reference. TODO(Vignesh): replace placeholders with the real remotes/branches file you mentioned; add other customers as customers/<CLIENT>/repos.json.",
-  "etl":      { "repo": "https://github.com/s5-stratos/etl-belk-batch/tree/etl_assortment_planning",  "branch": "etl_assortment_planning", "local": "" },
-  "config":   { "repo": "https://github.com/s5-stratos/belk-configs/tree/assortment-planning",    "branch": "assortment-planning", "local": "",
-                "note": "lower envs: OCI bucket is source of truth — runbook fetch-live-config.md" },
-  "frontend": { "repo": "<git-url-or-local-path>/assortmentui",   "branch": "main",   "local": "repos/assortmentui",
-                "note": "shared product repo, not per-client" }
+  "_readme": "Per-client repos ONLY (ETL + config). Shared frontend/backend are in knowledge/platform-repos.json.",
+  "etl": {
+    "repo": "https://github.com/s5-stratos/etl-belk-batch/tree/etl_assortment_planning",
+    "branch": "etl_assortment_planning",
+    "local": ""
+  },
+  "config": {
+    "repo": "https://github.com/s5-stratos/belk-configs/tree/assortment-planning",
+    "branch": "assortment-planning",
+    "local": "",
+    "note": "lower envs: OCI bucket is source of truth \u2014 runbook fetch-live-config.md"
+  }
 }
