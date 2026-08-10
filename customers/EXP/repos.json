@@ -1,0 +1,15 @@
+{
+  "_readme": "Per-client repos ONLY (ETL + config). Shared frontend/backend are in knowledge/platform-repos.json. EXP = Express.",
+  "etl": {
+    "repo": "https://github.com/s5-stratos/etl-exp-batch",
+    "branch": "etl_assortment_planning",
+    "local": "",
+    "note": "'etl_assortment_planning' is the main prod branch (confirmed by user, 2026-08-09)."
+  },
+  "config": {
+    "repo": "https://github.com/s5-stratos/express-configs",
+    "branch": "<unconfirmed — main is HEAD; other candidates seen: production-actual, revert_to_prod_planpivot, express_prod_deploy_07.19.2025.001>",
+    "local": "",
+    "note": "cloned 2026-08-09 during SUP triage of weekly bulk-plan failure. Repo name is 'express-configs' NOT 'exp-configs'. Which branch is actually live in PROD is unconfirmed — needs OCI live-config check or a human answer."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "_readme": "Per-client repos ONLY (ETL + config). Shared frontend/backend are in knowledge/platform-repos.json. AEO = American Eagle Outfitters.",
+  "config": {
+    "repo": "https://github.com/s5-stratos/aeo-configs",
+    "branch": "hindsighting",
+    "local": "../aeo-configs",
+    "note": "'hindsighting' is the repo's default branch (origin/HEAD), not 'main' — confirmed on clone 2026-08-07."
+  },
+  "etl": {
+    "repo": "<git-url-or-local-path>/etl-aeo-batch",
+    "branch": "<unconfirmed>",
+    "local": "",
+    "note": "ETL repo not yet cloned/confirmed — fill in when known"
+  }
+}

@@ -38,19 +38,34 @@ file gets a row here.**
 | `customers/<CLIENT>/db/postgres_schema.sql` | Exact PG DDL/triggers/functions/views (grep it) |
 | `customers/<CLIENT>/db/connections.json` | (gitignored) live read-only DB access config for the db MCP |
 | `customers/TRD/weekly-product-master-lineage.md` | TRD product-master pipeline (worked example of ETL lineage) |
+| `customers/<CLIENT>/captured-knowledge.md` | Facts users dropped during tickets (newest first, provenance-stamped by `learn.py`) — check before asking; promote durable ones into profile.md |
+| `knowledge/captured-knowledge.md` | Same, but platform-wide (not client-specific) |
 
-Known customers: TRD (deepest), BELK, EE. Adding one = a new
+Known customers: TRD (deepest), BELK, EE, AEO, BOD, KW, TB, EXP (repos.json
+only so far — no profile.md/db/ yet). Adding one = a new
 `customers/<CLIENT>/` folder (profile + repos.json, optionally db/).
 
 ## Tools (run in Claude Code / Cowork with the hub folder)
 
 | Tool | Use when |
 |---|---|
-| lineage MCP (`.mcp.json` → `tooling/lineage/mcp_server.py`) | "what breaks if I change X", upstream/downstream, blast radius |
-| `tooling/lineage/query.py` | Same, as CLI: `find/upstream/downstream/impact/path/stats` |
-| `tooling/lineage/extract.py` / `extract_config.py` / `merge_graphs.py` | (Re)generate lineage graphs after repo changes |
-| db read-only MCP (`.mcp.json` → `tooling/db/mcp_server.py`) | Run SELECT/SHOW against a customer's QA Vertica/PG/CH over SSH (verify a root cause with real data). PG via that endpoint is admin-proxied — prefer Vertica; CH pending infra |
+| lineage MCP (`.mcp.json` → `tooling/lineage/mcp_server.py`) | "what breaks if I change X", upstream/downstream, blast radius. **Reads the UNIFIED graph** (file→ETL→pivot temp→pivot→model→screen) for `LINEAGE_CLIENT` (default TRD) |
+| `tooling/lineage/query.py` | Same, as CLI: `find/upstream/downstream/impact/path/stats`. Also reaches pivot temps + screens now |
+| `tooling/lineage/regen.sh <CID> <etl> <config>` | Rebuild ALL graphs for a customer end-to-end (extract→merge→pivot→unified→sqlite) |
+| `tooling/lineage-viz/` (web tool) | Human visual explorer — 3 scopes (ETL / Pivot / End-to-End), expand-pivot. `cd tooling/lineage-viz && python3 server.py`. NOT how the agent uses lineage (that's the MCP) |
+| db read-only MCP (`.mcp.json` → `tooling/db/mcp_server.py`) | Run SELECT/SHOW against a customer's QA Vertica/PG/CH over SSH. PG via that endpoint is admin-proxied — prefer Vertica; CH pending infra |
 | `tooling/lineage/diff.py` | PR data-impact report (edge diff between two graphs) |
+| `tooling/triage/` | **Deterministic triage engine** — the backbone that shrinks the LLM's trust surface. See `tooling/triage/README.md`. |
+| `tooling/triage/route.py` | Classify a ticket from text → type/component/env (each with a source). Seeds `state.json`. |
+| `tooling/triage/newticket.sh` | Spin up `tickets/<ID>/`: clone right repo+branch, OCI sync, ticket branch, seed state.json |
+| `tooling/triage/confidence.py` | Deterministic 0-100 confidence + band from a ticket state; the band gates behavior |
+| `tooling/triage/evidence-matrix.md` | `(type × component) → required evidence + exact commands` lookup |
+| `tooling/triage/trace.py` | State → reasoning/debug trace, or `--note` → solution-note draft |
+| `tooling/triage/learn.py` | Persist a user-given fact with provenance (`captured-knowledge.md`) |
+
+Lineage graphs live under `customers/<CID>/lineage/` (single source; see
+`tooling/lineage/README.md`). Generated JSON/DB are gitignored — rebuild
+with `regen.sh`.
 
 ## Runbooks — how to get evidence / do a task
 

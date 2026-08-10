@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>ETL Lineage Explorer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<!-- Libraries are served locally (no CDN) so the tool works on locked-down networks and offline. -->
+<script src="/static/vendor/cytoscape.min.js"></script>
+<script src="/static/vendor/dagre.min.js"></script>
+<script src="/static/vendor/cytoscape-dagre.js"></script>
+<style>
+  :root{--bg:#0f1420;--panel:#171e2e;--line:#2a3550;--txt:#dfe6f2;--muted:#8a96b0;
+        --full:#e0673a;--incr:#3aa0e0;--file:#8a7bd8;--view:#4fb477;--unknown:#9aa3b5;--target:#ffcf4d;}
+  *{box-sizing:border-box}
+  body{margin:0;font:13px/1.4 system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--txt);height:100vh;display:flex;flex-direction:column}
+  header{padding:10px 14px;background:var(--panel);border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  header b{font-size:14px;margin-right:6px}
+  select,input,button{background:#0d1322;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font:inherit}
+  select:focus,input:focus{outline:1px solid #3a63c0}
+  button{cursor:pointer}
+  button.on{background:#274690;border-color:#3a63c0}
+  .seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+  .seg button{border:0;border-radius:0;padding:6px 10px}
+  #main{flex:1;display:flex;min-height:0}
+  #cy{flex:1;min-width:0}
+  #side{width:320px;border-left:1px solid var(--line);background:var(--panel);padding:12px;overflow:auto}
+  #side h3{margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  #side .kv{margin:2px 0}
+  #side code{background:#0d1322;padding:1px 5px;border-radius:4px;color:#b9c6e6;font-size:12px}
+  .prov{border-top:1px solid var(--line);margin-top:8px;padding-top:8px}
+  .prov div{margin:3px 0;color:var(--muted);font-size:12px;word-break:break-all}
+  .badge{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;font-weight:600;color:#0d1322}
+  .full{background:var(--full)}.incremental{background:var(--incr)}.file_move{background:var(--file)}
+  .view{background:var(--view)}.unknown{background:var(--unknown)}
+  #legend{display:flex;gap:10px;flex-wrap:wrap;margin-left:auto;color:var(--muted);font-size:12px;align-items:center}
+  #legend span{display:inline-flex;align-items:center;gap:4px}
+  #legend i{width:22px;height:3px;display:inline-block;border-radius:2px}
+  #banner{display:none;background:#5a3b12;color:#ffd98a;padding:6px 14px;font-size:12px;border-bottom:1px solid var(--line)}
+  #status{color:var(--muted);font-size:12px}
+  .hint{color:var(--muted);font-size:12px;margin-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <b>ETL Lineage Explorer</b>
+  <div class="seg" id="viewseg" title="view">
+    <button id="v-table" class="on">Table lineage</button>
+    <button id="v-batch">Batch scripts</button>
+  </div>
+  <select id="customer"></select>
+  <select id="batch"><option value="">all batches</option></select>
+  <span id="tblctrls" style="display:contents">
+    <select id="scope" title="Which lineage plane to show">
+      <option value="etl">ETL only</option>
+      <option value="pivot">Pivot only</option>
+      <option value="e2e">End-to-End</option>
+    </select>
+    <select id="table"><option value="">select a table…</option></select>
+    <input id="search" placeholder="filter tables…" style="width:150px" />
+    <div class="seg" title="direction">
+      <button id="dir-up" class="on">upstream</button>
+      <button id="dir-down">downstream</button>
+    </div>
+    <button id="toggle-full" title="Immediate vs full chain">Show full lineage</button>
+  </span>
+  <span id="batchctrls" style="display:none">
+    <button id="toggle-flow" class="on" title="Show the before/after execution order among sibling scripts">Execution flow</button>
+  </span>
+  <span id="status"></span>
+  <div id="legend"></div>
+</header>
+<div id="banner"></div>
+<div id="main">
+  <div id="cy"></div>
+  <div id="side">
+    <h3>Details</h3>
+    <div id="detail"><div class="hint">Hover a node or edge to see the script, transformation type, and whether the step is a full or incremental load.</div></div>
+  </div>
+</div>
+<script>
+const EDGE_COLOR={full:'#e0673a',incremental:'#3aa0e0',file_move:'#8a7bd8',view:'#4fb477',unknown:'#9aa3b5'};
+const ENGINE_COLOR={vertica:'#3f7f6f',postgres:'#3a5fa0',clickhouse:'#a06a2c',file:'#555f77'};
+// pivot-plane node kinds get their own colors (used in pivot/e2e scopes)
+const KIND_COLOR={pivot_temp:'#b07fe8',pivot:'#e0655c',model:'#e07fb0',view:'#5bc0c8',
+  screen:'#e0a13a',scope:'#6b7488',dictionary:'#7f9f5b'};
+function nodeColor(n){return KIND_COLOR[n.data('kind')]||ENGINE_COLOR[n.data('engine')]||'#556';}
+let cy, state={cust:null,batch:'',table:'',dir:'upstream',full:false,view:'table',
+  custBatches:[],flow:true,scope:'etl',expand:new Set()};
+
+const api=(p)=>fetch(p).then(r=>r.json());
+const $=(id)=>document.getElementById(id);
+
+const LEG={
+  table:'<span><i style="background:#e0673a"></i>full</span><span><i style="background:#3aa0e0"></i>incremental</span><span><i style="background:#8a7bd8"></i>file move</span><span><i style="background:#4fb477"></i>view</span><span><i style="background:#9aa3b5"></i>unknown</span>',
+  batch:'<span><i style="background:#42506e"></i>shell (.sh)</span><span><i style="background:#a06a2c"></i>clickhouse sql</span><span><i style="background:#3f7f6f"></i>vertica sql</span><span><i style="background:#3a5fa0"></i>postgres sql</span><span><i style="background:#e0a13a"></i>runs sql</span>'
+};
+function setLegend(){$('legend').innerHTML=LEG[state.view];}
+
+async function init(){
+  const custs=await api('/api/customers');
+  $('customer').innerHTML=custs.map(c=>`<option value="${c.id}">${c.name} (${c.id})</option>`).join('');
+  state.cust=custs[0].id; state.custBatches=custs[0].batches||[];
+  setLegend();
+  await loadBatches(); await loadTables(); checkStale();
+  $('customer').onchange=async e=>{state.cust=e.target.value;
+    const c=custs.find(x=>x.id===state.cust); state.custBatches=c?c.batches:[];
+    await loadBatches();await loadTables();checkStale();};
+  $('batch').onchange=async e=>{state.batch=e.target.value;
+    if(state.view==='batch') drawBatch(); else await loadTables();};
+  $('table').onchange=e=>{state.table=e.target.value;state.expand=new Set();draw();};
+  $('search').oninput=filterTables;
+  $('scope').onchange=async e=>{state.scope=e.target.value;state.table='';state.expand=new Set();
+    applyScopeChrome();
+    await loadTables();};
+  applyScopeChrome();
+  $('dir-up').onclick=()=>setDir('upstream');
+  $('dir-down').onclick=()=>setDir('downstream');
+  $('toggle-full').onclick=()=>{state.full=!state.full;$('toggle-full').classList.toggle('on',state.full);draw();};
+  $('v-table').onclick=()=>setView('table');
+  $('v-batch').onclick=()=>setView('batch');
+  $('toggle-flow').onclick=()=>{state.flow=!state.flow;$('toggle-flow').classList.toggle('on',state.flow);drawBatch();};
+}
+function setDir(d){state.dir=d;$('dir-up').classList.toggle('on',d==='upstream');$('dir-down').classList.toggle('on',d==='downstream');draw();}
+function applyScopeChrome(){
+  // batch is an ETL-only concept — hide it in pivot/e2e scopes
+  const etl = state.scope==='etl';
+  $('batch').style.display = etl ? '' : 'none';
+  const lbl = {etl:'filter tables…', pivot:'search pivots / temps…', e2e:'search screens / nodes…'}[state.scope];
+  const s=$('search'); if(s) s.placeholder = lbl;
+}
+
+function setView(v){
+  if(v===state.view) return;
+  state.view=v; setLegend();
+  $('v-table').classList.toggle('on',v==='table');
+  $('v-batch').classList.toggle('on',v==='batch');
+  $('tblctrls').style.display = v==='table' ? 'contents' : 'none';
+  $('batchctrls').style.display = v==='batch' ? 'inline' : 'none';
+  if(cy){cy.destroy();cy=null;}
+  $('detail').innerHTML='<div class="hint">'+(v==='batch'
+     ?'Pick a batch to see its script execution order. Hover a SQL step to see the tables it writes/reads and the load mode.'
+     :'Hover a node or edge to see the script, transformation type, and load mode.')+'</div>';
+  if(v==='batch'){
+    // batch dropdown lists the mapped batches (daily/weekly/…)
+    $('batch').innerHTML='<option value="">select a batch…</option>'+
+      state.custBatches.map(b=>`<option value="${b}">${b}</option>`).join('');
+    state.batch=''; $('status').textContent='';
+  } else { loadBatches().then(loadTables); }
+}
+
+let allTables=[];
+async function loadBatches(){
+  const b=await api(`/api/customers/${state.cust}/batches`);
+  $('batch').innerHTML='<option value="">all batches</option>'+b.map(x=>`<option value="${x.batch}">${x.batch} (${x.edges})</option>`).join('');
+  state.batch='';
+}
+async function loadTables(){
+  if(state.scope==='etl'){
+    allTables=await api(`/api/customers/${state.cust}/tables${state.batch?`?batch=${encodeURIComponent(state.batch)}`:''}`);
+  }else if(state.scope==='pivot'){
+    // Pivot scope: dropdown = pivot file names
+    allTables=await api(`/api/customers/${state.cust}/unified/nodes?kind=pivot`);
+  }else{
+    // End-to-End: dropdown = screens (natural entry: trace a screen to source)
+    allTables=await api(`/api/customers/${state.cust}/unified/nodes?kind=screen`);
+  }
+  renderTableOptions(allTables);
+}
+function renderTableOptions(list){
+  $('table').innerHTML='<option value="">select… ('+list.length+')</option>'+
+    list.map(t=>`<option value="${t.id}">${t.label}</option>`).join('');
+}
+async function filterTables(e){
+  const q=e.target.value;
+  if(state.scope==='etl'){
+    renderTableOptions(allTables.filter(t=>t.label.toLowerCase().includes(q.toLowerCase())));
+  }else if(q.length>=2){
+    const list=await api(`/api/customers/${state.cust}/unified/search?q=${encodeURIComponent(q)}&scope=${state.scope}`);
+    renderTableOptions(list);
+  }
+}
+
+async function checkStale(){
+  try{const s=await api(`/api/customers/${state.cust}/staleness`);
+    const bn=$('banner');
+    if(s.stale){bn.style.display='block';bn.textContent=`⚠ ${s.changed_scripts.length} script(s) changed since this graph was built — rebuild for accurate lineage.`;}
+    else bn.style.display='none';
+  }catch(e){}
+}
+
+async function draw(){
+  if(!state.table){return;}
+  if(typeof cytoscape==='undefined'){
+    $('status').textContent='⚠ graph library failed to load';
+    $('detail').innerHTML='<div class="hint" style="color:#ffb4a0">Cytoscape did not load. If /static/vendor/*.js is 404, re-copy the vendored libraries; the tool no longer uses a CDN.</div>';
+    return;
+  }
+  const depth=state.full?'full':'1';
+  $('status').textContent='loading…';
+  let q;
+  if(state.scope==='etl'){
+    q=`/api/customers/${state.cust}/lineage?table=${encodeURIComponent(state.table)}&direction=${state.dir}&depth=${depth}${state.batch?`&batch=${encodeURIComponent(state.batch)}`:''}`;
+  }else{
+    const exp=[...state.expand].join(',');
+    q=`/api/customers/${state.cust}/unified/lineage?node=${encodeURIComponent(state.table)}&direction=${state.dir}&depth=${depth}&scope=${state.scope}&expand=${encodeURIComponent(exp)}`;
+  }
+  let g;
+  try{ g=await api(q); }
+  catch(err){ $('status').textContent='⚠ request failed'; return; }
+  const els=[];
+  for(const n of g.nodes) els.push({data:{id:n.id,label:n.name,engine:n.engine,kind:n.kind,target:n.is_target,expandable:n.expandable}});
+  for(const e of g.edges) els.push({data:{id:e.src+'::'+e.dst+'::'+e.type,source:e.src,target:e.dst,
+     type:e.type,load_mode:e.load_mode,prov:e.provenance,batches:e.batches}});
+  if(cy) cy.destroy();
+  try{
+  cy=cytoscape({container:$('cy'),elements:els,
+    style:[
+     {selector:'node',style:{'background-color':(n)=>nodeColor(n),
+        'label':'data(label)','color':'#dfe6f2','font-size':10,'text-wrap':'wrap','text-max-width':150,
+        'text-valign':'center','text-halign':'center','width':'label','height':22,'padding':'6px',
+        'shape':'round-rectangle','border-width':1,'border-color':'#0d1322'}},
+     {selector:'node[?target]',style:{'border-width':3,'border-color':'#ffcf4d','font-weight':'bold'}},
+     {selector:'node[?expandable]',style:{'border-width':2,'border-color':'#fff','border-style':'double'}},
+     {selector:'node[kind = "file"]',style:{'shape':'ellipse','background-opacity':0.5,'border-style':'dashed'}},
+     {selector:'edge',style:{'width':2,'line-color':(e)=>EDGE_COLOR[e.data('load_mode')]||'#667',
+        'target-arrow-color':(e)=>EDGE_COLOR[e.data('load_mode')]||'#667','target-arrow-shape':'triangle',
+        'curve-style':'bezier','arrow-scale':0.9}},
+     {selector:'.faded',style:{'opacity':0.15}},
+    ],
+    layout:{name:'dagre',rankDir:state.dir==='upstream'?'RL':'LR',nodeSep:18,rankSep:70}});
+  cy.on('mouseover','node',ev=>showNode(ev.target.data()));
+  cy.on('mouseover','edge',ev=>showEdge(ev.target.data()));
+  cy.on('tap','node',ev=>{const d=ev.target.data();const id=ev.target.id();
+    if(d.expandable){ // e2e: toggle expand of a pivot to reveal/hide its temps
+      if(state.expand.has(id)) state.expand.delete(id); else state.expand.add(id);
+      draw(); return;
+    }
+    $('table').value=id;state.table=id;state.expand=new Set();draw();});
+  $('status').textContent=`${g.meta.node_count} nodes · ${g.meta.edge_count} edges · ${state.dir} · ${state.full?'full chain':'immediate'}`;
+  }catch(err){ $('status').textContent='⚠ render error: '+err.message; }
+}
+
+function showNode(d){
+  $('detail').innerHTML=`<div class="kv"><b>${d.label}</b></div>
+    <div class="kv">engine: <code>${d.engine}</code></div>
+    <div class="kv">kind: <code>${d.kind}</code></div>
+    <div class="hint">Click a node to re-center lineage on it.</div>`;
+}
+function showEdge(d){
+  const prov=(d.prov||[]).map(p=>`<div>📄 ${p.loc}${p.line?':'+p.line:''}</div>`).join('')||'<div>— dynamic / no static SQL —</div>';
+  $('detail').innerHTML=`<div class="kv">${d.source.split('.').pop()} → <b>${d.target.split('.').pop()}</b></div>
+    <div class="kv">transform: <code>${d.type}</code></div>
+    <div class="kv">load: <span class="badge ${d.load_mode}">${d.load_mode}</span></div>
+    <div class="kv">batches: ${ (d.batches||[]).map(b=>`<code>${b}</code>`).join(' ')||'—'}</div>
+    <div class="prov"><h3>Provenance (script:line)</h3>${prov}</div>`;
+}
+
+// ---------- Batch script lineage ----------
+let batchData=null;
+async function drawBatch(){
+  if(!state.batch){$('status').textContent='';return;}
+  if(typeof cytoscape==='undefined'){$('status').textContent='⚠ graph library failed to load';return;}
+  $('status').textContent='loading…';
+  let g; try{ g=await api(`/api/customers/${state.cust}/batch-scripts?batch=${encodeURIComponent(state.batch)}`);}
+  catch(err){$('status').textContent='⚠ request failed';return;}
+  batchData=g;
+  const indeg={}; g.edges.forEach(e=>indeg[e.dst]=(indeg[e.dst]||0)+1);
+  const els=[];
+  for(const n of g.nodes){
+    const isRoot = !indeg[n.id] && n.kind==='shell';
+    els.push({data:{id:n.id,label:n.label,kind:n.kind,engine:n.engine,root:isRoot,
+      tables:g.sql_tables[n.id]||null}});
+  }
+  for(const e of g.edges) els.push({data:{id:e.src+'::'+e.dst+'::'+e.kind,source:e.src,target:e.dst,kind:e.kind}});
+  if(state.flow) for(const e of (g.seq||[])) els.push({data:{id:e.src+'::'+e.dst+'::seq',source:e.src,target:e.dst,kind:'seq',parent:e.parent,step:e.step}});
+  if(cy) cy.destroy();
+  try{
+  const EK={source:'#39425c',calls:'#4a5570',runs_sql:'#e0a13a',seq:'#5fd0a0'};
+  cy=cytoscape({container:$('cy'),elements:els,
+    style:[
+     {selector:'node',style:{'label':'data(label)','color':'#dfe6f2','font-size':9,'text-wrap':'wrap',
+        'text-max-width':160,'text-valign':'center','text-halign':'center','width':'label','height':20,
+        'padding':'5px','shape':'round-rectangle','border-width':1,'border-color':'#0d1322',
+        'background-color':(n)=> n.data('kind')==='sql' ? (ENGINE_COLOR[n.data('engine')]||'#666') : '#42506e'}},
+     {selector:'node[?root]',style:{'border-width':3,'border-color':'#ffcf4d','font-weight':'bold'}},
+     {selector:'edge',style:{'curve-style':'bezier','target-arrow-shape':'triangle','arrow-scale':0.8,
+        'width':(e)=> e.data('kind')==='seq'?2:1.4,
+        'line-color':(e)=>EK[e.data('kind')]||'#556','target-arrow-color':(e)=>EK[e.data('kind')]||'#556',
+        'line-style':(e)=> (e.data('kind')==='seq')?'dashed':(e.data('kind')==='source'?'dotted':'solid'),
+        'opacity':(e)=> e.data('kind')==='source'?0.5:1}},
+    ],
+    layout:{name:'dagre',rankDir:'LR',nodeSep:12,rankSep:60}});
+  cy.on('mouseover','node',ev=>showScript(ev.target.data()));
+  cy.on('mouseover','edge',ev=>{const d=ev.target.data();
+    const verb={runs_sql:'runs SQL',calls:'calls',source:'sources',seq:'runs before'}[d.kind]||d.kind;
+    const ctx=d.kind==='seq'?` <span class="hint">(step ${d.step} under ${d.parent.split('/').pop()})</span>`:'';
+    $('detail').innerHTML=`<div class="kv">${d.source.split('/').pop()} <b>${verb}</b> ${d.target.split('/').pop()}${ctx}</div>`;});
+  $('status').textContent=`${g.meta.script_count} scripts · ${g.meta.sql_count} sql · ${g.meta.edge_count} edges${state.flow?` · ${g.meta.seq_count} order`:''} · batch ${g.meta.batch}`;
+  }catch(err){$('status').textContent='⚠ render error: '+err.message;}
+}
+function showScript(d){
+  if(d.kind==='sql' && d.tables){
+    const w=(d.tables.writes||[]).map(x=>`<div>▸ <b>${x.table}</b> <span class="badge ${x.load_mode}">${x.load_mode}</span> <code>${x.type}</code></div>`).join('')||'<div>—</div>';
+    const r=(d.tables.reads||[]).slice(0,12).map(x=>`<code>${x}</code>`).join(' ')||'—';
+    $('detail').innerHTML=`<div class="kv"><b>${d.label}</b></div>
+      <div class="kv">engine: <code>${d.engine}</code></div>
+      <div class="prov"><h3>Writes</h3>${w}</div>
+      <div class="prov"><h3>Reads</h3><div style="line-height:1.8">${r}</div></div>`;
+  } else {
+    $('detail').innerHTML=`<div class="kv"><b>${d.label}</b>${d.root?' <span class="badge view">main</span>':''}</div>
+      <div class="kv">shell orchestrator</div>
+      <div class="hint">Amber edges = runs a SQL step; grey edges = calls another script.</div>`;
+  }
+}
+init();
+</script>
+</body>
+</html>

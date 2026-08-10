@@ -1,0 +1,5 @@
+fastapi>=0.110
+uvicorn[standard]>=0.29
+# sqlglot is only needed if you regenerate graph.json with the upstream
+# extractor (etl-trd-batch/lineage/extract.py); the tool itself does not need it.
+sqlglot>=23

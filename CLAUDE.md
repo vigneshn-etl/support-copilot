@@ -50,8 +50,16 @@ in the triage-ticket skill.
   instance for all clients (same code serves every tenant; behavior differs
   by config) → `knowledge/platform-repos.json`.
 
-Working clones are siblings of this hub, or in `tickets/<SUP-ID>/repos/`
-(gitignored).
+**Investigation clones** (read-only lookups, lineage, diffing): sibling of
+this hub, per `customers/<CLIENT>/repos.json` `local` field.
+
+**Edit clones** (any ticket where a fix means changing repo code): under
+`/Users/vigneshn/Desktop/JIRAs/<SUP-ID>/<repo-name>/` — matches the
+existing human convention there, and keeps this hub's own git repo free of
+nested clones. Create the ticket branch there (named `<SUP-ID>`), do the
+edit, leave it uncommitted until the human reviews. Ticket *knowledge*
+(state.json, evidence, live-config diffs) still lives in
+`tickets/<SUP-ID>/` in this hub — only the code clone moves out.
 
 ## Rules
 
@@ -79,5 +87,5 @@ Working clones are siblings of this hub, or in `tickets/<SUP-ID>/repos/`
 | `customers/<CLIENT>/` | Per-customer facts: profile, repos.json, db/ |
 | `tooling/` | lineage + db MCP servers, extractors, query CLI |
 | `.claude/skills/` | triage-ticket, validate-fix, ticket-retro, impact-analysis |
-| `tickets/<SUP-ID>/` | Per-ticket workspace (repos/ + logs/ gitignored) |
+| `tickets/<SUP-ID>/` | Per-ticket knowledge only (state.json, live-config, logs — gitignored). Code edit clones live in `/Users/vigneshn/Desktop/JIRAs/<SUP-ID>/` instead. |
 | `feedback/` | One line per triage: useful? what was wrong? |

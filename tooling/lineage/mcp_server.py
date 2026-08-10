@@ -32,9 +32,9 @@ _graph_cache = {"mtime": None, "graph": None}
 
 
 def graph():
-    f = HERE / "graph.json"
+    f = query.resolve_graph()
     if not f.exists():
-        raise RuntimeError("graph.json missing — run: python3 lineage/extract.py")
+        raise RuntimeError(f"no lineage graph found ({f}) — run the extractor/merge")
     m = f.stat().st_mtime
     if _graph_cache["mtime"] != m:
         _graph_cache.update(mtime=m, graph=json.loads(f.read_text()))

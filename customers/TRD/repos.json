@@ -1,14 +1,21 @@
 {
-  "_readme": "Per-client repos ONLY (ETL + config). Shared frontend/backend are in knowledge/platform-repos.json.",
+  "_readme": "Per-client repos ONLY (ETL + config). Shared frontend/backend are in knowledge/platform-repos.json. For lower envs, clone the branch below then OVERLAY the OCI live config — see profile.md + runbooks/fetch-live-config.md.",
   "etl": {
-    "repo": "<git-url-or-local-path>/etl-trd-batch",
-    "branch": "master",
-    "local": "repos/etl-trd-batch"
+    "repo": "git@github.com:s5-stratos/etl-trd-batch.git",
+    "branch_prod": "etl_assortment_planning",
+    "branch_staging": "etl_assortment_planning_u",
+    "branch_qa": "etl_assortment_planning_u",
+    "default_branch": "etl_assortment_planning_u",
+    "local": "repos/etl-trd-batch",
+    "note": "Upgrade/staging/QA branch = etl_assortment_planning_u (_u = upgrade). No dedicated QA branch — use _u for QA."
   },
   "config": {
-    "repo": "<git-url-or-local-path>/trd-configs",
-    "branch": "master",
+    "repo": "git@github.com:s5-stratos/trd-configs.git",
+    "branch_prod": "allocation-configs",
+    "branch_staging": "allocation-configs",
+    "branch_qa": "allocation-configs",
+    "default_branch": "allocation-configs",
     "local": "repos/trd-configs",
-    "note": "lower envs: OCI bucket is source of truth \u2014 runbook fetch-live-config.md"
+    "note": "Clone allocation-configs, THEN overlay the env's OCI bucket (fetch-live-config.md). No QA branch — QA config lives only in OCI."
   }
 }

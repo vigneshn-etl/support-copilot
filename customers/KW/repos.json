@@ -1,0 +1,21 @@
+{
+  "_readme": "Per-client repos ONLY (ETL + config). Shared frontend/backend are in knowledge/platform-repos.json. KW = KnitWell Group (brands: Loft, Ann Taylor / Ann). Config repo is per-brand; this entry covers Loft (loft-configs). Add sibling entries here if/when Ann-specific config repo details are confirmed.",
+  "config": {
+    "loft": {
+      "repo": "git@github.com:s5-stratos/loft-configs.git",
+      "branch": "planning_strategy",
+      "local": "",
+      "note": "Branch name is 'planning_strategy' (underscore) — do not confuse with similar-sounding names."
+    }
+  },
+  "oci": {
+    "namespace": "ax5kyn0um7zh",
+    "region": "us-ashburn-1",
+    "tenant_prefix": "loft",
+    "buckets": {
+      "staging": "knit-knit-1-staging-config",
+      "prod": "knit-knit-1-prod-config"
+    },
+    "note": "No separate 'Upgrade' bucket exists — only staging and prod. Ticket SUP-2132 comments referred to 'Upgrade' as distinct from 'Prod', but config is byte-identical between the two live buckets and the repo (verified 2026-08-06), so 'Upgrade' likely shares the prod config source. Confirm with team if this mapping is wrong."
+  }
+}

@@ -21,12 +21,29 @@ from collections import defaultdict, deque
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+HUB = HERE.parent.parent   # support-copilot/
+
+
+def resolve_graph():
+    """Pick the lineage graph, richest first, per-customer.
+    Priority: $LINEAGE_GRAPH → customers/$LINEAGE_CLIENT/lineage/unified →
+    combined → graph.json → tooling/lineage/graph.json (ETL-only fallback)."""
+    import os
+    if os.environ.get("LINEAGE_GRAPH"):
+        return Path(os.environ["LINEAGE_GRAPH"])
+    client = os.environ.get("LINEAGE_CLIENT", "TRD")
+    base = HUB / "customers" / client / "lineage"
+    for name in ("unified_graph.json", "combined_graph.json", "graph.json"):
+        f = base / name
+        if f.exists():
+            return f
+    return HERE / "graph.json"
 
 
 def load():
-    f = HERE / "graph.json"
+    f = resolve_graph()
     if not f.exists():
-        sys.exit("graph.json not found — run: python3 lineage/extract.py")
+        sys.exit(f"no lineage graph found ({f}) — run the extractor/merge first")
     return json.loads(f.read_text())
 
 
@@ -179,16 +196,16 @@ def cmd_path(g, args):
 
 
 def cmd_stats(g, args):
-    m = g["meta"]
-    print(f"repo={m['repo']}  generated={m['generated_at']}")
-    print(f"nodes={m['node_count']}  edges={m['edge_count']}")
-    for k, v in sorted(m["stats"].items()):
+    from collections import Counter
+    m = g.get("meta", {})
+    print(f"graph: {resolve_graph()}")
+    print(f"repo={m.get('repo','?')}  generated={m.get('generated_at','?')}")
+    print(f"nodes={m.get('node_count', len(g.get('nodes',[])))}  "
+          f"edges={m.get('edge_count', len(g.get('edges',[])))}")
+    kinds = Counter(n.get('kind','?') for n in g.get('nodes', []))
+    print("node kinds:", dict(kinds))
+    for k, v in sorted((m.get("stats") or {}).items()):
         print(f"  {k}: {v}")
-    cov = HERE / "coverage.json"
-    if cov.exists():
-        c = json.loads(cov.read_text())
-        print(f"parse_rate={c['parse_rate_pct']}%  "
-              f"unparsed={c['statements_unparsed']}")
 
 
 def main():

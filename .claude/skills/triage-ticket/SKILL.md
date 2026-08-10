@@ -109,3 +109,57 @@ exact log file/host or the exact SQL — one batched request, not a drip.
 Rules: never re-ask something answered earlier in the session; never ask
 what Jira already says (confirm instead); if the user pre-answers
 everything in one message, skip straight to analysis.
+
+## Triage engine (deterministic backbone — tooling/triage/)
+
+Work every ticket through a structured **state** file, not free prose. This
+shrinks hallucination: the LLM fills the state + picks enumerated options;
+code scores and gates.
+
+0. **Spin up the workspace**: classify the text with
+   `tooling/triage/route.py` (gives type/component/env + source), then
+   `tooling/triage/newticket.sh <SUP-ID> <CID> <component> [env]` — clones
+   the right repo+branch per `repos.json`, cuts a ticket branch, prints the
+   env's OCI sync, seeds `state.json`.
+1. **Complete `tickets/<SUP-ID>/state.json`** against
+   `tooling/triage/state.schema.json`. Fill `classification` from route.py —
+   mark the SOURCE (jira-issuetype / router / reporter-confirmed), never
+   "guessed".
+2. **Confirm the requirement** (`requirement.confirmed`) with the reporter
+   before analysis. This is the MAIN understanding — echo it back, get yes.
+3. **Look up `tooling/triage/evidence-matrix.md`** for the (type × component)
+   cell → record `requested_evidence[]`, ask for it in ONE batched request,
+   run the self-serve items (lineage/DB).
+4. **Record every fact in `evidence[]`** with a resolvable `locator` +
+   `resolved` + observed/inferred. NEVER state a fact you didn't retrieve;
+   NEVER type an entity name you didn't resolve via the lineage/db tools.
+5. **Score**: `python3 tooling/triage/confidence.py tickets/<ID>/state.json`.
+   Obey the band: <40 gather more (no fix); 40-69 run checks to confirm;
+   70-89 propose; 90+ proceed. The score is the gate, not your feeling.
+
+## Output discipline (precision / progressive disclosure)
+
+Default reply = SUMMARY only: the answer + `confidence score [band]` + the
+top 2-3 cited evidence. Nothing more. Full evidence, ruled-out hypotheses,
+lineage walks, exact queries live in state.json and are shown ONLY on
+request ("expand" / "show evidence" / "why"). Auto-surface to summary ONLY:
+missing required evidence (gate blocker) or a large blast radius. Precise
+first; depth on demand.
+
+## Always end with (techno-functional)
+
+Populate `state.knowledge_gained.technical` AND `.functional` (retail
+business meaning). The retro copies both into the solution note — we are
+techno-functional consultants; capture both every time.
+
+## At retro (close the loop — code, not memory)
+
+- `python3 tooling/triage/trace.py tickets/<ID>/state.json --note` → drafts
+  the solution note (resolved evidence + techno-functional) into
+  `knowledge/solutions/<ID>.md`. Review the two `knowledge_gained` halves,
+  flip `draft:` when a human confirms.
+- If the reporter/user gave a durable fact this ticket, persist it:
+  `python3 tooling/triage/learn.py --client <CID> --category <cat> --fact
+  "…" --source <SUP-ID>` → `captured-knowledge.md`. Next ticket inherits it.
+- Use `trace.py` (no `--note`) any time as the **debug view** — it shows the
+  full reasoning map + the confidence breakdown that produced the band.

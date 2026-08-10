@@ -1,0 +1,40 @@
+{
+  "customers": [
+    {
+      "id": "TRD",
+      "name": "Torrid",
+      "repo_url": "git@github.com:org/etl-trd-batch.git",
+      "branch": "main",
+      "clone_path": "../etl-trd-batch",
+      "engines": [
+        "vertica",
+        "postgres",
+        "clickhouse"
+      ],
+      "graph_json": "../../customers/TRD/lineage/graph.json",
+      "graph_db": "../../customers/TRD/lineage/lineage_trd.db",
+      "batches": {
+        "daily": {
+          "main_script": "daily.sh"
+        },
+        "weekly": {
+          "main_script": "weekly.sh"
+        },
+        "intraday": {
+          "main_script": "intraday.sh"
+        },
+        "nightly": {
+          "main_script": "nightly.sh"
+        },
+        "cyclic": {
+          "main_script": "cyclic.sh",
+          "custom": true
+        }
+      },
+      "credential_ref": "default_github",
+      "unified_db": "../../customers/TRD/lineage/unified_trd.db",
+      "pivot_graph": "workspaces/TRD/pivot_graph.json",
+      "unified_graph": "../../customers/TRD/lineage/unified_graph.json"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "_readme": "Per-client repos ONLY (ETL + config). Shared frontend/backend are in knowledge/platform-repos.json. TB = Tory Burch.",
+  "etl": {
+    "repo": "https://github.com/s5-stratos/etl-tb-batch",
+    "branch": "etl_assortment_planning",
+    "local": ""
+  },
+  "config": {
+    "repo": "<git-url-or-local-path>/tb-configs",
+    "branch": "<unconfirmed>",
+    "local": "",
+    "note": "config repo not yet confirmed — fill in when known"
+  }
+}

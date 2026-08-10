@@ -2,7 +2,23 @@ repos/
 *.pyc
 __pycache__/
 customers/*/db/connections.json
+# Ticket workspaces: keep only state.json (reasoning examples); drop the bulk.
+# NOTE: gitignore has no trailing-comment support — patterns must stand alone.
 tickets/*/repos/
 tickets/*/logs/
+# pulled OCI live config — regenerable, raw client config, keep out of git
+tickets/*/live-config/
+tickets/*/live-config-staging/
+# newticket.sh smoke-test junk
+tickets/SUP-9001/
+tickets/SUP-9002/
 .DS_Store
 .claude/settings.local.json
+
+# Generated lineage artifacts (regenerable via tooling/lineage/regen.sh) — keep code, not 40MB of JSON/DB
+customers/*/lineage/*.db
+customers/*/lineage/unified_graph.json
+customers/*/lineage/pivot_graph.json
+customers/*/lineage/*.html
+tooling/lineage-viz/workspaces/
+unified_load.py

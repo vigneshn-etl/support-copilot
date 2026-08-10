@@ -1,0 +1,125 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Ticket triage state — the reasoning map + grounding record",
+  "description": "The deterministic backbone. The agent FILLS this stage by stage; code (confidence.py) SCORES it. It is both the debug trace and the anti-hallucination contract: every claim needs resolvable evidence or is marked inferred/unknown.",
+  "type": "object",
+  "required": ["ticket", "stage", "classification", "requirement", "evidence", "hypotheses"],
+  "properties": {
+    "ticket": {"type": "string", "description": "SUP-####"},
+    "client": {"type": "string", "description": "from the summary tag, e.g. TRD"},
+    "stage": {"enum": ["intake","classify","scope","investigate","root_cause","fix","validate","retro","blocked"]},
+    "updated_at": {"type": "string"},
+
+    "classification": {
+      "type": "object",
+      "required": ["type", "type_source", "component", "component_source", "environment"],
+      "properties": {
+        "type": {"enum": ["bug","data-issue","enhancement","config-change","deploy","question"]},
+        "type_source": {"enum": ["jira-issuetype","router","reporter-confirmed"], "description": "how it was decided — 'guessed' is NOT allowed"},
+        "component": {"type": "array", "items": {"enum": ["etl","config","frontend","backend","db","hybrid"]}},
+        "component_source": {"enum": ["router","system-map","reporter-confirmed"]},
+        "environment": {"enum": ["qa","staging","prod","unknown"]}
+      }
+    },
+
+    "requirement": {
+      "type": "object",
+      "required": ["statement", "confirmed"],
+      "description": "THE main field. Must be echoed back and confirmed by the reporter before analysis proceeds.",
+      "properties": {
+        "statement": {"type": "string", "description": "the issue/ask restated in one paragraph, in the reporter's terms"},
+        "confirmed": {"type": "boolean", "description": "reporter said 'yes that's right' — gate: analysis cannot proceed while false"},
+        "acceptance": {"type": "string", "description": "what 'done/fixed' means (from AC or reporter)"}
+      }
+    },
+
+    "prior_art": {
+      "type": "array",
+      "items": {"type": "object", "properties": {
+        "ref": {"type": "string", "description": "SUP-#### note or jira ticket"},
+        "why_relevant": {"type": "string"}
+      }}
+    },
+
+    "evidence": {
+      "type": "array",
+      "description": "Every fact used in analysis. resolved=true only if it points to a real, retrieved thing.",
+      "items": {"type": "object", "required": ["claim", "kind", "resolved"], "properties": {
+        "claim": {"type": "string"},
+        "kind": {"enum": ["file","query_result","log","lineage","config","note","screenshot","reporter"]},
+        "locator": {"type": "string", "description": "file:line, query text+result, note id, log excerpt — the citation"},
+        "resolved": {"type": "boolean", "description": "the locator was actually retrieved/run (not recalled)"},
+        "observed_or_inferred": {"enum": ["observed","inferred"]}
+      }}
+    },
+
+    "requested_evidence": {
+      "type": "array",
+      "description": "Per the evidence-matrix: what was asked of the reporter/DB and whether it's back.",
+      "items": {"type": "object", "properties": {
+        "item": {"type": "string"},
+        "command": {"type": "string", "description": "the exact query/command given"},
+        "status": {"enum": ["requested","received","na"]}
+      }}
+    },
+
+    "hypotheses": {
+      "type": "array",
+      "description": "Enumerated candidate causes — including ruled-out ones (the diagnosis path).",
+      "items": {"type": "object", "required": ["cause","status"], "properties": {
+        "cause": {"type": "string"},
+        "status": {"enum": ["candidate","ruled_out","confirmed"]},
+        "evidence_refs": {"type": "array", "items": {"type": "integer"}, "description": "indexes into evidence[]"},
+        "ruled_out_because": {"type": "string"}
+      }}
+    },
+
+    "root_cause": {
+      "type": "object",
+      "properties": {
+        "statement": {"type": "string"},
+        "evidence_refs": {"type": "array", "items": {"type": "integer"}},
+        "confirmed_by_execution": {"type": "boolean", "description": "a check was RUN (query/lineage/config-verify), not just reasoned"}
+      }
+    },
+
+    "fix": {
+      "type": "object",
+      "properties": {
+        "changes": {"type": "array", "items": {"type": "string", "description": "repo/path — what changes"}},
+        "branch": {"type": "string", "description": "ticket-named branch"},
+        "pr": {"type": "string"}
+      }
+    },
+
+    "validation": {
+      "type": "object",
+      "properties": {
+        "plan": {"type": "array", "items": {"type": "string"}},
+        "pre_state_captured": {"type": "boolean"},
+        "results": {"type": "array", "items": {"type": "object", "properties": {
+          "check": {"type": "string"}, "verdict": {"enum": ["pass","fail","pending"]}, "proof": {"type": "string"}
+        }}}
+      }
+    },
+
+    "knowledge_gained": {
+      "type": "object",
+      "description": "Techno-functional capture — MANDATORY on any resolved ticket.",
+      "properties": {
+        "technical": {"type": "string", "description": "code/data/config mechanism learned"},
+        "functional": {"type": "string", "description": "retail business meaning — what the metric/screen/rule means to a planner"}
+      }
+    },
+
+    "confidence": {
+      "type": "object",
+      "description": "COMPUTED by confidence.py — do not hand-set.",
+      "properties": {
+        "score": {"type": "integer"},
+        "band": {"enum": ["insufficient","plausible","evidence-backed","confirmed"]},
+        "breakdown": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}

@@ -35,6 +35,15 @@ makes these findable).
 
 How we knew it was fixed (query run, screen checked, batch re-run…).
 
+## Knowledge gained (techno-functional — required)
+
+**Technical:** the code/data/config mechanism learned (a table/view/trigger
+behavior, a pivot grain rule, a config binding…). One or two sentences.
+
+**Functional:** the retail business meaning — what this metric / screen /
+rule means to a planner or the merchandising process. (We are
+techno-functional consultants; both halves are mandatory.)
+
 ## Gotchas
 
 Anything surprising that future-you should know (timezones, client-specific

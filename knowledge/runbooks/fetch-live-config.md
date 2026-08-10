@@ -21,13 +21,24 @@ oci os object sync \
 #   (includes a .delete marker file listing tombstoned objects)
 ```
 
+### TRD buckets (confirmed 2026-08)
+
+| Env | Bucket | Region | Prefix |
+|---|---|---|---|
+| QA | `internal-qa-config` | us-chicago-1 (US Midwest Chicago) | `trd/asst/` |
+| Staging/Upgrade | `trd-trd-1-staging-config` | us-ashburn-1 (US East Ashburn) | `trd/asst/` |
+| Prod | `trd-trd-1-prod-config` | us-ashburn-1 (US East Ashburn) | `trd/asst/` |
+
+Workflow for TRD: clone git branch `allocation-configs` (the base), THEN
+sync the env bucket over it — the running config = base + OCI overlay.
+
+```bash
+oci os object sync -bn internal-qa-config --prefix trd/asst/ --dest-dir ./live-config/qa/
+```
+
 Fill per case:
-- `-bn internal-<env>-config` — env bucket (`internal-qa-config`,
-  `internal-staging-config`, …). Confirm the exact bucket name per env.
-- `--prefix <tenant>/asst/override_configuration/` — tenant = client
-  prefix (aeo, trd, blk…). `override_configuration/` holds the env's
-  live confdefn/viewdefn/modeldefn/pivotdefn OVERRIDES (only files that
-  were changed in the env; unchanged files still come from the repo).
+- `-bn <bucket>` — from the table above (per env).
+- `--prefix trd/asst/` — TRD's config path in the bucket.
 - Requires OCI CLI configured (`oci setup config` once) with access to
   the bucket; run from the VM/host that has that access.
 

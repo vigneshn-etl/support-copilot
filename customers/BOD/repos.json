@@ -1,0 +1,15 @@
+{
+  "_readme": "Per-client repos ONLY (ETL + config). Shared frontend/backend are in knowledge/platform-repos.json. BOD = Boden.",
+  "etl": {
+    "repo": "https://github.com/s5-stratos/etl-bod-batch",
+    "branch": "etl-prod-2025",
+    "local": "../etl-bod-batch",
+    "note": "'etl-prod-2025' is the main prod branch (confirmed by user, cloned 2026-08-07)."
+  },
+  "config": {
+    "repo": "<git-url-or-local-path>/bod-configs",
+    "branch": "<unconfirmed>",
+    "local": "",
+    "note": "config repo not yet cloned/confirmed — fill in when known"
+  }
+}
