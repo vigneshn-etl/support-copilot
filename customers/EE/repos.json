@@ -1,0 +1,21 @@
+{
+  "_readme": "Per-client repos ONLY (ETL + config). Shared frontend/backend are in knowledge/platform-repos.json. For lower envs, clone the branch below then OVERLAY the OCI live config — see profile.md + runbooks/fetch-live-config.md. Note: JIRA/client tag is EE, but repo/app names use 'evereve' — same client.",
+  "etl": {
+    "repo": "git@github.com:s5-stratos/etl-evereve-batch.git",
+    "branch_prod": "etl_assortment_planning",
+    "branch_staging": "etl_assortment_planning_upgrade",
+    "branch_qa": "etl_assortment_planning_upgrade",
+    "default_branch": "etl_assortment_planning",
+    "local": "etl-evereve-batch",
+    "note": "No dedicated QA branch — use _upgrade for QA (same as staging). Other branches seen in `git branch` on prod: main, sizerange_code_change (purpose unconfirmed)."
+  },
+  "config": {
+    "repo": "git@github.com:s5-stratos/evereve-configs.git",
+    "branch_prod": "assortment-planning",
+    "branch_staging": "assortment-planning",
+    "branch_qa": "assortment-planning",
+    "default_branch": "assortment-planning",
+    "local": "",
+    "note": "Same branch across all envs — drift lives in the OCI bucket overlay per env, not git. See profile.md OCI bucket table."
+  }
+}

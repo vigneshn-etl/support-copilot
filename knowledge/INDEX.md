@@ -41,9 +41,12 @@ file gets a row here.**
 | `customers/<CLIENT>/captured-knowledge.md` | Facts users dropped during tickets (newest first, provenance-stamped by `learn.py`) — check before asking; promote durable ones into profile.md |
 | `knowledge/captured-knowledge.md` | Same, but platform-wide (not client-specific) |
 
-Known customers: TRD (deepest), BELK, EE, AEO, BOD, KW, TB, EXP (repos.json
-only so far — no profile.md/db/ yet). Adding one = a new
-`customers/<CLIENT>/` folder (profile + repos.json, optionally db/).
+Known customers: TRD (deepest), EE (Evereve — note: JIRA tag `EE`, but
+repos/app/table-prefix use `eve`/`evereve`, see customers/EE/profile.md
+naming note), BELK, AEO, BOD, KW, TB, EXP (repos.json only so far — no
+profile.md/db/ yet). Adding one = a new `customers/<CLIENT>/` folder
+(profile + repos.json, optionally db/) — **check both the JIRA tag and any
+app-level short name before creating a new folder**, they can differ (EE).
 
 ## Tools (run in Claude Code / Cowork with the hub folder)
 
@@ -84,11 +87,14 @@ with `regen.sh`.
 | File | Use when |
 |---|---|
 | `knowledge/notes/SUP-*.md` | ALWAYS search first (grep symptom/component/table words). Lead with prior art |
+| `knowledge/notes/PROD-<CLIENT>-<YYYYMMDD>-*.md` | Same — prod batch/data incidents worked without a filed JIRA ticket (common: caught via log/monitoring before a ticket exists). If a ticket gets filed later, rename to `SUP-####.md` and update this row |
 
 Notable notes: SUP-4210 (viewdefn `_r`/`_u` formula typo + AEO subsidiary
 replication), SUP-4230 (Belk on-order id-mapping dedup), SUP-4254
 (carriage-return in upload → split export → products vanish), SUP-4311
-(text-column enhancement, ordinal-load gotcha), bd mfpapsync lock-race.
+(text-column enhancement, ordinal-load gotcha), bd mfpapsync lock-race,
+PROD-EE-20260809 (EE/Evereve new-store onboarding missing backtest backfill
+→ non-nullable NULL insert in `600_18_AllocAdjEve.sql`).
 
 ## Skills (`.claude/skills/`)
 
