@@ -128,13 +128,61 @@ BAND_ACTION = {
     "confirmed": "Confirmed by execution. Proceed.",
 }
 
+import datetime
+
+def _calib_log_path():
+    return Path(__file__).resolve().parent.parent / "learning" / "calibration_log.jsonl"
+
+def _band_of(sc):
+    return ("confirmed" if sc >= 90 else "evidence-backed" if sc >= 70 else
+            "plausible" if sc >= 40 else "insufficient")
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("state")
     ap.add_argument("--json", action="store_true")
+    # calibration / learning: predict before you reveal (keeps YOUR judgment sharp)
+    ap.add_argument("--predict", action="store_true",
+                    help="training mode: without --guess, print the elicitation prompt and DO NOT reveal")
+    ap.add_argument("--guess", type=int, default=None, help="your predicted score 0-100")
+    ap.add_argument("--guess-weak", default="", help="what you think the weakest/ missing evidence is")
+    ap.add_argument("--by", default="", help="who is predicting (for the calibration log)")
     a = ap.parse_args()
     state = json.loads(Path(a.state).read_text())
+
+    # --- calibration path -----------------------------------------------------
+    if a.predict and a.guess is None:
+        print("PREDICT FIRST (don't peek):")
+        print("  1) What score 0-100 do you expect, and which band?")
+        print("  2) What is the WEAKEST or MISSING piece of evidence here?")
+        print("  3) What single check would move this to 'confirmed' (90+)?")
+        print("\nThen re-run with:  --predict --guess <N> --guess-weak \"…\"")
+        return
+
     sc, band, breakdown, raw = score(state)
+
+    if a.predict and a.guess is not None:
+        gband = _band_of(a.guess)
+        delta = sc - a.guess
+        print(f"YOUR GUESS: {a.guess}/100 [{gband}]   ACTUAL: {sc}/100 [{band}]   delta {delta:+d}")
+        print(f"  band {'MATCH' if gband == band else 'MISS ('+gband+' vs '+band+')'}"
+              + ("  — good calibration" if gband == band else "  — study the breakdown below"))
+        if a.guess_weak:
+            print(f"  you flagged weakest: {a.guess_weak}")
+        print("\nactual breakdown:")
+        for line in breakdown:
+            print("  " + line)
+        rec = {"ts": datetime.datetime.now().isoformat(timespec="seconds"),
+               "ticket": state.get("ticket"), "by": a.by,
+               "guess": a.guess, "guess_band": gband, "actual": sc, "actual_band": band,
+               "delta": delta, "band_match": gband == band, "guess_weak": a.guess_weak}
+        p = _calib_log_path(); p.parent.mkdir(parents=True, exist_ok=True)
+        with p.open("a") as f:
+            f.write(json.dumps(rec) + "\n")
+        print(f"\nlogged -> {p.relative_to(p.parent.parent.parent)}  "
+              "(track your calibration over time; the goal is delta -> 0)")
+        return
+
     if a.json:
         print(json.dumps({"score": sc, "band": band, "raw": raw,
                           "action": BAND_ACTION[band], "breakdown": breakdown}, indent=1))

@@ -52,6 +52,43 @@ its rules are documented in `PivotScheduler.java:20-60` and computed from
 provided/modified/dependency tables per statement. We can port that logic
 to build pivot lineage statically (IDEAS.md, pivot-file lineage).
 
+### `aggregationSQLs` vs `reverseAggSQLs`
+
+Both are top-level `List<String>` fields on the pivotdefn (`PivotDefn.java:20,21,79-88`),
+not per-column config — each element is one raw SQL statement for one
+drill/aggregation level of the pivot (coarsest/root down to full grain).
+They are **not** a roll-up-vs-push-down-to-detail pair despite the naming —
+`PivotTemplatizerImpl.java:85-131` shows both do the same job, indexed from
+opposite ends of the drill hierarchy:
+
+- `aggregationSQLs`: index 0 = coarsest/root level; last index = finest
+  (reused for any deeper level not explicitly listed). Author top → bottom.
+- `reverseAggSQLs`: index 0 = most granular/leaf level; last index =
+  coarsest (reused for any shallower level not listed). Author bottom → top.
+- **Mutually exclusive at runtime**: `useReverse = !reverseAggSQLs.isEmpty()`
+  — if `reverseAggSQLs` is non-empty it wins outright and `aggregationSQLs`
+  is ignored. Across ~1,100 pivotdefns in trd/express/belk/evereve/aeo-configs,
+  zero files populate both — every author picks one and leaves the other `[]`.
+  If both are empty, `PivotTemplatizerImpl` throws
+  `ConfigException("pivot has neither aggSQLs nor reverseAggSQLs")` at
+  pivot-run time (not at config-load time).
+- The near-universal config comment (`// if more levels are specified than
+  aggSQLs, the last aggSQL will be used`) documents the clamping behavior
+  for both lists.
+- `ignoreAggByParams` (used for reports/exports) changes how many levels
+  render and from which param set: normally driven by the request's `aggBy`
+  groupings with per-level cumulative params; with this flag, driven by the
+  SQL list's own length with one flattened param set reused for every level.
+- The `TD_`-prefix ⇒ reverseAggSQLs theory (seen in some ticket notes) does
+  **not** hold — most `TD_*.pivotdefn` files actually use `aggregationSQLs`;
+  there's no naming-based branch in the Java code.
+- `bottomLevels` in a pivotdefn is dead as far as this mechanism (and all of
+  pivot execution) is concerned — see the note on that key above.
+
+Examples: `trd-configs/pivot/QuickRecon.pivotdefn:4734` (`aggregationSQLs`,
+root-first) and `express-configs/pivot/EXP01_POView.pivotdefn:182`
+(`reverseAggSQLs`, leaf-first).
+
 ## Filters (`com.darwin.service.filters.PivotFilterHandler`)
 
 Confirms (from source) how the filter panel gets its values:

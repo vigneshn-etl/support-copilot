@@ -9,11 +9,20 @@ file gets a row here.**
 
 | File | Use when |
 |---|---|
+| `AGENT.md` (repo root) | **First read for any agent** — the dual-mode operating manual (executor vs LLM-only), the loop, grounding rules, classification + confidence rubrics |
+| `jira-agent-system-prompt.md` (repo root) | Self-contained system prompt for an LLM+API JIRA agent (no shell) — paste into agent config |
 | `knowledge/workflow.md` | Always — the 8-stage ticket workflow + JIRA contract + the two gates |
 | `knowledge/system-map.md` | Routing a ticket to a layer (ETL/config/frontend/backend/db); repo contracts |
 | `knowledge/TEMPLATE.md` | Writing a solution note (retro) |
 | `knowledge/PLAN.md` | Big-picture roadmap / status of the whole initiative |
 | `knowledge/IDEAS.md` | Enhancement backlog (config-verify harness, pivot-file lineage, …) |
+
+## Domain knowledge — the FUNCTIONAL half (retail meaning)
+
+| File | Use when |
+|---|---|
+| `knowledge/domain/glossary.md` | Any term/metric (choice count, APS, OTB, flow status, sell-through, TY/LY/LLY…) — business meaning + the **↔ tech** anchor. Grep this to fill the "functional" half of `knowledge_gained` |
+| `knowledge/domain/assortment-planning-primer.md` | Need the retail mental model: the 6 products, the L3 process phases, pre/in-season, planning vs forecasting. Place a ticket on the process map |
 
 ## Platform knowledge — how the product works
 
@@ -25,7 +34,7 @@ file gets a row here.**
 | `knowledge/config-layer/components-catalog.md` | Per-component required/optional props + real examples (all 54) |
 | `knowledge/config-layer/how-filters-work.md` | Any filter ticket — the end-to-end filter mechanism + display-alias gap (confirmed in darwin source) |
 | `knowledge/config-layer/README.md` | Index to the config-layer training curriculum source |
-| `knowledge/backend/darwin-primer.md` | Backend (darwin) questions: pivot execution/ordering, filter option assembly, config caching, member resolution, the agents package |
+| `knowledge/backend/darwin-primer.md` | Backend (darwin) questions: pivot execution/ordering, `aggregationSQLs` vs `reverseAggSQLs` (drill-level SQL, root-first vs leaf-first, mutually exclusive), why `bottomLevels` is dead config, filter option assembly, config caching, member resolution, the agents package |
 
 ## Per-customer facts
 
@@ -65,6 +74,10 @@ app-level short name before creating a new folder**, they can differ (EE).
 | `tooling/triage/evidence-matrix.md` | `(type × component) → required evidence + exact commands` lookup |
 | `tooling/triage/trace.py` | State → reasoning/debug trace, or `--note` → solution-note draft |
 | `tooling/triage/learn.py` | Persist a user-given fact with provenance (`captured-knowledge.md`) |
+| `tooling/triage/MODES.md` | **Assistance modes** (tutor/pair/autopilot) — solve the ticket AND keep the human sharp; what changes per stage |
+| `tooling/triage/confidence.py --predict` | Calibration: predict the score before revealing; logs your delta over time |
+| `tooling/learning/flashcards.py` | Spaced-repetition recall built from every ticket's `knowledge_gained` (build/due/show/grade) |
+| `tooling/learning/skill_ledger.py` | Track authored-vs-accepted per skill; flags erosion (`log`, `report`, `streak`) |
 
 Lineage graphs live under `customers/<CID>/lineage/` (single source; see
 `tooling/lineage/README.md`). Generated JSON/DB are gitignored — rebuild
@@ -80,6 +93,7 @@ with `regen.sh`.
 | `knowledge/runbooks/local-ui-setup.md` | Reproduce a frontend bug locally (Vite proxy to a client env) |
 | `knowledge/runbooks/ui-repro.md` | Reproduce/verify a UI issue (Chrome interactive + Playwright regression) |
 | `knowledge/runbooks/capture-prompt.md` | Capture knowledge from another Claude chat into a solution note |
+| `knowledge/runbooks/exp-sftp-cyclic-recovery.md` | EXP cyclic `@here failed cyclic` — partner SFTP delivery failure (reset/timeout to sftp.inside-express.com) — hold cron, notify partner, re-push queued files |
 | `knowledge/runbooks/claude-project-setup.md` | Set up the copilot as a claude.ai Project (away-from-repo use) |
 
 ## Memory — past solutions
@@ -94,7 +108,9 @@ replication), SUP-4230 (Belk on-order id-mapping dedup), SUP-4254
 (carriage-return in upload → split export → products vanish), SUP-4311
 (text-column enhancement, ordinal-load gotcha), bd mfpapsync lock-race,
 PROD-EE-20260809 (EE/Evereve new-store onboarding missing backtest backfill
-→ non-nullable NULL insert in `600_18_AllocAdjEve.sql`).
+→ non-nullable NULL insert in `600_18_AllocAdjEve.sql`), PROD-TRD-20260813
+(Torrid duplicate MERGE key — new stylecolor sent without S5_ID, backfilled
+next day, raw-code identity collides with real UUID identity).
 
 ## Skills (`.claude/skills/`)
 

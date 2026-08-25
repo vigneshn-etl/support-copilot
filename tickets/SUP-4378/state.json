@@ -1,0 +1,102 @@
+{
+  "ticket": "SUP-4378",
+  "client": "BELK",
+  "mode": "pair",
+  "stage": "scope",
+  "updated_at": "2026-08-20",
+
+  "classification": {
+    "type": "enhancement",
+    "type_source": "jira-issuetype",
+    "component": ["config"],
+    "component_source": "reporter-confirmed",
+    "environment": "qa"
+  },
+
+  "requirement": {
+    "statement": "Belk wants 6 new KPIs (FP ST%, FP Wkly ST%, FP WOH, WOH, WOF, FP Weeks) added to the Wrench (metric picker) across ~24 Hindsighting and Assortment Build/Analysis view tabs, in a specified wrench order. Separately, the EXISTING ST% metric must be changed so its inventory denominator (Total Available Inv U) is price-status agnostic (currently believed to be filtered by whatever price-status/prodlife scope is applied) — same underlying defect already logged for AEO in SUP-4488.",
+    "confirmed": true,
+    "acceptance": "All 6 metrics calculate correctly, appear in the Wrench in the specified order across the listed views, save correctly to favorites, format consistently with existing metrics, apply LY logic per the reporter's LY/Var-LY rules, and handle divide-by-zero the same way as existing metrics."
+  },
+
+  "prior_art": [
+    {"ref": "SUP-4488", "why_relevant": "[AEO] Fix Sell-Through, Turns, or GMROI — open/Backlog, same root defect: FP Sell-Thru % denominator must be price-status-agnostic. Gives the exact target formula: FP Sell-Thru % = FP Sales U / (Total Sales U + Total EOP U). Not yet fixed anywhere in the platform — Belk's ask and AEO's bug are the same underlying config pattern."},
+    {"ref": "SUP-4478", "why_relevant": "[AEO] Done. TY vs LY view LY summary wrong when Price Status filter applied — root cause was 'only styles that are FP TY and LY are counting in top LY'. Related symptom family (price-status filter leaking into aggregates that should be status-agnostic) but a different specific bug; useful as a pattern reference, not a direct fix."}
+  ],
+
+  "evidence": [
+    {
+      "claim": "Current sell_thru_pct formula in BELK's HistoryFit pivot",
+      "kind": "file",
+      "locator": "belk-configs/pivot/HistoryFit.pivotdefn:174 — multiIf((last_value_eoh_u + (shp_u - ret_u)) > 0, round((shp_u - ret_u) / ((last_value_eoh_u + last_value_eoh_intransit_u) + (shp_u - ret_u)), 4), 0) AS sell_thru_pct",
+      "resolved": true,
+      "observed_or_inferred": "observed"
+    },
+    {
+      "claim": "last_value_eoh_u (the ST% denominator's inventory term) is summed from a base table that is already scoped by whatever prodlife filter (price status) the user applied — it is NOT total-inventory-agnostic at the point ST% is computed",
+      "kind": "file",
+      "locator": "belk-configs/pivot/include/history_metrics_ty.ftl:105 (sumIf(eoh_u, time=max week) as last_value_eoh_u_x) inside a query WHERE'd by `AND prodlife IN (${LEAF_PRODLIFE})` at line 129",
+      "resolved": true,
+      "observed_or_inferred": "observed"
+    },
+    {
+      "claim": "SUP-4488 confirms this same mechanism is a known, still-open defect for AEO with an agreed target formula",
+      "kind": "note",
+      "locator": "JIRA SUP-4488 description",
+      "resolved": true,
+      "observed_or_inferred": "observed"
+    },
+    {
+      "claim": "Belk view surface for 'History*' screens alone (Style Color Review, Cat Recap, Aggregate/Nested Attribute, History Grid) is 60+ viewdefn files before counting the Assortment Build/Analysis side",
+      "kind": "file",
+      "locator": "belk-configs/uidefn/view/ (grep by screen-name pattern, no TD_ prefix)",
+      "resolved": true,
+      "observed_or_inferred": "observed"
+    },
+    {
+      "claim": "No code changes have started yet on this ticket — the edit clone at /Users/vigneshn/Desktop/JIRAs/SUP-4378/belk-configs is clean on the assortment-planning branch, no SUP-4378 branch cut",
+      "kind": "file",
+      "locator": "git status/branch in JIRAs/SUP-4378/belk-configs",
+      "resolved": true,
+      "observed_or_inferred": "observed"
+    }
+  ],
+
+  "hypotheses": [
+    {
+      "cause": "Existing ST% is price-status-sensitive because its EOH/inventory inputs are computed after the base aggregation already filters by the user's prodlife/price-status scope, not because of an error in the sell_thru_pct formula itself",
+      "status": "confirmed",
+      "evidence_refs": [0, 1, 2],
+      "ruled_out_because": ""
+    }
+  ],
+
+  "root_cause": {
+    "statement": "sell_thru_pct's denominator terms (last_value_eoh_u, last_value_eoh_intransit_u) are sourced from _BASE_SUM_SALES_METRICS_/_BASE_SUM_RCPT_METRICS_ tables that already apply `WHERE prodlife IN (${LEAF_PRODLIFE})` (history_metrics_ty.ftl:129,251,371) — LEAF_PRODLIFE is driven by the user's price-status/merchcat filter selection. So when a planner filters to FP-only, last_value_eoh_u reflects FP-only EOH, not total EOH — making ST% price-status-sensitive contrary to the business intent stated in the ticket and matching SUP-4488's AEO bug exactly.",
+    "evidence_refs": [0, 1, 2],
+    "confirmed_by_execution": false
+  },
+
+  "fix": {
+    "changes": [],
+    "branch": "SUP-4378",
+    "pr": ""
+  },
+
+  "validation": {
+    "plan": [],
+    "pre_state_captured": false,
+    "results": []
+  },
+
+  "knowledge_gained": {
+    "technical": "Across S5 pivots, 'price-status agnostic' inventory metrics (Total Available Inv U) can silently inherit a price-status scope when they're computed downstream of a base aggregation table that already WHERE-filters by prodlife/merchcat (see history_metrics_ty.ftl BASE_SUM_* tables). Any metric meant to be status-agnostic needs its own unfiltered aggregation path, not just a formula tweak in COMPUTED_METRICS_PRUNED.",
+    "functional": "Retail planners expect Sell-Through % to measure demand against the FULL available inventory position (regardless of whether that stock is currently priced Full Price or Markdown) — filtering the view to 'FP only' should narrow which SALES count in the numerator, not shrink the inventory denominator. The current behavior conflates 'what I'm looking at' with 'what's actually on hand,' understating true sell-through whenever a price-status filter is applied."
+  },
+
+  "confidence": {
+    "score": null,
+    "band": null,
+    "breakdown": ["not yet scored via tooling/triage/confidence.py — this is a scope-stage enhancement ticket, not a bug diagnosis; confidence scoring applies once the fix/validation stages start"]
+  }
+}

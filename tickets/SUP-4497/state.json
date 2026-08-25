@@ -1,0 +1,167 @@
+{
+  "ticket": "SUP-4497",
+  "client": "BELK",
+  "mode": "pair",
+  "stage": "root_cause",
+  "classification": {
+    "type": "bug",
+    "type_source": "jira-issuetype",
+    "component": ["backend", "frontend", "config"],
+    "component_source": "reporter-confirmed",
+    "environment": "staging"
+  },
+  "requirement": {
+    "statement": "In Recon with Targets, mass-editing ranging fields (e.g. Store Grade / cluster) on the Total View tab does not queue the change or apply it to the plan, even though the identical mass edit works from the By-Cluster (Plan by Week) view and from Attributes & Params - Ranging Tab (Style Color Parameters screen). This blocks users from making cluster-level ranging updates through Total View.",
+    "confirmed": false,
+    "acceptance": "Mass edit changes in Recon with Targets queue and apply consistently in both Plan by Week and Total View; ranging fields update and trigger replanning without a workaround."
+  },
+  "prior_art": [
+    {
+      "ref": "SUP-4453",
+      "why_relevant": "[BLK] Additional fields in Recon Views (Story, same client, same day 2026-08-17). Config analyst Rithanya N was adding cc_merch_color_name to Total View's mass-edit dialog and independently hit the EXACT same darwin error signature ('Unable to find a property table to assign modification of attribute:cc_merch_color_name:name ... at levels {..., time=quarter}') that appears in our own captured log. She and Jatin Rana diagnosed and FIXED it in a Slack thread the same afternoon - see evidence below. This is a live, working fix precedent for the same underlying mechanism, not just a theory."
+    }
+  ],
+  "evidence": [
+    {
+      "claim": "LIVE REPRO (darwin assortment-api log, BELK QA): mass-editing str_grade=[01] in Total View submits ChangedRow{coordinates={product=6b0a2fb0-..., location=CP-1, time=FY27_Q1}}. ModificationGroupPartitioner resolves this at levels {product=stylecolor, location=channel, time=QUARTER} and finds candidate property tables 'storeattributes' and 'assortment' but NEITHER is an exact match at quarter grain -> ERROR 'Unable to find a property table to assign modification of str_grade' -> update silently dropped, never queued.",
+      "kind": "log",
+      "locator": "/Users/vigneshn/Desktop/JIRAs/SUP-4497/Total_view_mass_edit.txt:14216-14268 (class c.d.s.m.ModificationGroupPartitioner)",
+      "resolved": true,
+      "observed_or_inferred": "observed"
+    },
+    {
+      "claim": "LIVE REPRO (darwin assortment-api log, BELK QA, working screen): the identical mass edit of str_grade from Attributes & Params - Style Color Parameters submits the row at time=FY27_02_Mar (a FLOORSET id), ModificationGroupPartitioner finds 'assortment is an exact match for input levels={..., time=floorset}', assigns the modification, and executes 'UPDATE blk_a_assortment SET str_grade = ...' successfully.",
+      "kind": "log",
+      "locator": "/Users/vigneshn/Desktop/JIRAs/SUP-4497/Style_color_params_mass_edit.txt:8606-8617 (class c.d.s.m.ModificationGroupPartitioner, c.d.d.JdbcPropertyRepo)",
+      "resolved": true,
+      "observed_or_inferred": "observed"
+    },
+    {
+      "claim": "The grain mismatch is systemic, not a one-off: every mass-edit ChangedRow submitted from Total View in the captured session (both str_grade and attribute:cc_merch_color_name:name) carries time=FY27_Q1 (quarter grain); 15/15 resulting resolutions fail with 'Unable to find a property table'; 0 succeed. In the working log, 100% of resolutions carry a floorset-grain time id and succeed (1/1 'exact match', 1/1 'Assigning modification').",
+      "kind": "log",
+      "locator": "grep -c 'Unable to find a property table' / 'exact match' / 'Assigning modification' over both log files",
+      "resolved": true,
+      "observed_or_inferred": "observed"
+    },
+    {
+      "claim": "Total View's str_grade ('[AND] Clusters') grid column additionally carries editableByCalc: edit_flag_for_viewdefn==1, gated on floorset_seq_num>1 in the pivot - a client-side editability restriction absent from the working By-Cluster/Style-Params views. The live log shows this does NOT block the mass-edit request from reaching darwin (it is processed and only then fails on grain), so this gate is a secondary/compounding issue at most, not the proximate cause of the reported symptom.",
+      "kind": "file",
+      "locator": "tickets/SUP-4497/repos/belk-configs/uidefn/view/AssortmentLinePlanByFloorset_RecOverride_Cluster_Grouped_TotalView.viewdefn (str_grade column) + pivot/LinePlanFloorset_RecOverride_Cluster_Targets_TotalView.pivotdefn:3512-3533",
+      "resolved": true,
+      "observed_or_inferred": "observed"
+    },
+    {
+      "claim": "str_grade IS present in Total View's massEditConfig.modificationOptions.modifierTypes (the Apply Mass Edit dialog) - ruling out 'field simply missing from dialog'",
+      "kind": "file",
+      "locator": "tickets/SUP-4497/repos/belk-configs/uidefn/view/AssortmentLinePlanByFloorset_RecOverride_Cluster_Grouped_TotalView.viewdefn:664-673",
+      "resolved": true,
+      "observed_or_inferred": "observed"
+    },
+    {
+      "claim": "massEditConfig.coordinateMap is declared IDENTICAL between the working Targets view and the broken TotalView ({product:stylecolor, location:channel, time:floorset}) in both viewdefn files - so the static config is not where the quarter-vs-floorset divergence comes from; it must come from the actual row/time member Total View's grid holds at runtime (Total View has no floorset selector, only 'Select Quarter')",
+      "kind": "file",
+      "locator": "diff of massEditConfig blocks in AssortmentLinePlanByFloorset_RecOverride_Cluster_Grouped_{Targets,TotalView}.viewdefn; parent viewdefn subheaderDropdowns 'Select Quarter'",
+      "resolved": true,
+      "observed_or_inferred": "observed"
+    },
+    {
+      "claim": "LIVE REPRO, 3rd screen (user-supplied): 'With Dept' tab (same Recon with Targets nav) ALSO submits mass edit at time=FY27_Q1 (quarter grain) - but for cc_rcptint, and it SUCCEEDS: ModificationGroupPartitioner finds property table 'stylecolorchannelattributes' as an exact match at quarter grain and updates blk_ma_stylecolorchannelattributes. This does not contradict the root cause - it isolates it: the grain problem is per-field, not per-screen.",
+      "kind": "log",
+      "locator": "/Users/vigneshn/Desktop/JIRAs/SUP-4497/with_dept_mass_edit.txt:29147-29159",
+      "resolved": true,
+      "observed_or_inferred": "observed"
+    },
+    {
+      "claim": "M_Meta.conf explains WHY: 'stylecolorchannelattributes' (backs cc_rcptint, cc_presmin, cc_ordpolicy, cc_service_level, dbt_wk, erlstmkdnwk, exitdate - i.e. every field 'With Dept' offers for mass edit) is declared with levels:[\"stylecolor\",\"channel\"] - NO time dimension at all, so it matches any time grain. The AssortmentDefn 'assortment' (backs the plan-level str_grade ranging field) hardcodes its time dimension to level:\"floorset\" - there is no quarter-grain plan record anywhere in the schema. 'storeattributes' (the OTHER str_grade candidate, store-master reference data) requires location level='store', which also doesn't match Total View's channel-grain location. So str_grade has no candidate that can ever match a quarter-grain row, on any screen.",
+      "kind": "file",
+      "locator": "tickets/SUP-4497/repos/belk-configs/conf/M_Meta.conf:688-691 (stylecolorchannelattributes, no time level), :693 (storeattributes, levels:[\"store\"]), :1746-1753 (AssortmentDefn assortment, time level:\"floorset\"), :934 and :1765 (the two competing str_grade defns)",
+      "resolved": true,
+      "observed_or_inferred": "observed"
+    },
+    {
+      "claim": "'With Dept's own massEditConfig.modificationOptions.modifierTypes (checked earlier) does NOT include str_grade/Store Grade at all - only dbt_wk, erlstmkdnwk, exitdate, planned_sell_down_week, cc_presmin, cc_rcptint, cc_ordpolicy, cc_service_level, all stylecolorchannelattributes/dptflrsetattributes-backed. So 'With Dept' never exercises the broken str_grade path regardless of its own quarter grain - Total View is simply the only screen whose mass-edit dialog surfaces str_grade while scoped at quarter grain.",
+      "kind": "file",
+      "locator": "tickets/SUP-4497/repos/belk-configs/uidefn/view/AssortmentLinePlanByFloorset_RecOverride_Cluster_Grouped_Targets.viewdefn:123-206 (massEditConfig.modifierTypes)",
+      "resolved": true,
+      "observed_or_inferred": "observed"
+    },
+    {
+      "claim": "SLACK (SUP-4453 thread, 2026-08-17): Rithanya N independently added cc_merch_color_name to Total View's massEditConfig.modifierTypes (dataIndex attribute:cc_merch_color_name:name, editor textInput, dataApi api/v2/ssg?appName=assortment) and hit, verbatim, the same error our log shows: 'Unable to find a property table to assign modification of attribute:cc_merch_color_name:name for input row {..., time=FY27_Q1} at levels {..., time=quarter}'. Jatin Rana confirmed the field exists in ma_stylecolorattributes keyed at product=stylecolor and pointed at the 'time=quarter' levels as the actual issue - independently arriving at the same grain diagnosis from a different field.",
+      "kind": "note",
+      "locator": "Slack thread https://s5stratos.slack.com/archives/C0397HDN4Q6/p1786964412245029, replies 1-4 (Rithanya N, Jatin Rana, 2026-08-17 16:38-17:13 IST)",
+      "resolved": true,
+      "observed_or_inferred": "observed"
+    },
+    {
+      "claim": "SLACK FIX (same thread, reply 5): Rithanya set an explicit coordinateMap of {\"product\": \"stylecolor\", \"location\": \"channel\", \"time\": \"floorset\"} and changed the field's dataApi to /api/assortment/rangeList?appName=Assortment&dimension=time&past=false&extendedRange=false (the same dataApi already used by the working time-editable fields dbt_wk/erlstmkdnwk/exitdate) - reported 'Now it is working fine.' This is a QA-side change only; belk-configs has no commits since 2026-08-15, so the exact diff isn't in git yet - description is from her Slack account, not independently verified against a config diff.",
+      "kind": "note",
+      "locator": "Slack thread https://s5stratos.slack.com/archives/C0397HDN4Q6/p1786964412245029, reply 5 (Rithanya N, 2026-08-17 18:01 IST)",
+      "resolved": true,
+      "observed_or_inferred": "observed"
+    }
+  ],
+  "requested_evidence": [
+    {
+      "item": "Confirm the actual backend failure mode for a live Total View mass edit (vs code-path inference alone)",
+      "command": "user supplied darwin assortment-api log tails for both screens: Total_view_mass_edit.txt (failing) and Style_color_params_mass_edit.txt (working)",
+      "status": "received"
+    }
+  ],
+  "hypotheses": [
+    {
+      "cause": "str_grade is a plan-level field of AssortmentDefn 'assortment', which M_Meta.conf hardcodes to time grain=floorset (no quarter-grain plan record exists in the schema by design). Any screen submitting a str_grade edit from a quarter-grain row will fail identically in darwin's ModificationGroupPartitioner ('Unable to find a property table'). Total View is quarter-scoped and DOES offer str_grade for mass edit, so it fails. 'With Dept' is also quarter-scoped but its mass-edit dialog only offers stylecolorchannelattributes-backed fields (no time-grain constraint at all), so it never triggers the fault - which is why it succeeded for cc_rcptint without contradicting this root cause.",
+      "status": "confirmed",
+      "evidence_refs": [0, 1, 2, 6, 7, 8]
+    },
+    {
+      "cause": "Total View itself is structurally broken for mass edit (any field, any screen quirk specific to the Total View component/tab)",
+      "status": "ruled_out",
+      "evidence_refs": [6],
+      "ruled_out_because": "With Dept - a different tab under the same Recon with Targets nav, also quarter-scoped - succeeds for cc_rcptint. The fault is specific to fields backed by the floorset-locked AssortmentDefn 'assortment' (str_grade), not to the Total View component generally."
+    },
+    {
+      "cause": "cc_merch_color_name's failure in the same TotalView log is unrelated noise / a malformed manual test, not evidence about the mass-edit mechanism",
+      "status": "ruled_out",
+      "evidence_refs": [9, 10],
+      "ruled_out_because": "SELF-CORRECTION: this was our own earlier (wrong) call. SUP-4453/Slack (2026-08-17) shows Rithanya N was actively building cc_merch_color_name into Total View's real massEditConfig for a client requirement, hit this exact error organically, and fixed it - it is a second, independent, live confirmation of the same quarter-vs-floorset mechanism, not noise. The 'editable:false, not in modifierTypes' state we found is simply the pre-fix snapshot in our clone; her fix was applied QA-side and is not yet committed to the belk-configs repo (checked: no commits since 2026-08-15)."
+    },
+    {
+      "cause": "Total View's editableByCalc/floorset_seq_num gate silently blocks the cell from being edited client-side",
+      "status": "ruled_out",
+      "evidence_refs": [3],
+      "ruled_out_because": "the live log shows the mass-edit request for str_grade IS submitted and reaches darwin's ModificationGroupPartitioner regardless - it fails there on a property-table grain mismatch, not client-side. This gate may still be worth cleaning up as a compounding UX issue but is not the reported symptom's cause."
+    },
+    {
+      "cause": "Store Grade field is simply missing from the Total View mass-edit dialog config",
+      "status": "ruled_out",
+      "evidence_refs": [4],
+      "ruled_out_because": "str_grade is present in massEditConfig.modificationOptions.modifierTypes for Total View"
+    },
+    {
+      "cause": "massEditConfig.coordinateMap mismatch (static config) prevents the queue engine from mapping edited rows to plan rows",
+      "status": "ruled_out",
+      "evidence_refs": [5],
+      "ruled_out_because": "coordinateMap is byte-identical between the working and broken views; the divergence is in the runtime row data (quarter vs floorset), not the static map"
+    }
+  ],
+  "root_cause": {
+    "statement": "The fault is per-FIELD, not per-screen. str_grade (the 'Clusters'/Store Grade ranging field) is a plan-level attribute of the AssortmentDefn 'assortment' in M_Meta.conf, which hardcodes its time dimension to level:\"floorset\" (M_Meta.conf:1752) - there is no quarter-grain plan record anywhere in the schema, by design (plans are made per floorset, not per quarter). The only other candidate table for str_grade, 'storeattributes', requires a store-grain location, which also never matches a channel-grain row. So ANY screen that tries to mass-edit str_grade from a row whose time coordinate is quarter-grain will fail identically with darwin's ModificationGroupPartitioner logging 'Unable to find a property table to assign modification of str_grade' - confirmed for Total View (15/15 fail). 'With Dept' is ALSO quarter-scoped (time=FY27_Q1) and its mass edit of cc_rcptint succeeds, but that is because cc_rcptint (and every other field 'With Dept' exposes for mass edit - dbt_wk, erlstmkdnwk, exitdate, planned_sell_down_week, cc_presmin, cc_ordpolicy, cc_service_level) is backed by 'stylecolorchannelattributes', which M_Meta.conf declares with NO time dimension at all (levels:[\"stylecolor\",\"channel\"]) - so it matches any time grain trivially. 'With Dept's own massEditConfig doesn't even offer str_grade for mass edit. Total View is simply the only screen whose mass-edit dialog surfaces str_grade while scoped at quarter grain - so it's the only place the underlying floorset-only constraint on 'assortment' actually gets triggered. Style Color Parameters (Ranging tab) and any floorset-scoped screen succeed because their rows are already floorset-grain, matching 'assortment' exactly.",
+    "evidence_refs": [0, 1, 2, 6, 7, 8],
+    "confirmed_by_execution": true
+  },
+  "fix": {
+    "changes": [
+      "LEADING CANDIDATE (has a working precedent from today, SUP-4453): add an explicit per-field coordinateMap {\"product\":\"stylecolor\",\"location\":\"channel\",\"time\":\"floorset\"} to str_grade's (and str_grade_or's) modifierType entry in Total View's massEditConfig.modifierTypes, in belk-configs/uidefn/view/AssortmentLinePlanByFloorset_RecOverride_Cluster_Grouped_TotalView.viewdefn - same pattern Rithanya used to fix cc_merch_color_name. NEEDS VERIFICATION: pull her actual QA-side config change (not yet committed) via the OCI live-config runbook and diff, to confirm the exact field/schema before replicating - her description also mentions a dataApi URL swap, which for merch_color_name may have been specific to fixing an unrelated broken textInput dataApi, not necessarily required for str_grade's validValuesMulti editor.",
+      "Fallback config-only stopgap: remove str_grade from Total View's massEditConfig.modifierTypes entirely if the coordinateMap override doesn't work for a validValuesMulti/cluster field the way it did for a plain text field",
+      "Not needed if the coordinateMap fix works: a darwin-side fan-out/plugin change - was our best guess before the SUP-4453 precedent surfaced a simpler config-level fix",
+      "Not a fix: adding a quarter-grain entry to AssortmentDefn 'assortment' in M_Meta.conf - there is no such thing as a quarter-grain plan record, so this would break plan semantics rather than fix the bug"
+    ],
+    "branch": "SUP-4497"
+  },
+  "validation": {},
+  "knowledge_gained": {
+    "technical": "darwin's ModificationGroupPartitioner resolves an edit's target property table by exact-matching {product, location, time} grain (per field) against every AttributeDefn/AssortmentDefn candidate registered for that field id in M_Meta.conf, logging every candidate considered ('Property table=X is a candidate') before either an 'exact match'+'Assigning modification' or an 'Unable to find a property table' ERROR. A field can have MULTIPLE competing defns sharing the same id (e.g. str_grade exists both as a store-master AttributeDefn on 'storeattributes' [levels:[\"store\"]] AND as a plan attribute of AssortmentDefn 'assortment' [time level:\"floorset\"]) - resolution picks whichever's declared levels exactly match the incoming row's levels, with NO fallback/translation between grains. A table declared without a 'time' entry in its levels (e.g. stylecolorchannelattributes: levels:[\"stylecolor\",\"channel\"]) is effectively grain-agnostic for time and will match any time value. Failure here is silent to the UI (server-side ERROR log only) - mass edit looks like it accepted the input but nothing is ever written or queued. Diagnosing this required live assortment-api log comparison across THREE screens (c.d.s.m.ModificationGroupPartitioner), not just config-file reading - config alone (str_grade present in the mass-edit dialog, an editableByCalc gate) pointed to plausible but ultimately secondary causes, and even the first log-based theory ('Total View is quarter-grain, working screens are floorset-grain') was per-screen and turned out to be imprecise until a same-grain, different-field comparison (With Dept) isolated it to being per-field.",
+    "functional": "Total View in Recon with Targets is meant to let planners make cluster/ranging decisions (e.g. Store Grade) across a stylecolor's full life at a quarter-level rollup, not per floorset. But the underlying planning data (assortment/storeattributes) is only ever written at floorset grain - there's no such thing as a 'quarter-grain' plan record; plans are made per floorset by design. So a Total View edit to a plan-level ranging field needs to be translated down to the floorset(s) within that quarter before it can be written; today it isn't, so the edit has nowhere to land. Fields that aren't 'plan' data proper (receipt interval, order min, service level, presentation minimums - all stored per stylecolor/channel with no time grain) don't have this problem and mass-edit fine from any quarter-scoped screen, which is why 'With Dept' looked fine to the reporter for those fields."
+  },
+  "confidence": {}
+}

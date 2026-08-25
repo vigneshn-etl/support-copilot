@@ -1,12 +1,12 @@
 {
   "_readme": "Per-client repos ONLY (ETL + config). Shared frontend/backend are in knowledge/platform-repos.json.",
   "etl": {
-    "repo": "https://github.com/s5-stratos/etl-belk-batch/tree/etl_assortment_planning",
+    "repo": "https://github.com/s5-stratos/etl-belk-batch",
     "branch": "etl_assortment_planning",
     "local": ""
   },
   "config": {
-    "repo": "https://github.com/s5-stratos/belk-configs/tree/assortment-planning",
+    "repo": "https://github.com/s5-stratos/belk-configs",
     "branch": "assortment-planning",
     "local": "",
     "note": "lower envs: OCI bucket is source of truth \u2014 runbook fetch-live-config.md"

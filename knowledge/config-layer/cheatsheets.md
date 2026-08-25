@@ -177,9 +177,15 @@ files — trust filenames.
 ## Module 5 — Pivotdefn (FreeMarker + ClickHouse)
 
 **Top-level statements:** `id="..."` (matches model.pivotDefn),
-`bottomLevels=[...]` (hierarchy bottoms per dimension — SETS THE GRAIN),
+`bottomLevels=[...]` (hierarchy bottoms per dimension — documentation only,
+**not read by darwin**: `PivotDefn.from()` never parses this key, so it has
+zero runtime effect; actual grain comes from the request-time `aggBy` param
+via `PivotParamGenerator.computeGroupings()` — see `knowledge/backend/darwin-primer.md`
+§ aggregationSQLs/reverseAggSQLs),
 `computed={}`, `params.NAME="""..."""`, `prologueSQL`, `prologueSQLs=[]`,
-`aggregationSQLs=[]`, `reverseAggSQLs=[]`, `epilogueSQL`.
+`aggregationSQLs=[]`, `reverseAggSQLs=[]` (one SQL per drill/aggregation
+level, root-first vs leaf-first authoring — mutually exclusive, see
+darwin-primer.md), `epilogueSQL`.
 
 **FreeMarker directives:** `<#include "x.ftl" />` (from `pivot/include/`),
 `<#if X??>...</#if>`, `<#else>`/`<#elseif>`, `<#list X as item>`,

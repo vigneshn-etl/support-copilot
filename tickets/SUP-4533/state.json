@@ -1,0 +1,113 @@
+{
+  "ticket": "SUP-4533",
+  "client": "TRD",
+  "mode": "pair",
+  "stage": "fix",
+  "classification": {
+    "type": "bug",
+    "type_source": "jira-issuetype",
+    "component": ["etl"],
+    "component_source": "router",
+    "environment": "prod"
+  },
+  "requirement": {
+    "statement": "TRD daily/weekly ETL builds TRD_REF_S5_CLIENT_ID_MAPPING fresh every run from TRD_IN_PRD_MASTER (today's file) plus a fallback from trd_d_product_existing (yesterday's persisted state). When a new stylecolor is first sent with a blank S5_ID, we key it by the raw client code; when Torrid backfills the real S5_ID (UUID) a day or more later, the old raw-code row and the new UUID row both end up in the mapping table for the same client_erp_id, because the existing-fallback insert only excludes by s5_id, not by client_erp_id. That duplicate mapping then fans out into trd_d_product / trd_h_prodstd (and ma_stylecolorattributes at the stylecolor level), and vertica_weekly_transform.sql's MERGE into the *_existing tables fails with ERROR 3147 Duplicate MERGE key. Need a permanent ETL fix (not manual cleanup) so this stops recurring.",
+    "confirmed": false,
+    "acceptance": "Daily/weekly batch no longer fails with ERROR 3147 when a stylecolor's S5_ID is backfilled a day after first being sent blank; no duplicate client_erp_id rows persist in TRD_REF_S5_CLIENT_ID_MAPPING or downstream _existing tables."
+  },
+  "prior_art": [
+    {
+      "ref": "knowledge/notes/PROD-TRD-20260813-duplicate-mergekey-new-stylecolor-s5id-backfill.md",
+      "why_relevant": "Same incident, same date (2026-08-13), same stylecolors (45264596_DEEPDEPTHS etc.) diagnosed at the time as an ad-hoc manual cleanup. SUP-4533 is the request to make that fix permanent."
+    }
+  ],
+  "evidence": [
+    {
+      "claim": "Ticket-provided prod grep shows the same stylecolor row present with blank S5_ID on day 1 (S5ProdMaster_20260812040217.dat) and populated S5_ID on day 2 (S5ProdMaster_20260813040226.dat).",
+      "kind": "reporter",
+      "locator": "SUP-4533 description, grep output for 45264596_DEEPDEPTHS / 43750388_BUSAIVYORY across two consecutive S5ProdMaster_*.dat files",
+      "resolved": true,
+      "observed_or_inferred": "observed"
+    },
+    {
+      "claim": "Ticket-provided query against TRD_REF_S5_CLIENT_ID_MAPPING shows 3 client_erp_id values with count(*) = 2 (43750388_BUSAIVYORY, 45264596_HYACINTH, 45264596_BEROINSESK).",
+      "kind": "reporter",
+      "locator": "SUP-4533 description, `select client_erp_id, count(*) from TRD_REF_S5_CLIENT_ID_MAPPING group by client_erp_id having count(*) > 1;`",
+      "resolved": true,
+      "observed_or_inferred": "observed"
+    },
+    {
+      "claim": "TRD_REF_S5_CLIENT_ID_MAPPING is built by two INSERTs: (1) from today's TRD_IN_PRD_MASTER using coalesce(S5_ID, MEMBER_ID); (2) a fallback from trd_d_product_existing (yesterday's persisted Postgres state) filtered only by `id not in (select distinct s5_id from TRD_REF_S5_CLIENT_ID_MAPPING)` — i.e. excludes by s5_id, not by client_erp_id, so a stale raw-code row and a fresh UUID row for the same client_erp_id both survive.",
+      "kind": "file",
+      "locator": "repos/etl-trd-batch/vsql/weekly/010_products.sql:46-61",
+      "resolved": true,
+      "observed_or_inferred": "observed"
+    },
+    {
+      "claim": "The duplicate mapping fans out downstream: trd_d_product's stylecolor insert joins IDMAP (unfiltered TRD_REF_S5_CLIENT_ID_MAPPING) on client_erp_id, producing one output row per matching IDMAP row (two ids for one logical product). trd_h_prodstd's child-level inserts join on ANCESTOR match to per-level mapping subsets (STY_MAP/STYCLR_MAP/SIZE_MAP) — if the PARENT level's mapping has 2 rows, the child row fans out to 2 rows sharing the same id but differing ancestor value, which is what trips the Vertica MERGE.",
+      "kind": "file",
+      "locator": "repos/etl-trd-batch/vsql/weekly/010_products.sql:275-297 (trd_d_product stylecolor insert), :381-404 (trd_h_prodstd stylecolor insert joining STY_MAP)",
+      "resolved": true,
+      "observed_or_inferred": "observed"
+    },
+    {
+      "claim": "MERGE into trd_h_prodstd_existing requires a unique key on the source side; a duplicate id in the trd_h_prodstd staging table throws Vertica ERROR 3147.",
+      "kind": "file",
+      "locator": "repos/etl-trd-batch/vsql/daily/vertica_weekly_transform.sql:30 (merge into trd_h_prodstd_existing dst using (select * from trd_h_prodstd) src)",
+      "resolved": true,
+      "observed_or_inferred": "observed"
+    },
+    {
+      "claim": "trd_d_product_existing / trd_h_prodstd_existing / trd_ma_stylecolorattributes_existing are dropped and reloaded into Vertica every run from a CSV exported out of Postgres — so the true persistent store of the stale raw-code identity is Postgres, not Vertica.",
+      "kind": "file",
+      "locator": "repos/etl-trd-batch/bash/weekly/07.1_export_existing_pgsql.sh, 07.2_load_exported_psql.sh, vsql/weekly/load_existing.sql:1-19",
+      "resolved": true,
+      "observed_or_inferred": "observed"
+    },
+    {
+      "claim": "TRD_IN_PRD_MASTER and TRD_IN_PRD_HIER are populated from two independently-arriving inbound files (S5ProdMaster_* and S5ProdHier_*), which is why they can be out of sync / carry inconsistent identity state across days.",
+      "kind": "file",
+      "locator": "repos/etl-trd-batch/table_mappings.json:2-9",
+      "resolved": true,
+      "observed_or_inferred": "observed"
+    },
+    {
+      "claim": "Prior 2026-08-13 incident diagnosed the identical mechanism and fixed it manually (delete stale raw-code rows from trd_d_product, trd_h_prodstd, trd_ma_stylecolorattributes in Postgres, then re-run) — flagged at the time as a candidate for a permanent fix if it recurred.",
+      "kind": "note",
+      "locator": "knowledge/notes/PROD-TRD-20260813-duplicate-mergekey-new-stylecolor-s5id-backfill.md",
+      "resolved": true,
+      "observed_or_inferred": "observed"
+    }
+  ],
+  "requested_evidence": [],
+  "hypotheses": [
+    {
+      "cause": "Existing-fallback INSERT into TRD_REF_S5_CLIENT_ID_MAPPING (010_products.sql:59-61) excludes candidates by s5_id, not client_erp_id, so it re-adds a stale raw-code identity for a client_erp_id that already got a fresh UUID mapping from today's file. The resulting duplicate mapping fans out into trd_d_product/trd_h_prodstd and trips the Vertica MERGE.",
+      "status": "confirmed",
+      "evidence_refs": [2, 3, 4, 6]
+    },
+    {
+      "cause": "Mapping-table self-referential fallback (coalesce producing a bad row from TRD_REF_S5_CLIENT_ID_MAPPING itself)",
+      "status": "ruled_out",
+      "evidence_refs": [7],
+      "ruled_out_because": "Already ruled out in the prior 2026-08-13 investigation — queried TRD_REF_S5_CLIENT_ID_MAPPING for a fallback entry and found none; the two competing rows come from two literal source rows (yesterday's Postgres existing table vs today's inbound file), not a join artifact."
+    }
+  ],
+  "root_cause": {
+    "statement": "TRD_REF_S5_CLIENT_ID_MAPPING's existing-fallback INSERT (010_products.sql:59-61) dedupes by s5_id only ('id not in (select distinct s5_id ...)'), not by client_erp_id. When a stylecolor is first sent with a blank S5_ID, its raw client code gets persisted as the working id (via coalesce(S5_ID, MEMBER_ID) upstream and merged into Postgres's *_existing tables). The next day, once Torrid backfills the real S5_ID, today's first INSERT adds a second, correct mapping row for the same client_erp_id — and because the fallback INSERT only checks s5_id (which differs), it also re-adds the old raw-code row from trd_d_product_existing. Both rows coexist in TRD_REF_S5_CLIENT_ID_MAPPING, fan out into trd_d_product/trd_h_prodstd, and the Vertica MERGE into the *_existing tables fails with ERROR 3147 the moment two rows race for the same key.",
+    "evidence_refs": [0, 1, 2, 3, 4, 5, 6, 7],
+    "confirmed_by_execution": false
+  },
+  "fix": {
+    "branch": "SUP-4533",
+    "changes": [
+      "vsql/weekly/010_products.sql:64-124 (edit clone: /Users/vigneshn/Desktop/JIRAs/SUP-4533/etl-trd-batch) — after the first TRD_REF_S5_CLIENT_ID_MAPPING build, detect client_erp_id dups (count>1), purge the stale raw-code row (id/product = client_erp_id) from trd_d_product_existing, trd_h_prodstd_existing, trd_ma_styleattributes_existing, trd_ma_stylecolorattributes_existing, trd_ma_sizeattributes_existing, then drop+rebuild TRD_REF_S5_CLIENT_ID_MAPPING so only the UUID-keyed row survives. Runs every batch (daily calls this same weekly script via bash/daily/06_master_load.sh), so it self-heals going forward instead of needing manual DBA cleanup."
+    ]
+  },
+  "validation": {},
+  "knowledge_gained": {
+    "technical": "TRD_REF_S5_CLIENT_ID_MAPPING is rebuilt every run from two sources: today's inbound TRD_IN_PRD_MASTER (authoritative, coalesce(S5_ID, MEMBER_ID)) and a fallback from trd_d_product_existing (yesterday's persisted Postgres state, meant to preserve ids for products not present in today's file). The fallback's exclusion filter checks s5_id, not client_erp_id, so it doesn't recognize 'this client_erp_id already has a mapping today' when the id value itself changed day over day (blank->UUID backfill). That's the structural gap: the filter should be keyed on the natural key (client_erp_id) the two sources share, not on the id column that's expected to change.",
+    "functional": "S5_ID is Torrid's own permanently-assigned product identifier; it can be missing for a few days after a stylecolor is first created in their system before their side finishes assignment. Our pipeline currently has no graceful handling of 'this product's real id just arrived' — it treats the pre-assignment and post-assignment states as two different products until they collide."
+  },
+  "confidence": {}
+}

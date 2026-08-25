@@ -22,3 +22,8 @@ customers/*/lineage/pivot_graph.json
 customers/*/lineage/*.html
 tooling/lineage-viz/workspaces/
 unified_load.py
+
+# Personal learning artifacts — your practice data, regenerable, keep out of git
+tooling/learning/deck.json
+tooling/learning/calibration_log.jsonl
+tooling/learning/skill_ledger.jsonl

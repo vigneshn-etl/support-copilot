@@ -7,6 +7,7 @@
   "properties": {
     "ticket": {"type": "string", "description": "SUP-####"},
     "client": {"type": "string", "description": "from the summary tag, e.g. TRD"},
+    "mode": {"enum": ["tutor","pair","autopilot"], "default": "pair", "description": "assistance level — see tooling/triage/MODES.md. tutor=human authors/AI reviews; pair=AI proposes/human approves; autopilot=AI runs it all"},
     "stage": {"enum": ["intake","classify","scope","investigate","root_cause","fix","validate","retro","blocked"]},
     "updated_at": {"type": "string"},
 

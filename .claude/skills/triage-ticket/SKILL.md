@@ -163,3 +163,16 @@ techno-functional consultants; capture both every time.
   "…" --source <SUP-ID>` → `captured-knowledge.md`. Next ticket inherits it.
 - Use `trace.py` (no `--note`) any time as the **debug view** — it shows the
   full reasoning map + the confidence breakdown that produced the band.
+
+## Assistance mode (keep yourself sharp — tooling/triage/MODES.md)
+
+Pick a mode at intake, record it in `state.mode` (default `pair`):
+- **tutor** — YOU author each decision + every SQL/config change; the agent
+  reviews/critiques and does NOT hand you a finished query unless you ask. It
+  runs predict-the-score before revealing confidence.
+- **pair** — agent proposes with reasoning; you approve/redirect.
+- **autopilot** — agent runs the whole loop (tickets you don't need to learn from).
+
+At close-out, regardless of mode: `tooling/learning/skill_ledger.py log` what
+you actually did (authored/reviewed/accepted/cold), and
+`tooling/learning/flashcards.py due` to drill what this ticket taught.
