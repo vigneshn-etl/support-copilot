@@ -9,7 +9,9 @@ file gets a row here.**
 
 | File | Use when |
 |---|---|
-| `AGENT.md` (repo root) | **First read for any agent** — the dual-mode operating manual (executor vs LLM-only), the loop, grounding rules, classification + confidence rubrics |
+| `WELCOME.md` (repo root) | The session-start menu — greet + capability options (persona-filtered) + routing into each workflow. Shown on the first turn. |
+| `AGENT.md` (repo root) | **First read for any agent** — persona resolution (admin/user) + the loop, grounding rules, classification + confidence rubrics |
+| `modes/roles.json` + `modes/{admin,user}.md` | **Persona modes** — admin (owner/architect: proactive, edits the brain, suggests what to build) vs user (ticket-solving guide). Resolved by email; `/mode` switches (admin owner-gated). Distinct from tutor/pair/autopilot |
 | `jira-agent-system-prompt.md` (repo root) | Self-contained system prompt for an LLM+API JIRA agent (no shell) — paste into agent config |
 | `knowledge/workflow.md` | Always — the 8-stage ticket workflow + JIRA contract + the two gates |
 | `knowledge/system-map.md` | Routing a ticket to a layer (ETL/config/frontend/backend/db); repo contracts |
@@ -71,6 +73,7 @@ app-level short name before creating a new folder**, they can differ (EE).
 | db read-only MCP (`.mcp.json` → `tooling/db/mcp_server.py`) | Run SELECT/SHOW against a customer's QA Vertica/PG/CH over SSH. PG via that endpoint is admin-proxied — prefer Vertica; CH pending infra |
 | clickhouse-docs MCP (`.mcp.json` → `https://clickhouse.com/docs/mcp`) | Look up ClickHouse SQL/functions/engines/settings from official docs when composing or debugging CH queries. Docs-only (no DB). **Caveat:** docs reflect current CH; for 21.4-specific truth, confirm with `tooling/validation/ch_validate.py` version+capability probe |
 | `tooling/lineage/diff.py` | PR data-impact report (edge diff between two graphs) |
+| `tooling/metrics/rollup.py` + `server.py` | **ADMIN** — copilot utilization/quality/knowledge dashboard from `state.json` + notes + learning logs. `./run.sh` → :8771 |
 | `tooling/triage/` | **Deterministic triage engine** — the backbone that shrinks the LLM's trust surface. See `tooling/triage/README.md`. |
 | `tooling/triage/route.py` | Classify a ticket from text → type/component/env (each with a source). Seeds `state.json`. |
 | `tooling/triage/newticket.sh` | Spin up `tickets/<ID>/`: clone right repo+branch, OCI sync, ticket branch, seed state.json |

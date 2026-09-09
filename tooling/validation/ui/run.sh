@@ -6,7 +6,7 @@ set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 : "${CONFIG_DIR:?set CONFIG_DIR to your trd-configs path (needed to read pivotdefns)}"
 export CONFIG_DIR
-export CATALOG_DB="${CATALOG_DB:-$HERE/../../../customers/TRD/lineage/catalog.db}"
+export CATALOG_DB="${CATALOG_DB:-$CONFIG_DIR/lineage/catalog.db}"   # matches build_catalog.py default
 export CLIENT="${CLIENT:-TRD}"
 cd "$HERE"
 echo "catalog : $CATALOG_DB"

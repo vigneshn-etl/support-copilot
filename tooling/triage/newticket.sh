@@ -85,6 +85,7 @@ if [ ! -f "$STATE" ]; then
 {
   "ticket": "$TID",
   "client": "$CID",
+  "owner": "$(git config user.email 2>/dev/null || echo "${USER:-unknown}")",
   "stage": "intake",
   "classification": {"type": null, "type_source": null,
     "component": ["${layers[0]}"], "component_source": "newticket-arg",

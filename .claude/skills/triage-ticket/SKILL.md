@@ -146,11 +146,22 @@ request ("expand" / "show evidence" / "why"). Auto-surface to summary ONLY:
 missing required evidence (gate blocker) or a large blast radius. Precise
 first; depth on demand.
 
-## Always end with (techno-functional)
+## Always end with (techno-functional) — and SHOW it
 
 Populate `state.knowledge_gained.technical` AND `.functional` (retail
-business meaning). The retro copies both into the solution note — we are
-techno-functional consultants; capture both every time.
+business meaning), and **display both in the chat at ticket close** (an
+explicit exception to summary-only), labelled:
+
+> **Learned**
+> · **Technical:** <mechanism>
+> · **Functional (retail):** <what it means to a planner>
+
+**Display is the user's choice** (`modes/settings.json` `learning_display`,
+overridable in chat): `coach` = one-line `📎 learned — technical: … ·
+functional: …` per notable step + full pair at close; `end` (default) = full
+pair at close only; `quiet` = don't show, still captured, offer at close.
+CAPTURE to `knowledge_gained` + the solution note happens every time regardless
+of display — we are techno-functional consultants.
 
 ## At retro (close the loop — code, not memory)
 
@@ -176,3 +187,12 @@ Pick a mode at intake, record it in `state.mode` (default `pair`):
 At close-out, regardless of mode: `tooling/learning/skill_ledger.py log` what
 you actually did (authored/reviewed/accepted/cold), and
 `tooling/learning/flashcards.py due` to drill what this ticket taught.
+
+## ClickHouse questions → clickhouse-docs MCP
+
+For any ClickHouse semantics/error question during triage (function behavior,
+engine/FINAL, aggregation combinators, DB::Exception, settings), consult the
+`clickhouse-docs` MCP instead of recalling — cite the doc as evidence, and
+confirm the behavior on the customer's version with
+`tooling/validation/ch_validate.py` (fleet is mostly 21.4). Docs inform
+reasoning only; never wire them into the deterministic query composer.

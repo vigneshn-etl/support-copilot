@@ -81,6 +81,18 @@ Required evidence:
 - **prod** → repo is more trustworthy; still confirm with a read-only query
   where possible; never run writes.
 
+## ClickHouse semantics (any CH query/error question)
+
+When a ticket turns on *how ClickHouse behaves* — a function's semantics, an
+engine/`FINAL` interaction, an aggregation combinator, a `DB::Exception`, a
+`SETTINGS` effect — consult the **clickhouse-docs MCP** (`.mcp.json`) instead of
+recalling from memory. It's docs-only (no DB). Then confirm the behavior exists
+on the customer's actual version with `tooling/validation/ch_validate.py`
+(most of the fleet is 21.4, which the current docs run ahead of). Record what
+you learned as evidence with the doc reference as the locator. Do NOT use it to
+*generate* SQL — the composer is deterministic; docs inform reasoning, not the
+compose path.
+
 ## The gate
 
 The root-cause gate passes only when every REQUIRED item for the cell is

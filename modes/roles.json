@@ -1,0 +1,11 @@
+{
+  "_readme": "Persona-mode config. This is a BEHAVIOR gate (how the copilot acts), NOT security — the repo is cloned, so anyone could edit this. For a hard boundary you'd need server-side enforcement. admin_emails auto-resolve to admin; everyone else defaults to user. An in-chat '/mode admin' is honored only for an email in admin_emails.",
+  "default_mode": "user",
+  "admin_emails": [
+    "vignesh.n@s5stratos.com"
+  ],
+  "modes": {
+    "admin": "modes/admin.md",
+    "user": "modes/user.md"
+  }
+}

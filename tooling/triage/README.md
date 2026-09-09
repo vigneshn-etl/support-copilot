@@ -57,8 +57,11 @@ and the top 2-3 cited evidence lines. Nothing else. Everything deeper
 (full evidence list, ruled-out hypotheses, the lineage walk, the exact
 queries) lives in the state and is shown ONLY when the user asks
 ("expand", "show evidence", "why"). Exception — auto-surface to the
-summary: anything that BLOCKS the gate (missing required evidence) or a
-HIGH-RISK change (blast radius large). Keep it precise; depth on demand.
+summary: anything that BLOCKS the gate (missing required evidence), a
+HIGH-RISK change (blast radius large), and the **techno-functional learnings
+at ticket close** (Technical + Functional — always shown, plus a one-line
+`📎 learned` inline when a step reveals something notable). Keep it precise;
+depth on demand.
 
 ## Debug / fine-tune loop
 

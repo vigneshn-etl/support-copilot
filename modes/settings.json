@@ -1,0 +1,11 @@
+{
+  "_readme": "User-selectable defaults for copilot behavior. The copilot reads these at session start and honors an in-chat override any time. These affect DISPLAY only — capture/storage of knowledge is always mandatory regardless.",
+  "defaults": {
+    "learning_display": "end"
+  },
+  "learning_display_options": {
+    "coach": "show a one-line 'learned' per notable step, plus the full Technical/Functional pair at ticket close",
+    "end": "show the full Technical/Functional pair only at ticket close (default)",
+    "quiet": "don't show learnings in chat; still capture them to the note — offer/show only when the user asks"
+  }
+}

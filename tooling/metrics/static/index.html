@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Copilot Metrics</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<style>
+  :root{--bg:#0f1420;--panel:#171e2e;--line:#2a3550;--txt:#dfe6f2;--muted:#8a96b0;--chip:#0d1322;
+        --accent:#3a63c0;--ok:#4fb477;--warn:#e0a13a;--bad:#e0673a;--b1:#3aa0e0;--b2:#8a7bd8;}
+  *{box-sizing:border-box}
+  body{margin:0;font:13px/1.45 system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--txt)}
+  header{padding:12px 16px;background:var(--panel);border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:center}
+  header b{font-size:15px}
+  header .sub{color:var(--muted);font-size:12px}
+  #who{margin-left:auto;font-size:12px}
+  .badge{padding:1px 8px;border-radius:10px;font-size:11px;font-weight:600;color:#0d1322}
+  .badge.admin{background:var(--ok)}.badge.user{background:var(--warn)}
+  main{padding:16px;max-width:1100px;margin:0 auto}
+  .cards{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 16px;min-width:150px}
+  .card .n{font-size:26px;font-weight:700}
+  .card .l{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 16px}
+  .panel h3{margin:0 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  .bar{display:flex;align-items:center;gap:8px;margin:5px 0}
+  .bar .k{width:120px;color:var(--txt);font-size:12px;text-align:right;flex:none}
+  .bar .t{flex:1;background:var(--chip);border-radius:5px;overflow:hidden;height:16px}
+  .bar .f{height:100%;background:var(--accent)}
+  .bar .v{width:34px;color:var(--muted);font-size:12px}
+  .gaps{background:#241a0e;border:1px solid #5a4212;color:#ffd98a;border-radius:10px;padding:10px 14px;margin-top:16px;font-size:12.5px}
+  .foot{color:var(--muted);font-size:11px;margin-top:14px}
+</style>
+</head>
+<body>
+<header>
+  <b>Copilot Metrics</b><span class="sub">utilization · quality · knowledge growth</span>
+  <span id="who"></span>
+</header>
+<main>
+  <div class="cards" id="cards"></div>
+  <div class="grid" id="grid"></div>
+  <div id="gaps"></div>
+  <div class="foot" id="foot"></div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const api=p=>fetch(p).then(r=>r.json());
+const COL={confirmed:'#4fb477','evidence-backed':'#3aa0e0',plausible:'#e0a13a',insufficient:'#e0673a'};
+function bars(obj,color){
+  const e=Object.entries(obj||{}); if(!e.length) return '<div class="foot">— none recorded —</div>';
+  const max=Math.max(...e.map(x=>x[1]),1);
+  return e.sort((a,b)=>b[1]-a[1]).map(([k,v])=>
+    `<div class="bar"><div class="k">${k}</div><div class="t"><div class="f" style="width:${Math.round(v/max*100)}%;background:${(color&&color[k])||'var(--accent)'}"></div></div><div class="v">${v}</div></div>`).join('');
+}
+function panel(title,html){return `<div class="panel"><h3>${title}</h3>${html}</div>`;}
+async function init(){
+  const cfg=await api('/api/config');
+  $('who').innerHTML = cfg.user
+    ? `${cfg.user} <span class="badge ${cfg.is_admin?'admin':'user'}">${cfg.is_admin?'admin':'user'}</span>`
+    : '<span class="badge user">set USER_EMAIL</span>';
+  const m=await api('/api/metrics');
+  const t=m.tickets,q=m.quality,k=m.knowledge,l=m.learning;
+  const pct=(a,b)=>b?Math.round(a/b*100):0;
+  $('cards').innerHTML=[
+    ['tickets worked',t.total],
+    ['avg confidence',q.avg_confidence??'—'],
+    ['requirement confirmed',pct(q.requirement_confirmed,t.total)+'%'],
+    ['prior-art reused',pct(q.prior_art_used,t.total)+'%'],
+    ['solution notes',k.solution_notes],
+    ['customers',k.customers],
+  ].map(([l2,n])=>`<div class="card"><div class="n">${n}</div><div class="l">${l2}</div></div>`).join('');
+  $('grid').innerHTML=
+    panel('By component',bars(t.by_component))+
+    panel('By type',bars(t.by_type))+
+    panel('By client',bars(t.by_client))+
+    panel('Confidence bands',bars(q.confidence_bands,COL))+
+    panel('By stage',bars(t.by_stage))+
+    panel('By assistance mode',bars(t.by_mode));
+  $('gaps').innerHTML = (m.gaps&&m.gaps.length)
+    ? '<div class="gaps"><b>To make these metrics richer:</b><ul style="margin:6px 0 0">'+m.gaps.map(g=>`<li>${g}</li>`).join('')+'</ul></div>' : '';
+  const led=Object.entries(l.ledger||{}).map(([a,n])=>`${a}:${n}`).join('  ')||'no entries';
+  $('foot').textContent=`knowledge: ${k.notes} notes · ${k.captured_knowledge_entries} captured facts | `
+    +`learning ledger: ${led} · calibration n=${l.calibration_n} avg|Δ|=${l.calibration_avg_delta??'—'} | generated ${m.generated}`;
+}
+init();
+</script>
+</body>
+</html>

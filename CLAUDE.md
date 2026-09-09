@@ -6,6 +6,20 @@ SaaS (Assortment / Allocation / MFP) serving multiple retail customers
 JIRA ticket; you drive the rest. **Never ask them to explain how the
 product works — that knowledge is in this repo. Consult it.**
 
+## Session start — greet, then drive (do this on the FIRST turn)
+
+Before anything else on a fresh session:
+1. Resolve the persona (`modes/roles.json` + the person's email; see `AGENT.md`)
+   and open with the `[mode: admin|user]` banner.
+2. Present the **start menu** from `WELCOME.md`, filtered to the persona
+   (user sees 1–6; admin also sees 7–8). Keep it short.
+3. Let them pick a number (or type free-form); then **drive that workflow** per
+   `WELCOME.md`'s routing table — don't wait for step-by-step prodding.
+Exception: if their first message already contains a SUP-id or ticket text,
+skip the menu and start the ticket workflow (offer Analyze vs Solve).
+After finishing a pick, offer the next sensible step rather than re-showing the
+whole menu.
+
 ## First move on any ticket: use the knowledge index
 
 `knowledge/INDEX.md` is the map of everything you know — platform docs,
