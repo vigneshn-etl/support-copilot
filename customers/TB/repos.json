@@ -3,12 +3,14 @@
   "etl": {
     "repo": "https://github.com/s5-stratos/etl-tb-batch",
     "branch": "etl_assortment_planning",
-    "local": ""
+    "branch_staging": "etl_assortment_planning_upgrade",
+    "local": "../etl-tb-batch",
+    "note": "PROD = etl_assortment_planning; Staging/Upgrade = etl_assortment_planning_upgrade"
   },
   "config": {
-    "repo": "<git-url-or-local-path>/tb-configs",
-    "branch": "<unconfirmed>",
-    "local": "",
-    "note": "config repo not yet confirmed — fill in when known"
+    "repo": "https://github.com/s5-stratos/tb-configs-v2",
+    "branch": "main",
+    "local": "../tb-configs-v2",
+    "note": "PROD branch = main (confirmed 2026-09-04, Vikram CM via SUP-3061)"
   }
 }

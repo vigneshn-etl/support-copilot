@@ -27,3 +27,4 @@ unified_load.py
 tooling/learning/deck.json
 tooling/learning/calibration_log.jsonl
 tooling/learning/skill_ledger.jsonl
+customers/*/lineage/catalog.db

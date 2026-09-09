@@ -1,0 +1,15 @@
+{
+  "_readme": "Per-client repos ONLY (ETL + config). Shared frontend/backend are in knowledge/platform-repos.json. LP = Lilly Pulitzer.",
+  "etl": {
+    "repo": "https://github.com/s5-stratos/etl-lp-batch",
+    "branch": "<unconfirmed — main is HEAD>",
+    "local": "../etl-lp-batch",
+    "note": "MFP-only in prod today (weekly.sh, CLIENT=lp). Hindsighting/AP build in progress 2026-09 — see customers/LP/hindsighting-build-log.md. GCS for file transfer, OCI for compute (restart_ch_oci)."
+  },
+  "config": {
+    "repo": "https://github.com/s5-stratos/lp-configs",
+    "branch": "main",
+    "local": "../lp-configs",
+    "note": "MFP-only today: conf/, mfp/, uidefn/{conf,view}, silos.json lists only 'mfp'. No pivot/ dir yet — Hindsighting config is Phase 8 of the build."
+  }
+}

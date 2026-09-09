@@ -11,6 +11,10 @@
       "args": [
         "tooling/db/mcp_server.py"
       ]
+    },
+    "clickhouse-docs": {
+      "type": "http",
+      "url": "https://clickhouse.com/docs/mcp"
     }
   }
 }

@@ -1,5 +1,43 @@
 {
-  "_readme": "Per-client repos ONLY (ETL + config). Shared frontend/backend are in knowledge/platform-repos.json. KW = KnitWell Group (brands: Loft, Ann Taylor / Ann). Config repo is per-brand; this entry covers Loft (loft-configs). Add sibling entries here if/when Ann-specific config repo details are confirmed.",
+  "_readme": "Per-client repos ONLY (ETL + config). Shared frontend/backend are in knowledge/platform-repos.json. KW = KnitWell Group (KWG), 4 brands: ann, atfs, los, loft (confirmed by user 2026-08-28). ETL and config repos are per-brand, PLUS a group-level combine repo (etl-knitwell-batch) that orchestrates all 4 brands into the KWG-combined outbounds. Add sibling entries here as each brand's repo details are confirmed.",
+  "etl": {
+    "combine": {
+      "repo": "https://github.com/s5-stratos/etl-knitwell-batch",
+      "branch": "etl-assortment-planning",
+      "branch_note": "HYPHENS here (etl-assortment-planning / -upgrade), unlike the per-brand ann repo which uses UNDERSCORES (etl_assortment_planning). Prod-deployed branch inferred as etl-assortment-planning (non-upgrade) — confirm. Repo default branch is etl-assortment-planning-upgrade.",
+      "local": "/Users/vigneshn/Desktop/AI World/Lineage works/etl-knitwell-batch",
+      "deploy_path": "/data/external/etl-knitwell-batch",
+      "note": "Group combine layer. knitwell-combine-outbounds.sh <current> <frequency> is the entrypoint for ALL KWG outbounds. Frequencies (from prod crontab, all CONFIG_DIR=/data/external/config/kw): cyclic (*/10 during business hrs), nightly (03:21 Tue-Sun), nightly-allocation (06:00 UTC daily = the Monitoring Report / SUP-4101), weekly (Sun 18:00 -> check_batch_status.sh gate). It fans out to each brand's /data/external/etl-<brand>-batch/outbounds.sh <freq> <workdir>/<brand>/ <NOW> (args: $1=frequency $2=WORKDIR $3=NOW), then concatenates per-brand .dat files with `awk FNR!=1` (header-strip) — NO dedup in the combine layer; all dedup logic lives in each brand's ch/nightly/generate_output_allocation.sql. Uploads via gsutil to gs://$SELF_TRANSFER_BUCKET/$SFTP_OUT_PATH/external_daily/. NOTE: on the etl-assortment-planning (prod) branch there is NO restart_ch_oci; that + `bash/func.sh` exist only on etl-assortment-planning-upgrade. The nightly-allocation elif is also duplicated (2nd copy is dead code)."
+    },
+    "ann": {
+      "repo": "https://github.com/s5-stratos/etl-ann-batch",
+      "branch": "etl_assortment_planning",
+      "local": "/Users/vigneshn/Desktop/AI World/Lineage works/etl-ann-batch",
+      "deploy_path": "/data/external/etl-ann-batch",
+      "note": "PROD branch confirmed by user 2026-08-28, during SUP-4625 triage. Allocation Monitoring Report built by ch/nightly/generate_output_allocation.sql -> sync_outbound_alloc_final -> export_scripts_allocation.sql -> A-S5OutboundMonitorReportingAllocation_<NOW>.dat. outbounds.sh 'nightly-allocation' is the per-brand step. stylecolorchannelattributes_sync.sh runs EVERY MINUTE (cron) — likely source of identical-updated_at rows (SUP-4101 dup mechanism 1)."
+    },
+    "atfs": {
+      "repo": "https://github.com/s5-stratos/etl-atfs-batch",
+      "branch": "<unconfirmed>",
+      "local": "",
+      "deploy_path": "/data/external/etl-atfs-batch",
+      "note": "Repo exists (confirmed 2026-09-01 via git ls-remote, ~145 branches). atfs_ table prefix (atfs_ma_stylecolorchannelattributes, atfs_d_product), seen in SUP-4625. Branch unconfirmed — likely etl_assortment_planning like ann."
+    },
+    "los": {
+      "repo": "https://github.com/s5-stratos/etl-los-batch",
+      "branch": "<unconfirmed>",
+      "local": "",
+      "deploy_path": "/data/external/etl-los-batch",
+      "note": "Repo exists (confirmed 2026-09-01 via git ls-remote, ~150 branches). Branch unconfirmed."
+    },
+    "loft": {
+      "repo": "https://github.com/s5-stratos/etl-loft-batch",
+      "branch": "<unconfirmed>",
+      "local": "",
+      "deploy_path": "/data/external/etl-loft-batch",
+      "note": "Repo exists (confirmed 2026-09-01 via git ls-remote, ~175 branches). Branch unconfirmed. Note run_target_sync.sh is invoked from the etl-loft-batch path for the whole group in the crontab."
+    }
+  },
   "config": {
     "loft": {
       "repo": "git@github.com:s5-stratos/loft-configs.git",

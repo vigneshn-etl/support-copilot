@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Data Validation Studio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  /* Shared design language with the ETL Lineage Explorer */
+  :root{--bg:#0f1420;--panel:#171e2e;--line:#2a3550;--txt:#dfe6f2;--muted:#8a96b0;
+        --chip:#0d1322;--accent:#3a63c0;
+        --ok:#4fb477;--warn:#e0a13a;--bad:#e0673a;
+        --additive:#3aa0e0;--snapshot:#8a7bd8;--first:#4fb477;}
+  *{box-sizing:border-box}
+  body{margin:0;font:13px/1.45 system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--txt);height:100vh;display:flex;flex-direction:column}
+  header{padding:10px 14px;background:var(--panel);border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  header b{font-size:14px;margin-right:6px}
+  header .sub{color:var(--muted);font-size:12px;margin-left:-4px}
+  select,input,button{background:var(--chip);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font:inherit}
+  select:focus,input:focus{outline:1px solid var(--accent)}
+  button{cursor:pointer}
+  button.primary{background:#274690;border-color:var(--accent)}
+  .seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+  .seg button{border:0;border-radius:0;padding:6px 10px}
+  .seg button.on{background:#274690;border-color:var(--accent)}
+  label.f{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--muted)}
+  #status{color:var(--muted);font-size:12px;margin-left:auto}
+  #main{flex:1;display:flex;min-height:0}
+  #left{flex:1;min-width:0;display:flex;flex-direction:column}
+  #verdict{padding:0 14px}
+  .vbar{margin:10px 0 0;padding:9px 12px;border-radius:8px;border:1px solid var(--line);font-size:12.5px;display:none}
+  .vbar.show{display:block}
+  .vbar.ok{background:#12301f;border-color:#245c3a;color:#a6e6c0}
+  .vbar.warn{background:#332611;border-color:#5a4212;color:#ffd98a}
+  .vbar.bad{background:#33150f;border-color:#5c2418;color:#ffb4a0}
+  #sqlwrap{flex:1;margin:10px 14px 14px;border:1px solid var(--line);border-radius:8px;background:#0b101c;overflow:auto;position:relative}
+  #sqltools{position:sticky;top:0;display:flex;gap:8px;justify-content:flex-end;padding:8px;background:linear-gradient(#0b101cdd,#0b101c00)}
+  #sql{margin:0;padding:6px 14px 16px;font:12.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;white-space:pre;color:#cdd8ef}
+  #sql .c{color:#5f6b86}          /* comment */
+  #sql .ok{color:#79d19b}         /* ✓ consistency */
+  #sql .warn{color:#e7b45a}       /* ⚠ consistency */
+  #sql .kw{color:#7fa6ff}         /* keyword */
+  #sql .todo{color:#e58f7a}       /* TODO/CONFIRM */
+  #side{width:340px;border-left:1px solid var(--line);background:var(--panel);padding:12px;overflow:auto}
+  #side h3{margin:14px 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  #side h3:first-child{margin-top:0}
+  .kv{margin:3px 0}
+  code{background:var(--chip);padding:1px 5px;border-radius:4px;color:#b9c6e6;font-size:12px}
+  .badge{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11px;font-weight:600;color:#0d1322}
+  .badge.majority{background:var(--ok)} .badge.outlier{background:var(--warn)} .badge.noop{background:var(--bad)}
+  .badge.additive{background:var(--additive)} .badge.snapshot{background:var(--snapshot)} .badge.first{background:var(--first)}
+  .mrow{display:flex;justify-content:space-between;gap:8px;margin:3px 0;align-items:center}
+  .mrow code{font-size:11.5px}
+  .hint{color:var(--muted);font-size:12px;margin-top:8px}
+  .crit{background:var(--chip);border:1px solid var(--line);border-radius:6px;padding:6px 8px;margin:4px 0;font:12px ui-monospace,monospace;color:#b9c6e6;word-break:break-all}
+  .pill{display:inline-block;padding:1px 7px;border-radius:6px;border:1px solid var(--line);color:var(--muted);font-size:11px;margin:2px 4px 2px 0}
+  #exec{border-top:1px solid var(--line);background:var(--panel);padding:10px 14px;max-height:40%;overflow:auto}
+  #exec .exhead{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  #exec b{font-size:12px}
+  #exec input{background:var(--chip)}
+  #exec button[disabled]{opacity:.5;cursor:not-allowed}
+  table.cmp{border-collapse:collapse;margin-top:8px;font-size:12.5px;min-width:60%}
+  table.cmp td,table.cmp th{border:1px solid var(--line);padding:4px 9px;text-align:left}
+  table.cmp th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+  .m-ok{color:var(--ok);font-weight:600}.m-bad{color:var(--bad);font-weight:600}
+  .resbar{margin:8px 0;font-weight:600}
+</style>
+</head>
+<body>
+<header>
+  <b>Data Validation Studio</b><span class="sub" id="clienttag"></span>
+  <label class="f">module<select id="module"></select></label>
+  <label class="f">screen<select id="screen"></select></label>
+  <label class="f">view<select id="view" style="min-width:220px"></select></label>
+  <label class="f">grain (aggBy)<select id="grain"></select></label>
+  <label class="f">criteria
+    <div class="seg" id="critseg"><button data-c="hist" class="on">HIST</button><button data-c="flow">FLOW</button></div>
+  </label>
+  <label class="f">flowStatus<input id="flow" placeholder="(all)" style="width:80px"/></label>
+  <label class="f">topMembers<input id="top" placeholder="e.g. DP-48" style="width:110px"/></label>
+  <button class="primary" id="go">Compose ▸</button>
+  <span id="status"></span>
+</header>
+<div id="main">
+  <div id="left">
+    <div id="verdict"><div class="vbar" id="vbar"></div></div>
+    <div id="sqlwrap">
+      <div id="sqltools"><button id="copy">Copy SQL</button></div>
+      <pre id="sql"><span class="c">-- Pick a screen → view, then Compose to generate a ClickHouse-correct,
+-- consistency-annotated validation query you can run and cross-check vs the UI.</span></pre>
+    </div>
+    <div id="exec">
+      <div class="exhead">
+        <b>Execute &amp; compare</b>
+        <span id="chstate" class="hint"></span>
+        <input id="weeks" placeholder="weeks e.g. 202540,202541,202542" style="width:230px"/>
+        <input id="expected" placeholder='expected UI JSON e.g. {&quot;choice_count&quot;:125}' style="flex:1;min-width:180px"/>
+        <button class="primary" id="run" disabled>Run &amp; compare ▸</button>
+      </div>
+      <div id="exresult"></div>
+    </div>
+  </div>
+  <div id="side">
+    <h3>Pivot contract</h3>
+    <div id="contract"><div class="hint">Select a view to see its pivot, base table, grain, per-metric aggregation, and consistency verdict.</div></div>
+  </div>
+</div>
+<script>
+const $=(id)=>document.getElementById(id);
+const api=(p)=>fetch(p).then(r=>{if(!r.ok)return r.json().then(e=>Promise.reject(e.detail||r.statusText));return r.json();});
+let S={module:null,screen:null,view:null,pivot:null,grain:'stylecolor',criteria:'hist'};
+
+async function init(){
+  let cfg;
+  try{ cfg=await api('/api/config'); }
+  catch(e){ $('status').textContent='⚠ '+e; return; }
+  $('clienttag').textContent=cfg.client;
+  $('grain').innerHTML=cfg.grains.map(g=>`<option ${g==='stylecolor'?'selected':''}>${g}</option>`).join('');
+  if(!cfg.catalog_present) $('status').innerHTML='⚠ catalog.db missing — run build_catalog.py locally';
+  // execute panel availability
+  if(cfg.ch_available){ $('run').disabled=false; $('chstate').textContent='ClickHouse connected'; }
+  else { $('chstate').textContent='set CH_DSN on the server to enable execution'; }
+  $('run').onclick=runExec;
+  const mods=await api('/api/modules');
+  $('module').innerHTML=mods.map(m=>`<option value="${m.module}">${m.module} (${m.views})</option>`).join('');
+  S.module=(mods.find(m=>m.module==='Hindsighting')||mods[0]).module;
+  $('module').value=S.module;
+  await loadScreens();
+  $('module').onchange=async e=>{S.module=e.target.value;await loadScreens();};
+  $('screen').onchange=async e=>{S.screen=e.target.value;await loadViews();};
+  $('view').onchange=e=>{pickView(e.target.value);};
+  $('grain').onchange=e=>{S.grain=e.target.value;if(S.pivot)doCompose();};
+  $('flow').oninput=()=>{};$('top').oninput=()=>{};
+  $('critseg').querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    S.criteria=b.dataset.c;$('critseg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+    if(S.pivot)doCompose();});
+  $('go').onclick=()=>{if(S.pivot)doCompose();};
+  $('copy').onclick=()=>{navigator.clipboard.writeText($('sql').textContent);
+    $('copy').textContent='Copied ✓';setTimeout(()=>$('copy').textContent='Copy SQL',1200);};
+}
+async function loadScreens(){
+  const s=await api(`/api/screens?module=${encodeURIComponent(S.module)}`);
+  $('screen').innerHTML=s.map(x=>`<option>${x}</option>`).join('');
+  S.screen=s[0];await loadViews();
+}
+let VIEWS=[];
+async function loadViews(){
+  VIEWS=await api(`/api/views?module=${encodeURIComponent(S.module)}&screen=${encodeURIComponent(S.screen)}`);
+  const vmark=(v)=>v.verdict==='noop'?' ⚠':v.verdict==='outlier'?' ⚠':'';
+  $('view').innerHTML=VIEWS.map((v,i)=>`<option value="${i}">${v.view}${vmark(v)}${v.pivot?'':'  (no pivot)'}</option>`).join('');
+  if(VIEWS.length) pickView('0');
+}
+function pickView(i){
+  const v=VIEWS[+i]; if(!v)return;
+  S.view=v.view; S.pivot=v.pivot;
+  if(!v.pivot){$('contract').innerHTML=`<div class="hint">This view has no bound pivot (presentation-only). Nothing to validate directly.</div>`;
+    $('sql').textContent='';return;}
+  loadContract(); doCompose();
+}
+async function loadContract(){
+  let p; try{ p=await api(`/api/pivot?pivot=${encodeURIComponent(S.pivot)}`);}catch(e){$('contract').innerHTML='⚠ '+e;return;}
+  const co=p.consistency||{};
+  const vclass=co.verdict||'';
+  const aggs=p.metric_aggs||{};
+  const mrows=Object.keys(aggs).sort().map(m=>`<div class="mrow"><code>${m}</code><span class="badge ${aggs[m].family}">${aggs[m].family}</span></div>`).join('')||'<div class="hint">—</div>';
+  const grain=(p.grain||[]).map(g=>`<span class="pill">${g}</span>`).join('')||'—';
+  $('contract').innerHTML=`
+    <div class="kv"><b>${p.pivot}</b> ${co.verdict?`<span class="badge ${vclass}">${co.verdict}</span>`:''}</div>
+    <div class="kv">base view: <code>${p.base||'(derived / nested)'}</code></div>
+    <h3>Grain (bottomLevels)</h3><div>${grain}</div>
+    <h3>Per-metric aggregation (CH)</h3>${mrows}
+    <h3>Selection criteria</h3>
+    <div class="crit">HIST: ${p.hist||'—'}${p.hist_noop?'  ⚠ NO-OP':''}</div>
+    <div class="crit">FLOW: ${p.flow||'—'}${p.flow_noop?'  ⚠ NO-OP':''}</div>
+    ${co.verdict==='outlier'?`<div class="hint">Majority on ${co.base}: <code>${co.majority_hist}</code></div>`:''}
+    ${p.siblings&&p.siblings.length?`<h3>Reconcile against (same base)</h3><div>${p.siblings.map(s=>`<span class="pill">${s}</span>`).join('')}</div>`:''}
+  `;
+  // verdict bar
+  const vb=$('vbar');
+  if(co.verdict==='majority'){vb.className='vbar show ok';vb.innerHTML=`✓ Consistent — criteria matches the majority (${co.n_siblings} pivots) on <code>${co.base}</code>.`;}
+  else if(co.verdict==='outlier'){vb.className='vbar show warn';vb.innerHTML=`⚠ Outlier — this pivot's criteria differs from its ${co.n_siblings} base-mates on <code>${co.base}</code>. Counts may not reconcile across views (SUP-4486 class).`;}
+  else if(co.verdict==='noop'){vb.className='vbar show bad';vb.innerHTML=`⚠ No-op criteria — filtering is effectively disabled for this view. Rows are unfiltered.`;}
+  else{vb.className='vbar';}
+}
+async function doCompose(){
+  $('status').textContent='composing…';
+  const fs=encodeURIComponent($('flow').value.trim());
+  const tm=encodeURIComponent($('top').value.trim());
+  let r; try{ r=await api(`/api/compose?pivot=${encodeURIComponent(S.pivot)}&grain=${S.grain}&criteria=${S.criteria}&flowStatus=${fs}&topMembers=${tm}`);}
+  catch(e){$('status').textContent='⚠ '+e;return;}
+  renderSQL(r.sql);
+  $('status').textContent=`composed · ${S.pivot} @ ${S.grain} · ${S.criteria}`;
+}
+async function runExec(){
+  if(!S.pivot){return;}
+  const weeks=$('weeks').value.trim(), expected=$('expected').value.trim()||'{}';
+  if(!weeks){$('exresult').innerHTML='<div class="hint" style="color:#e7b45a">Enter the history weeks (comma list) to run.</div>';return;}
+  $('run').disabled=true; $('exresult').innerHTML='<div class="hint">running on ClickHouse…</div>';
+  const fs=encodeURIComponent($('flow').value.trim()), tm=encodeURIComponent($('top').value.trim());
+  let r;
+  try{ r=await api(`/api/execute?pivot=${encodeURIComponent(S.pivot)}&grain=${S.grain}&criteria=${S.criteria}`
+      +`&weeks=${encodeURIComponent(weeks)}&expected=${encodeURIComponent(expected)}&flowStatus=${fs}&topMembers=${tm}`);}
+  catch(e){ $('exresult').innerHTML='<div class="hint" style="color:#ffb4a0">⚠ '+e+'</div>'; $('run').disabled=false; return; }
+  $('run').disabled=false;
+  const sumRows=Object.entries(r.summary).map(([k,v])=>`<tr><td>${k}</td><td>${v}</td></tr>`).join('');
+  let cmp='';
+  if(r.details&&r.details.length){
+    const rows=r.details.map(d=>{const ok=d.verdict==='MATCH';
+      return `<tr><td>${d.metric}</td><td>${d.ui}</td><td>${d.db}</td><td class="${ok?'m-ok':'m-bad'}">${d.verdict}</td></tr>`;}).join('');
+    cmp=`<table class="cmp"><tr><th>metric</th><th>UI</th><th>DB</th><th>verdict</th></tr>${rows}</table>`;
+  }
+  const bar = r.match===null ? '' :
+    `<div class="resbar ${r.match?'m-ok':'m-bad'}">${r.match?'✓ ALL MATCH — value confirmed':'✗ MISMATCH — investigate criteria / filter / aggregation'}</div>`;
+  $('exresult').innerHTML=
+    `<div class="hint">CH ${r.version} · ${r.weeks} weeks</div>`+bar+
+    `<table class="cmp"><tr><th>DB summary (independent)</th><th>value</th></tr>${sumRows}</table>`+cmp;
+}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+const KW=/\b(SELECT|FROM|WHERE|GROUP BY|HAVING|ORDER BY|AND|OR|AS|DISTINCT|LIMIT)\b/g;
+function renderSQL(sql){
+  const html=sql.split('\n').map(line=>{
+    const t=line.trim();
+    if(t.startsWith('-- ✓')) return `<span class="ok">${esc(line)}</span>`;
+    if(t.startsWith('-- ⚠')) return `<span class="warn">${esc(line)}</span>`;
+    if(t.includes('TODO')||t.includes('CONFIRM')) return `<span class="todo">${esc(line)}</span>`;
+    if(t.startsWith('--')) return `<span class="c">${esc(line)}</span>`;
+    return esc(line).replace(KW,'<span class="kw">$1</span>');
+  }).join('\n');
+  $('sql').innerHTML=html;
+}
+init();
+</script>
+</body>
+</html>

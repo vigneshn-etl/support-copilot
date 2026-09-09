@@ -35,6 +35,7 @@ file gets a row here.**
 | `knowledge/config-layer/how-filters-work.md` | Any filter ticket — the end-to-end filter mechanism + display-alias gap (confirmed in darwin source) |
 | `knowledge/config-layer/README.md` | Index to the config-layer training curriculum source |
 | `knowledge/backend/darwin-primer.md` | Backend (darwin) questions: pivot execution/ordering, `aggregationSQLs` vs `reverseAggSQLs` (drill-level SQL, root-first vs leaf-first, mutually exclusive), why `bottomLevels` is dead config, filter option assembly, config caching, member resolution, the agents package |
+| `knowledge/backend/ann-add-to-assortment.md` | Understanding the ann/KWG `add_to_assortment()` PG procedure — the "materialize a cart into the plan" pipeline: its goal, the A–J chunks, every step's why/output, the forward-feeding chain, where SUP-3879 sat, plus a reusable method for reading big dynamic-SQL procedures |
 
 ## Per-customer facts
 
@@ -47,12 +48,14 @@ file gets a row here.**
 | `customers/<CLIENT>/db/postgres_schema.sql` | Exact PG DDL/triggers/functions/views (grep it) |
 | `customers/<CLIENT>/db/connections.json` | (gitignored) live read-only DB access config for the db MCP |
 | `customers/TRD/weekly-product-master-lineage.md` | TRD product-master pipeline (worked example of ETL lineage) |
+| `customers/LP/hindsighting-build-log.md` | **Why each step** of the LP Hindsighting ETL+config build — learning-oriented, cross-client grounded, grows per session. Read when working any LP AP/hindsighting step or learning the inbound→landing→staging→model→PG/CH pipeline generally |
 | `customers/<CLIENT>/captured-knowledge.md` | Facts users dropped during tickets (newest first, provenance-stamped by `learn.py`) — check before asking; promote durable ones into profile.md |
 | `knowledge/captured-knowledge.md` | Same, but platform-wide (not client-specific) |
 
 Known customers: TRD (deepest), EE (Evereve — note: JIRA tag `EE`, but
 repos/app/table-prefix use `eve`/`evereve`, see customers/EE/profile.md
-naming note), BELK, AEO, BOD, KW, TB, EXP (repos.json only so far — no
+naming note), BELK, AEO, BOD, KW, TB, EXP, LP (Lilly Pulitzer — MFP in
+prod, Hindsighting/AP build in progress; repos.json + build log so far, no
 profile.md/db/ yet). Adding one = a new `customers/<CLIENT>/` folder
 (profile + repos.json, optionally db/) — **check both the JIRA tag and any
 app-level short name before creating a new folder**, they can differ (EE).
@@ -66,6 +69,7 @@ app-level short name before creating a new folder**, they can differ (EE).
 | `tooling/lineage/regen.sh <CID> <etl> <config>` | Rebuild ALL graphs for a customer end-to-end (extract→merge→pivot→unified→sqlite) |
 | `tooling/lineage-viz/` (web tool) | Human visual explorer — 3 scopes (ETL / Pivot / End-to-End), expand-pivot. `cd tooling/lineage-viz && python3 server.py`. NOT how the agent uses lineage (that's the MCP) |
 | db read-only MCP (`.mcp.json` → `tooling/db/mcp_server.py`) | Run SELECT/SHOW against a customer's QA Vertica/PG/CH over SSH. PG via that endpoint is admin-proxied — prefer Vertica; CH pending infra |
+| clickhouse-docs MCP (`.mcp.json` → `https://clickhouse.com/docs/mcp`) | Look up ClickHouse SQL/functions/engines/settings from official docs when composing or debugging CH queries. Docs-only (no DB). **Caveat:** docs reflect current CH; for 21.4-specific truth, confirm with `tooling/validation/ch_validate.py` version+capability probe |
 | `tooling/lineage/diff.py` | PR data-impact report (edge diff between two graphs) |
 | `tooling/triage/` | **Deterministic triage engine** — the backbone that shrinks the LLM's trust surface. See `tooling/triage/README.md`. |
 | `tooling/triage/route.py` | Classify a ticket from text → type/component/env (each with a source). Seeds `state.json`. |
@@ -106,7 +110,11 @@ with `regen.sh`.
 Notable notes: SUP-4210 (viewdefn `_r`/`_u` formula typo + AEO subsidiary
 replication), SUP-4230 (Belk on-order id-mapping dedup), SUP-4254
 (carriage-return in upload → split export → products vanish), SUP-4311
-(text-column enhancement, ordinal-load gotcha), bd mfpapsync lock-race,
+(text-column enhancement, ordinal-load gotcha), SUP-4378 (Belk ST%/FP
+ST%/WOH/FP WOH — confirmed formula set, agnostic `tot_avail_inv_u`,
+weekcount `countIf(...strcntwk>0)` + grouped-rollup `max` not `sum`,
+Life-To-Date style pane architecture, pivotdefn filename-vs-`id=` routing),
+bd mfpapsync lock-race,
 PROD-EE-20260809 (EE/Evereve new-store onboarding missing backtest backfill
 → non-nullable NULL insert in `600_18_AllocAdjEve.sql`), PROD-TRD-20260813
 (Torrid duplicate MERGE key — new stylecolor sent without S5_ID, backfilled

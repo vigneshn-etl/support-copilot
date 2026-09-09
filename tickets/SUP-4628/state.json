@@ -1,0 +1,109 @@
+{
+  "ticket": "SUP-4628",
+  "client": "BELK",
+  "mode": "pair",
+  "stage": "investigate",
+  "updated_at": "2026-09-02",
+
+  "classification": {
+    "type": "enhancement",
+    "type_source": "jira-issuetype",
+    "component": ["config"],
+    "component_source": "reporter-confirmed",
+    "environment": "qa"
+  },
+
+  "requirement": {
+    "statement": "Split from SUP-4378 (see knowledge/notes/SUP-4378.md for the Hindsighting-side work, already shipped/validated). This ticket covers the Assortment Build/Analysis side only: add FP ST%, FP WOH, WOH (ST metrics only in several items) to ~10 named view groups, per JIRA description.",
+    "confirmed": true,
+    "acceptance": "Metrics calculate correctly, appear in the Wrench in the specified order, save to favorites, format like existing metrics, handle divide-by-zero the same way as other metrics of that type."
+  },
+
+  "prior_art": [
+    {"ref": "SUP-4378", "why_relevant": "Same client, same 6-metric family, Hindsighting side already shipped and Nicole-approved. knowledge/notes/SUP-4378.md has the CONFIRMED formula set (tot_avail_inv_u, weekcount countIf+max rollup rule), the reference pivot implementation to copy (pivot/HistoryFit.pivotdefn:175-212, itself an Assortment Build pivot already fixed), the darwin pivotdefn-routing gotcha (filename authoritative, not internal id=), and several tangential bugs found along the way (StyleChannelReview.pivotdefn fp_sell_thru_pct, NestedOverTime.pivotdefn dataIndex mismatch, VPN attribute lineage) that are IN SCOPE here since they live in the Assortment pivots this ticket touches."}
+  ],
+
+  "evidence": [
+    {
+      "claim": "Requirement list (10 items, view name -> scope) from SUP-4628 JIRA description",
+      "kind": "note",
+      "locator": "JIRA SUP-4628 description",
+      "resolved": true,
+      "observed_or_inferred": "observed",
+      "detail": "1. Summary View Tabs (full set) 2. Grid View Tabs (full set) 3. Flow Type (full set) 4. Top TY vs LY (full set) 5. TY/LY Grid View Tabs (full set) 6. Cat Summary Tabs (ST only) 7. Nested Attr Tabs (ST only) 8. Nested View Tabs (ST only + FP ST% Rating, ensure ST% rating uses new logic) 9. Nested Over Time (ST only, already has an 'FP ST%' column — verify) 10. Style Color over Time (ST only, TD unwired — flag). Wrench order for THIS ticket: FP ST% after ST%; FP WOH BEFORE 'BOH U'; WOH AFTER FP WOH — NOT the consecutive ST%/FPST%/FPWOH/WOH block used for SUP-4378's Hindsighting views. Do not reuse that pattern by habit."
+    },
+    {
+      "claim": "Confirmed live: only StyleColorReview is reachable in the Assortment Build module — the plain 'Style' (non-color) Review nav section is dead",
+      "kind": "file",
+      "locator": "belk-configs/uidefn/conf/AssortmentUiConf.confdefn:774 and :4206 — both 'id': 'StyleReview' blocks have 'hidden': true and 'inPerspectives': []",
+      "resolved": true,
+      "observed_or_inferred": "observed",
+      "detail": "Drops pivot/AssortmentFitStyle.pivotdefn, pivot/AssortmentFitStyleTYLY.pivotdefn, and every plain-Style (non-StyleColor) viewdefn from scope for items 1/3/4. Only the StyleColor-level pivots/viewdefns matter."
+    },
+    {
+      "claim": "Per-item viewdefn/pivotdefn mapping, current sell_thru_pct/fp_sell_thru_pct/WOH presence — full detail",
+      "kind": "file",
+      "locator": "belk-configs @ assortment-planning (investigation clone). All 8 pivot files verified present 2026-09-02 with grep counts as described; line numbers still to be re-checked at edit time.",
+      "resolved": true,
+      "observed_or_inferred": "observed",
+      "detail": "VERIFIED 2026-09-02 against belk-configs@assortment-planning. Pivots needing the tot_avail_inv_u/fp_st_pct/fp_woh/woh block added: pivot/AssortmentFit.pivotdefn (items 1,2,3 StyleColor — 'as sell_thru_pct' x5, 'as fp_sell_thru_pct' x1, sell_thru_pct_band x13, no WOH), pivot/AssortmentFitTYLY.pivotdefn (item 4 — 'as sell_thru_pct' x10, sell_thru_pct_band x36, no fp_sell_thru_pct, no WOH; NOTE pivot/AssortmentFitStyleTYLY.pivotdefn already has fp_sell_thru_pct x49 despite being the dead Style-level file — asymmetric, understand why before copying), pivot/AssortmentFitTYLYTranspose.pivotdefn (item 5 — ty_sell_thru_pct x2 / ly_sell_thru_pct x2 only, no FP, no WOH), pivot/AssortmentAggregateViewsNestedAttribute_for_CatRecap.pivotdefn (item 6, ST-only — sell_thru_pct x2, ty_ x4, ly_ x8), pivot/AssortmentAggregateViewsNestedAttribute.pivotdefn (item 7, ST-only — identical shape to item 6), pivot/AssortmentAnalysisGrid.pivotdefn (item 8, ST-only — 'as sell_thru_pct' x8, sell_thru_pct_band x15; band is a weighted-composite calc: line ~1614 round(sum(x_sell_thru_pct_band)), line ~1615 temp_comp_band = 0.5*net_sls_r_band + 0.3*sell_thru_pct_band + 0.2*overall_selling_margin_pct_band, line ~1734 band->color multiIf — a parallel fp_sell_thru_pct_band block is a real structural add, not a formula swap), pivot/NestedOverTime.pivotdefn (item 9 — see bug below; has only avail_sell_thru_pct x2 on eoh_u+net_sls_u denominator, NO sell_thru_pct field), pivot/NestedStyleOverTime.pivotdefn (item 10, ST-only — 'as sell_thru_pct' x2)."
+    },
+    {
+      "claim": "Item 9 (Nested Over Time) likely has a live, ticket-independent bug: the column labeled 'FP ST %' does not bind to a real field",
+      "kind": "file",
+      "locator": "belk-configs/uidefn/view/AssortmentBuildNestedOvertime.viewdefn:39-40 -- {\"text\": \"FP ST %\", \"dataIndex\": \"sell_thru_pct\"}; pivot/NestedOverTime.pivotdefn confirmed 2026-09-02 to have NO 'sell_thru_pct' field at all -- only 'avail_sell_thru_pct'/'ly_avail_sell_thru_pct' (line 32-33, denominator eoh_u + net_sls_u, already inventory-agnostic in form, uses total net_sls_u not fp). viewdefn lines 77/88 bind ly_avail_sell_thru_pct.",
+      "resolved": true,
+      "observed_or_inferred": "observed",
+      "detail": "File-level binding gap CONFIRMED 2026-09-02: the 'FP ST %' column dataIndex has no backing pivot field, so it renders blank/empty today regardless of this ticket. Runtime behaviour (blank vs fallback vs throw) still worth a QA-log confirm but not blocking. NestedOverTime is architecturally lighter than the SUP-4378 agnostic formula: its inventory base is plain eoh_u, not tot_last_value_eoh_u + tot_last_value_eoh_intransit_u + tot_net_sls_u. Decision needed: for item 9, do we (a) just re-point 'FP ST %' to a new fp_avail_sell_thru_pct = fp_net_sls_u/(eoh_u+net_sls_u) mirroring the existing avail_sell_thru_pct shape, or (b) rebuild this pivot onto the full SUP-4378 agnostic tot_avail_inv_u base. (a) is consistent with the view's existing metric family; (b) is consistent with the rest of this ticket. Recommend (a) + flag the inconsistency to Nicole."
+    },
+    {
+      "claim": "Item 5 (TY/LY Grid View Tabs) and Item 10 (Style Color over Time) have Top-Down unwired in confdefn entirely",
+      "kind": "file",
+      "locator": "belk-configs/uidefn/conf/AssortmentUiConf.confdefn -- CONFIRMED 2026-09-02: TopTYLYGridView block at :4127 has inPerspectives:[\"bottom-up\"] only; NestedStyleOvertime block at :7204 ('Style Color Over Time', component Worklist, model OverTimeCompanion) has inPerspectives:[\"bottom-up\"] only. No TD_ variant view id for either. Also confirmed StyleReview blocks at :773 and :4206 both hidden:true + inPerspectives:[].",
+      "resolved": true,
+      "observed_or_inferred": "observed",
+      "detail": "The JIRA ask is scoped 'Bottom Up and Top Down (where view exists in Top Down)'. For items 5 and 10 the TD view does NOT exist in config, so TD is out of scope by the ticket's own wording -- treat as bottom-up-only, no decision strictly required. Still worth a one-line confirm to Nicole that she isn't expecting a NEW TD wiring for these two. StyleReview dead-section confirmation drops AssortmentFitStyle.pivotdefn / AssortmentFitStyleTYLY.pivotdefn / all plain-Style viewdefns from scope for items 1/3/4."
+    },
+    {
+      "claim": "StyleChannelReview.pivotdefn (Assortment Style Pane, AssortmentStyleDetailsPane.viewdefn/TD_AssortmentStyleDetailsPane.viewdefn) has the same un-fixed fp_sell_thru_pct bug already fixed for Hindsighting",
+      "kind": "file",
+      "locator": "belk-configs/pivot/StyleChannelReview.pivotdefn:2985 -- CASE WHEN (fp_last_value_eoh_u + (fp_shp_u - fp_ret_u)) > 0 THEN round((fp_shp_u - fp_ret_u) / (fp_last_value_eoh_u + (fp_shp_u - fp_ret_u)),4) ELSE 0 end as fp_sell_thru_pct",
+      "resolved": true,
+      "observed_or_inferred": "observed",
+      "detail": "Not one of the 10 named requirement items, but same defect family and same pivot family as items 1-5 -- worth fixing alongside this ticket's work rather than as a separate ticket. Not yet actioned pending user decision."
+    },
+    {
+      "claim": "Assortment Style Pane's VPN field (attribute:sty_vpn_final:name) is architecturally different from every other working VPN display (attribute:cc_vpn:name) -- different table, different grain",
+      "kind": "file",
+      "locator": "belk-configs/uidefn/view/AssortmentStyleDetailsPane.viewdefn:42 vs. darwin AttributePostProcessor.java + live QA log (style_pane_assort.txt) showing the decoration query FROM blk_ma_styleattributes (style-level, sty_vpn_final) vs FROM blk_ma_stylecolorattributes (stylecolor-level, cc_vpn) used everywhere else",
+      "resolved": true,
+      "observed_or_inferred": "observed",
+      "detail": "Not a config bug -- likely a genuine data-population gap in the narrower sty_vpn_final field, or an intentional-but-confusing binding choice. Unrelated to the metric work but flagged in case it's raised again on this ticket's views."
+    }
+  ],
+
+  "edit_clone": "/Users/vigneshn/Desktop/JIRAs/SUP-4628/belk-configs (branch SUP-4628). Fast-forwarded 2026-09-08 to origin/assortment-planning @ 8c1e794 (2026-09-03) -- clean ff, zero local commits, no conflicts. UPDATE: SUP-4378 belk-configs PR #320 IS NOW MERGED into assortment-planning (8c1e794). That merge touched only History* pivots/views + shared history_metrics_*.ftl; of the SUP-4628 target files it only touched 3 Assortment viewdefns (SummaryDetails/FlowTypeDetails/TopTYLYDetails) and that was INT-6210 'brand into title on card views', NOT metric work. Assortment TARGET PIVOTS (AssortmentFit/TYLY/Transpose/AnalysisGrid/AggViews/NestedOverTime/NestedStyleOverTime) were NOT touched -- walkthrough line anchors still valid (AssortmentFit :2616/:2623/:2658 confirmed). Assortment pivots use their OWN include family (assortment_base_tables.ftl / assortment_product_ty*.ftl), NOT history_metrics_ty.ftl -- no shared-include collision. Re-sync (git ff to origin/assortment-planning) before each work session.",
+
+  "hypotheses": [
+    {"id": "H1", "statement": "Assortment pivots (AssortmentFit* family) do NOT share history_metrics_ty.ftl -- confirmed 2026-09-02 they use assortment_base_tables.ftl / assortment_product_ty*.ftl instead. The SUP-4378 base-table agnostic columns are not automatically present; each pivot needs its own raw-column plumbing before the fp_st_pct/fp_woh/woh formulas can be added. Per-pivot audit of assortment_base_tables.ftl still pending.", "status": "partly-confirmed"},
+    {"id": "H2", "statement": "Wrench order for this ticket is NOT the SUP-4378 consecutive block. It is: FP ST% immediately after ST%; FP WOH immediately before 'BOH U'; WOH immediately after FP WOH. Applies to every view where KPIs are selectable.", "status": "confirmed-from-jira"},
+    {"id": "H3", "statement": "Item 8 (Nested View / AssortmentAnalysisGrid) needs a parallel fp_sell_thru_pct_band composite-band block (weights 0.5/0.3/0.2 at ~:1614, band->color multiIf ~:1734) + an 'FP ST% Rating' column, and the existing ST% rating must be re-pointed to the agnostic sell_thru_pct. This is the largest single sub-task.", "status": "open"},
+    {"id": "H6", "statement": "Only AssortmentFit.pivotdefn carries an FP raw-metric family today (BASE_SUM_FP_SALES_METRICS / BASE_SUM_FP_INV_METRICS params; FP achieved via a price-status-filtered re-sum of the normal wo_/omni_ columns aliased fp_*_x). AssortmentFitTYLY, AssortmentFitTYLYTranspose, AssortmentAggregateViewsNestedAttribute*, AssortmentAnalysisGrid have ZERO fp_ fields -- each needs the full parallel FP family built before FP ST%/FP WOH can be computed. This is the dominant implementation cost (items 4,5,8 = HIGH).", "status": "confirmed-2026-09-02"},
+    {"id": "H7", "statement": "Assortment weekcount = max(count(distinct time)) -- plain, no strcntwk>0 condition and no prodlife filter (unlike Hindsighting). Rollup layers already use max(weekcount). So WOH needs no tot_weekcount_x plumbing: woh = avail_inv_u / (net_sls_u / weekcount) directly. avail_inv_u (= last_value_eoh_u + last_value_eoh_intransit_u + net_sls_u) already exists in AssortmentFit/TYLY/Transpose/AggViews/AnalysisGrid; NestedOverTime & NestedStyleOverTime use a lighter eoh_u base instead.", "status": "confirmed-2026-09-02"},
+    {"id": "H4", "statement": "Item 9 (NestedOverTime) 'FP ST %' column is already broken (dataIndex sell_thru_pct has no backing field). Fix by adding fp_avail_sell_thru_pct to the pivot mirroring the existing avail_sell_thru_pct shape, rather than a full agnostic-base rebuild.", "status": "open-needs-nicole"},
+    {"id": "H5", "statement": "StyleChannelReview.pivotdefn fp_sell_thru_pct bug (FP-only inventory denominator) is same defect family as the SUP-4378 ETL fix and lives in an in-scope Assortment pivot -- fix alongside this ticket.", "status": "open-needs-user-ok"}
+  ],
+  "root_cause": null,
+
+  "fix": {
+    "status": "in-progress -- AssortmentFit.pivotdefn done (items 1,2,3), 5 pivots + all viewdefns remaining",
+    "approach": "DECIDED 2026-09-08: modify the SALES base table IN PLACE (user's design, matches shipped SUP-4378 pattern in pivot/include/history_metrics_ty.ftl). NOT the separate-table approach. Mechanism: (a) comment out WHERE 'AND prodlife IN (${LEAF_PRODLIFE})'; (b) wrap every existing metric col in sumIf(<expr>, prodlife IN (${LEAF_PRODLIFE})) so filter-sensitive metrics still respect Price Status; (c) add agnostic cols in the same table as plain sum()/countIf -- tot_wo_shp_u_x, tot_omni_shp_u_x, tot_wo_ret_u_x, tot_omni_ret_u_x, tot_weekcount_x; (d) zero-fill those 5 in the other base param blocks; (e) thread through BASE_METRICS_UNION / _AGG_UNION / _AGG_UNION_SUM (sum, except max(tot_weekcount)); (f) COMPUTED_METRICS: tot_shp_u/tot_ret_u/tot_net_sls_u/tot_avail_inv_u(=ttl_eoh_u+tot_net_sls_u) then sell_thru_pct=tot_net_sls_u/tot_avail_inv_u, fp_sell_thru_pct=fp_net_sls_u/tot_avail_inv_u (shared agnostic denominator, matches SUP-4378), woh, fp_woh. reverseAggSQLs picks up ${COMPUTED_METRICS} automatically.",
+    "assortmentfit_notes": "AssortmentFit-specific: used ttl_eoh_u directly (last_value_eoh_u + last_value_eoh_intransit_u) instead of adding tot_last_value_eoh_u -- correct because AssortmentFit's BASE_LAST_INV_METRICS is already prodlife-unfiltered (pre-existing commented filter). Kept name fp_sell_thru_pct (Assortment wrench binds it; Hindsighting used fp_st_pct). Because BASE_SUM_SALES_METRICS was a params.X block (where ${LEAF_PRODLIFE} would NOT interpolate -- SUP-4378's HOCON lesson), the column list was inlined into the CREATE TABLE body and the now-dead params.BASE_SUM_SALES_METRICS block deleted.",
+    "review_fixes_applied_2026-09-08": "User's first pass had: (1) all 39 sumIf args reversed -- sumIf(cond, value) instead of CH's sumIf(value, cond) with UInt8 cond last -> would not compile; FIXED. (2) dead params.BASE_SUM_SALES_METRICS block (170 lines, unreferenced after inline) -> DELETED. (3) SUP-4648 typo in WHERE comment -> corrected to SUP-4628. Validated: 15 union column lists all 170 cols aligned, triple-quotes balanced (66), COMPUTED_METRICS alias dependency order correct (ttl_eoh_u@2547 < fp_net_sls_u@2566 < tot_net_sls_u@2580 < tot_avail_inv_u@2581 < the 4 metrics@2582-2585), no duplicate aliases.",
+    "latent_risk": "woh/fp_woh have no 'tot_weekcount > 0' guard (matches shipped HistoryFit, so consistent) -- div-by-zero if a group ever has sales rows but zero qualifying weeks. Acceptable per precedent; note for QA.",
+    "validation_checkpoint": "Deploy to BELK QA, toggle Price Status filter FP on/off on a Style Color Summary/Grid/Flow Type row -- confirm tot_avail_inv_u / sell_thru_pct / fp_sell_thru_pct / woh / fp_woh stay FLAT (base table unfiltered is necessary; live on/off proves sufficient). Also spot-check a department rollup for weekcount inflation (max not sum -- already correct in this pivot)."
+  },
+  "validation": null,
+  "knowledge_gained": "See knowledge/notes/SUP-4378.md -- the confirmed formula set, weekcount/rollup rules, and darwin pivotdefn-routing gotcha all apply directly here without rediscovery.",
+  "confidence": "62/100 [plausible] as of 2026-09-02. Scoping evidence now verified against belk-configs@assortment-planning (all 8 pivot files present; item-9 binding gap confirmed; items 5/10 TD-absence + StyleReview dead-section confirmed in confdefn). Remaining uncertainty is implementation-side (per-pivot raw-column plumbing H1, fp band block H3) not scoping. No fix work started. Open reporter questions: item 9 approach (H4), StyleChannelReview fp bug inclusion (H5), TD confirm for items 5/10."
+}

@@ -1,0 +1,58 @@
+{
+  "ticket": "SUP-3876",
+  "client": "KW",
+  "mode": "pair",
+  "stage": "investigate",
+  "updated_at": "2026-09-01",
+  "classification": {
+    "type": "bug",
+    "type_source": "jira-issuetype",
+    "component": ["config"],
+    "component_source": "router",
+    "environment": "qa"
+  },
+  "requirement": {
+    "statement": "In the LOFT Flow Sheet view, the MD/Eff AUR metric does not respect the correct ticket price and discount. For weeks/channels that have NO Corp Discount override, the Flow Sheet computes AUR off the full-price (FP/pre-MD) ticket instead of the MD ticket, so Flow Sheet AUR != Pricing view AUR. When a channel-level override IS present, that channel uses the MD ticket correctly, producing a blended (partly-right) number. The Pricing view is correct; the Flow Sheet is wrong.",
+    "confirmed": true,
+    "acceptance": "Flow Sheet Eff AUR (ttl + Stores + Ecom) matches the Pricing view for weeks with no override, with a lower-than-default override, and with a higher-than-default override."
+  },
+  "prior_art": [
+    {"ref": "SUP-3101", "why_relevant": "Introduced the Stores Eff AUR / Ecom Eff AUR metrics to the LOFT Flow Sheet. Per Jatin's comment the by-channel Eff AURs are 'pre-calculated by Planning' and ttl_eff_aur is a pivot calc. Likely where this defect entered."},
+    {"ref": "SUP-3688", "why_relevant": "Same class: AUR/discount % calc differed between Hindsight and Assortment because one formula used current-selling-price and the other full-selling-price (shp_r_csp vs shp_r_fsp). Fix = align the ticket-price basis across views. Deployed to LOFT QA first, then PRs for ANN/LOS/ATFS."},
+    {"ref": "SUP-3075", "why_relevant": "Same pattern of an override being applied when it should have deferred to the default."},
+    {"ref": "SUP-3275", "why_relevant": "Open KWG ticket: LOFT MD Strategy not aligned with Constant Table — adjacent MD-ticket/strategy area."},
+    {"ref": "SUP-3033", "why_relevant": "KWG Pricing View / Discount consolidated fixes — same view family."}
+  ],
+  "evidence": [
+    {"claim": "Ticket is [KWG] MD AUR Calc incorrect, Bug, component Config, status In Development, assignee Aatif Khan, reporter Nicole Rockwell, no resolution.", "kind": "reporter", "locator": "SUP-3876 getJiraIssue 2026-09-01", "resolved": true, "observed_or_inferred": "observed"},
+    {"claim": "Reporter: Flow Sheet 'Eff AUR' uses the Non-MD ticket ($59.95) e.g. 59.95*.49*.96=28.20; Pricing view uses MD ticket. Three LOFT QA weeks (W41/W43) diverge.", "kind": "reporter", "locator": "SUP-3876 description", "resolved": true, "observed_or_inferred": "observed"},
+    {"claim": "Olga's conclusion: 'Flow Sheet uses FP Ticket Price in AUR calcs for the channels/weeks that do not have an override.' Table: W39 override 30% (below 50% default) -> Flow Sheet 39.95*.5*.96 vs Pricing 29.96*.5*.96; W47 no override -> same divergence; W45 override 60% -> Flow Sheet blends FP-ecom + MD-stores. Numbers match only when a larger override is set for ALL selling channels.", "kind": "reporter", "locator": "SUP-3876 comment 52469 (Olga Gervits, 2026-03-25)", "resolved": true, "observed_or_inferred": "observed"},
+    {"claim": "SUP-3101: Stores Eff AUR & Ecom Eff AUR are pre-calculated metrics by Planning; ttl_eff_aur is a pivot calc: round(multiIf(shp_u+shp_u_ecom-ret_u-ret_u_ecom>0,(shp_r+shp_r_ecom-(ret_u*eff_aur)-(ret_u_ecom*eff_aur_ecom))/(shp_u+shp_u_ecom-ret_u-ret_u_ecom),0),2).", "kind": "note", "locator": "SUP-3101 comment 36000 (Jatin Rana)", "resolved": true, "observed_or_inferred": "observed"},
+    {"claim": "KW config repo for LOFT = git@github.com:s5-stratos/loft-configs.git branch planning_strategy (HEAD 2a3247b). Not cloned locally.", "kind": "config", "locator": "customers/KW/repos.json + git ls-remote", "resolved": true, "observed_or_inferred": "observed"},
+    {"claim": "No db-readonly target exists for KW/LOFT (only TRD qa postgres/vertica). OCI KWG buckets: staging=knit-knit-1-staging-config, prod=knit-knit-1-prod-config, ns ax5kyn0um7zh, us-ashburn-1. No explicit LOFT-QA bucket recorded.", "kind": "config", "locator": "mcp db_targets + customers/KW/repos.json oci block", "resolved": true, "observed_or_inferred": "observed"},
+    {"claim": "LOFT staging live config (oci os object sync knit-knit-1-staging-config prefix loft/asst/configuration/) is BYTE-IDENTICAL to loft-configs@planning_strategy (only diff = a stray .rec_u_st.swo vim swapfile). No config drift; repo is trustworthy for staging.", "kind": "config", "locator": "tickets/SUP-3876/live-config/staging vs loft-configs; diff -rq clean 2026-09-01", "resolved": true, "observed_or_inferred": "observed"},
+    {"claim": "Flow Sheet grid viewdefn shows RAW pivot fields with no display formula: Eff AUR->ttl_eff_aur, Stores Eff AUR->eff_aur, ECOM Eff AUR->eff_aur_ecom. So the shown value == what the plan engine wrote to p_flowsheet.", "kind": "config", "locator": "loft-configs/uidefn/view/AssortmentBuildFlowSheetGrid.viewdefn:60-78; AssortmentBuildFlowSheetGridStores.viewdefn:161", "resolved": true, "observed_or_inferred": "observed"},
+    {"claim": "Plan-engine AUR formula (table adjust_for_md): eff_aur = round(least(A,B) * (1 - cc_discount_pct), 2) where A = multiIf(md_seq=0, original_ticketchannel*(1-corpexcl), original_ticketchannel*(1-md_corpexcl))  [A always anchored to original_ticketchannel = FP/pre-MD ticket]; B = multiIf(md_seq=0, multiIf(expressed_aur>0, expressed_aur, original_ticketchannel)*(1-addoff)*(1-corpaddoff), original_ticketchannel*(1-md_disc)*(1-addoff)*(1-md_corpaddoff)). md_seq comes from erlstmkdnwk->mdstart_indx (MD-strategy sequence), md_disc from l_mdstrategy_tbl curve ('Normal 20-40-60').", "kind": "config", "locator": "loft-configs/pivot/include/p1_08_price_cost_computation.ftl:273-282, 321-345, 172", "resolved": true, "observed_or_inferred": "observed"},
+    {"claim": "REPRODUCES Olga's wrong number exactly: W39 FP ticket $39.95, corp 4%, cc_discount_pct 50%. md_seq=0 & no override => A = 39.95*0.96 = 38.35; B = 39.95*1*0.96 = 38.35; eff_aur = 38.35*(1-0.5) = 19.18 == Flowsheet AUR reported. Pricing (correct) = MD ticket 29.96 * 0.5 * 0.96 = 14.38.", "kind": "config", "locator": "p1_08 formula applied to SUP-3876 comment 52469 table row 2026-W39", "resolved": true, "observed_or_inferred": "inferred"},
+    {"claim": "The Pricing view recomputes off the corp markdown calendar: PricingOvertime joins l_corpdisc_tbl / CORPDISC ON week AND prodlife, so an MD-calendar week picks the MD corpdisc row and MD ticket regardless of the plan engine's md_seq. FlowSheetPlanPivot and PricingOvertime BOTH read p_flowsheet, but Pricing re-derives price/discount by prodlife while Flow Sheet shows the stored eff_aur.", "kind": "config", "locator": "loft-configs/pivot/PricingOvertime.pivotdefn:34-36,98,102-104,209", "resolved": true, "observed_or_inferred": "observed"},
+    {"claim": "Planner channel override path: p_channeloverride/p_itemprice carry a planner 'eff_aur' (expressed_aur) + addoff per product/location/time; these feed adjust_for_md via temp_itemprice_week. When present in the md_seq=0 branch, multiIf(expressed_aur>0, expressed_aur, original_ticketchannel) replaces the FP ticket -> matches Pricing. least(A,B) still picks FP-anchored A when the override discount is SMALLER than corp default (expressed_aur higher), explaining 'only a larger override on all channels makes the views match'.", "kind": "config", "locator": "loft-configs/pivot/include/p1_02_channel_split.ftl:465-489, p1_05_pricing.ftl:79-122, p1_08:278", "resolved": true, "observed_or_inferred": "inferred"}
+  ],
+  "requested_evidence": [
+    {"item": "Confirm requirement statement above", "command": "n/a - reporter confirm", "status": "requested"},
+    {"item": "Which environment is 'LOFT QA' -> which OCI bucket/prefix (internal-qa-config vs knit-knit-1-staging-config)", "command": "n/a", "status": "requested"},
+    {"item": "OCI live config for LOFT QA: sync + diff vs loft-configs@planning_strategy", "command": "oci os object sync -bn <bucket> --prefix loft/asst/ --dest-dir ./live-config/qa/", "status": "requested"},
+    {"item": "Exact Flow Sheet view name + wrench header where Eff AUR / Stores Eff AUR / Ecom Eff AUR sit", "command": "n/a - reporter", "status": "requested"}
+  ],
+  "hypotheses": [
+    {"cause": "PRIMARY: The plan-engine effective-AUR formula in p1_08 (adjust_for_md) decides 'is this a markdown week' from md_seq (the erlstmkdnwk / MD-strategy sequence) instead of the corp markdown calendar (l_corpdisc_tbl prodlife='FP'/'MD') that the Pricing view uses. Term A is always anchored to original_ticketchannel (the FP/pre-MD ticket). So for a week where corp markdown is already in effect (MD ticket exists, Pricing correct) but md_seq is still 0 and there is no channel override, least(A,B) resolves to the FP ticket and Flow Sheet AUR is computed off the pre-MD ticket. A channel override injects the planner's expressed_aur and masks the bug for that channel/week; least(A,B) still keeps the FP anchor when the override discount is below the corp default.", "status": "candidate", "evidence_refs": [6, 7, 8, 9, 10]},
+    {"cause": "Contributing: even in the md_seq>0 branch, term A uses original_ticketchannel*(1-md_corpexcl) (FP ticket, comment says 'CurP for MD') rather than the MD-adjusted ticket, and md_disc is taken from the generic MD-strategy curve ('Normal 20-40-60'), not the actual corp markdown %, so the plan-engine MD ticket can still disagree with the corp MD ticket the Pricing view shows.", "status": "candidate", "evidence_refs": [8]},
+    {"cause": "RULED OUT - Flow Sheet grid viewdefn display formula: the grid binds raw ttl_eff_aur/eff_aur/eff_aur_ecom with no expression, so the defect is upstream in the pivot/plan-engine, not the view.", "status": "ruled_out", "evidence_refs": [7], "ruled_out_because": "viewdefn dataIndex bindings are bare fields"},
+    {"cause": "RULED OUT - LOFT staging config drift (manual OCI hotfix): staging bucket is byte-identical to loft-configs@planning_strategy.", "status": "ruled_out", "evidence_refs": [5], "ruled_out_because": "diff -rq clean except a vim swapfile"}
+  ],
+  "root_cause": {
+    "statement": "Flow Sheet Eff AUR / Stores Eff AUR / ECOM Eff AUR are the raw eff_aur / eff_aur_ecom values the plan engine writes to p_flowsheet. The plan-engine AUR formula (loft-configs/pivot/include/p1_08_price_cost_computation.ftl, table adjust_for_md, lines 273-282) computes the ticket base as least(A,B) where A is always anchored to original_ticketchannel (the FP / pre-MD ticket) and the switch to the marked-down ticket happens only when md_seq>0 (driven by erlstmkdnwk + the l_mdstrategy curve) OR a channel override supplies expressed_aur. The Pricing view instead re-derives price and discount from the corp markdown calendar (l_corpdisc_tbl joined on week+prodlife) and is correct. When corp markdown is in effect for a week but the plan engine's md_seq is still 0 and no channel override exists, least(A,B) falls back to the FP ticket, so Flow Sheet AUR is computed off the pre-MD ticket ($39.95) while Pricing uses the MD ticket ($29.96). Reproduced numerically: 39.95*0.96*(1-0.5) = $19.18 (Flow Sheet, wrong) vs 29.96*0.96*(1-0.5) = $14.38 (Pricing, right).",
+    "evidence_refs": [6, 7, 8, 9, 10, 11],
+    "confirmed_by_execution": false,
+    "still_needed": "Confirm against p_flowsheet data for the specific LOFT styles/weeks (W39/W41/W43/W45/W47) that md_seq/prodlife disagree and eff_aur == FP-ticket math — needs a LOFT QA CH query (no db-readonly target configured for KW) or Aatif/planning to run it."
+  }
+}
