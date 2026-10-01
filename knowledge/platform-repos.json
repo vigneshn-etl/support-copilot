@@ -1,15 +1,16 @@
 {
-  "_readme": "SHARED platform repos \u2014 one instance for ALL clients, not per-customer. Per-client repos (ETL, config) live in customers/<CLIENT>/repos.json.",
+  "_readme": "SHARED platform repos — one instance for ALL clients, not per-customer. Per-client repos (ETL, config) live in customers/<CLIENT>/repos.json.",
+  "_sync": "Before reading platform source on a ticket, sync each local clone to the latest `branch`: `git -C <local> fetch origin <branch> && git -C <local> checkout <branch> && git -C <local> pull --ff-only`. Skip (and say so) if the clone has local changes. Cite the synced commit SHA in evidence.",
   "frontend": {
     "repo": "git@github.com:s5-stratos/assortmentui.git",
-    "branch": "main",
+    "branch": "dev",
     "local": "../assortmentui",
-    "note": "React/TS monorepo, config-driven UI (AG Grid). Same build serves every tenant; behavior differs by config, not code."
+    "note": "React/TS monorepo, config-driven UI (AG Grid). Same build serves every tenant; behavior differs by config, not code. `dev` is the main branch."
   },
   "backend": {
     "repo": "git@github.com:s5-stratos/darwin.git",
     "branch": "dev",
     "local": "../darwin",
-    "note": "Java (Maven). Executes pivots, serves config, builds filter options, member resolution. See knowledge/backend/darwin-primer.md."
+    "note": "Java (Maven). Executes pivots, serves config, builds filter options, member resolution. `dev` is the main branch. See knowledge/backend/darwin-primer.md."
   }
 }
