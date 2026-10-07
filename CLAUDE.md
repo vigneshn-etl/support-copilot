@@ -47,7 +47,7 @@ search only finds it. Keep INDEX current for the curated core.
 **ROOT-CAUSE GATE** (evidence-cited or it doesn't pass) → FIX (validation
 plan first, pre-state captured) → **VALIDATION GATE** (proof or no close)
 → RETRO (solution note → memory). JIRA is the shared ledger: draft every
-comment/label, human approves. Skills drive it: `triage-ticket` (1–5),
+comment/label, human approves. Skills drive it: `triage-ticket` (1–5), `qa-sync` (config fix → QA OCI; ask once edits are done),
 `validate-fix` (6–7), `ticket-retro` (8). Start with the intake dialogue
 in the triage-ticket skill.
 
@@ -86,6 +86,9 @@ edit, leave it uncommitted until the human reviews. Ticket *knowledge*
   OCI live config / query the live DB and diff vs repo before concluding.
 - **Gates are hard:** no fix before an evidence-cited root cause; no close
   before validation proof (pre-state captured first).
+- **Help on demand:** "help", "what can you do" or "how do I…" → `copilot-help` skill (answers
+  from `GUIDE.md`). Any new skill/tool/MCP must be added to `GUIDE.md`
+  (`python3 tooling/guide_check.py` enforces it).
 - **Memory via PR:** after solving anything novel, write the note
   (`ticket-retro`) and add any new knowledge file to `knowledge/INDEX.md`.
   Backfilled/uncertain notes stay `draft: true`. Pattern seen 3+ times →

@@ -1,0 +1,27 @@
+{
+ "_readme": "Config sources: 'config_repo' = git base branch; each env = base OVERLAID with its OCI bucket (<prefix>configuration/ + override_configuration/ + .delete tombstones). Used by tooling/validation/config_sync.py and tooling/triage/qa_sync.py. QA prefixes verified by `oci os object list` on 2026-10-07. Extra 'tenants' share the bucket under their own prefix.",
+ "client": "EE",
+ "root": "config",
+ "config_repo": {
+  "repo": "git@github.com:s5-stratos/evereve-configs.git",
+  "branch": "assortment-planning",
+  "local": "repo"
+ },
+ "envs": {
+  "qa": {
+   "bucket": "internal-qa-config",
+   "region": "us-chicago-1",
+   "prefix": "eve/asst/"
+  },
+  "staging": {
+   "bucket": "eve-eve-1-staging-config",
+   "region": "us-chicago-1",
+   "prefix": "eve/asst/"
+  },
+  "prod": {
+   "bucket": "eve-eve-1-prod-config",
+   "region": "us-ashburn-1",
+   "prefix": "eve/asst/"
+  }
+ }
+}

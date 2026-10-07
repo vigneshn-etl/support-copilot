@@ -28,6 +28,9 @@ Pick the recipe by layer (combine for hybrid):
   downstream steps completed.
 
 **Config fix**
+- Getting it onto QA: use the `qa-sync` skill. Its `qa-backup/<ts>-<tenant>/`
+  is the pre-state, and `tickets/<SUP>/logs/qa-sync-push-*.json` is the proof it's
+  applied (per file md5-verified). Not pushed yet → offer it before UI checks.
 - `npx ajv validate -s confdefnschema.json -d "uidefn/conf/*.confdefn"`
   (and mfp schemas if touched).
 - Grain check for any count/aggregate metric: pivot bottomLevels vs
@@ -35,7 +38,9 @@ Pick the recipe by layer (combine for hybrid):
 - Grid export comparison: expected vs actual at the aggregate level the
   reporter used.
 - Replication check: does this client have subsidiaries/env copies that
-  need the same change? (AEO: UNS/TSN/AER — see note SUP-4210.)
+  need the same change? (AEO: UNS/TSN/AER — see note SUP-4210.) `qa-sync
+  --tenant all` diffs every brand at once. Check each brand's QA for hand
+  edits before pushing (SUP-4678: aer had a live teammate hotfix).
 
 **Frontend fix**
 - Playwright spec named SUP-XXXX.spec.ts in the assortmentui e2e harness

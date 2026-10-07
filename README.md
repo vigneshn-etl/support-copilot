@@ -6,6 +6,8 @@ AI-assisted support engineering for our retail planning products
 our collected knowledge: past solutions, lineage graphs, customer
 profiles, and debugging runbooks.
 
+**👉 What can it do and how do I use it? See [GUIDE.md](GUIDE.md), or type `help` in the chat.**
+
 ## Quick start (one-time, ~5 minutes)
 
 1. **Clone** this repo and open the folder in **Cowork** (select folder)
@@ -44,7 +46,8 @@ If Claude ever seems unaware of the setup, say:
 | `knowledge/runbooks/` | How to fetch evidence: OCI live config, UI repro, chat-capture prompt |
 | `customers/<CLIENT>/` | Per-customer profile + generated lineage graphs (open `lineage_e2e.html` in a browser: file → screen lineage) |
 | `tooling/lineage/` | Generic extractors — run against any customer repo to (re)generate graphs |
-| `.claude/skills/` | triage-ticket, ticket-retro, impact-analysis |
+| `GUIDE.md` | **Feature guide**: every capability with example prompts |
+| `.claude/skills/` | triage-ticket, validate-fix, ticket-retro, impact-analysis, qa-sync, copilot-help |
 | `feedback/` | One line per triage: was it useful? Feeds improvement |
 
 ## Regenerating lineage (when customer code changes)

@@ -100,6 +100,7 @@ Refresh per `knowledge/runbooks/db-schema-snapshot.md`.
 | `tooling/triage/` | **Deterministic triage engine** — the backbone that shrinks the LLM's trust surface. See `tooling/triage/README.md`. |
 | `tooling/triage/route.py` | Classify a ticket from text → type/component/env (each with a source). Seeds `state.json`. |
 | `tooling/triage/newticket.sh` | Spin up `tickets/<ID>/`: clone right repo+branch, OCI sync, ticket branch, seed state.json |
+| `tooling/triage/qa_sync.py` | **Push a ticket's config fix to QA**: pull QA OCI → 3-way diff vs `<SUP-ID>` branch → approve plan_id → push to `override_configuration/` (backup, etag-guarded, rollback). Tests: `test_qa_sync.py` |
 | `tooling/triage/confidence.py` | Deterministic 0-100 confidence + band from a ticket state; the band gates behavior |
 | `tooling/triage/evidence-matrix.md` | `(type × component) → required evidence + exact commands` lookup |
 | `tooling/triage/trace.py` | State → reasoning/debug trace, or `--note` → solution-note draft |
@@ -118,6 +119,9 @@ with `regen.sh`.
 | File | Use when |
 |---|---|
 | `knowledge/runbooks/fetch-live-config.md` | Lower-env config issue — sync OCI live config + diff vs git (drift) |
+| `GUIDE.md` + `.claude/skills/copilot-help/` | User-facing feature guide + in-chat `help`; `tooling/guide_check.py` fails if a feature is undocumented |
+| `.claude/skills/qa-sync/SKILL.md` | Workflow step: config edits done → offer QA OCI sync (review rules, special cases) |
+| `knowledge/runbooks/qa-config-sync.md` | Ticket config fix ready → push it to QA's OCI bucket safely (all clients/tenants mapped) |
 | `knowledge/runbooks/db-schema-snapshot.md` | Refresh PG/CH/Vertica schema dumps (also DB drift detection) |
 | `knowledge/runbooks/create-readonly-accounts.md` | Stand up read-only DB users for a new env (incl. CH 21.4 gotchas) |
 | `knowledge/runbooks/local-ui-setup.md` | Reproduce a frontend bug locally (Vite proxy to a client env) |

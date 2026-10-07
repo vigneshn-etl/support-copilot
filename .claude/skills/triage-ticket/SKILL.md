@@ -77,7 +77,8 @@ ROOT-CAUSE GATE. Draft JIRA writes at each stage (labels cc-<type>,
 cc-layer:<x>, cc-triaged; evidence-request and root-cause comments) and
 ask the user to approve posting. The root-cause comment must include the
 validation plan sketch — hand off to the validate-fix skill for stages
-6–7 and ticket-retro for stage 8. No fix work before the root-cause gate
+6–7 (config fixes: once edits are done in the edit clone, ASK whether to
+sync them to QA OCI via the qa-sync skill) and ticket-retro for stage 8. No fix work before the root-cause gate
 passes with cited evidence.
 
 ## Intake dialogue (run FIRST, before any analysis)

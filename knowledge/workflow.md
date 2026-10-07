@@ -5,7 +5,8 @@ stage reads the ticket and writes its output back (comment/label/link) —
 drafted by Claude, approved by the engineer. Nothing important lives only
 in a chat session.
 
-Stage skills: `triage-ticket` covers 1–5; `validate-fix` covers 6–7;
+Stage skills: `triage-ticket` covers 1–5; `qa-sync` applies config fixes
+to QA (end of 6); `validate-fix` covers 6–7;
 `ticket-retro` covers 8.
 
 ## Stages
@@ -59,7 +60,14 @@ Stage skills: `triage-ticket` covers 1–5; `validate-fix` covers 6–7;
 - Implement following repo conventions (CLAUDE.md of the repo). Ticket ID
   in branch + commits. Regenerate lineage if data flows changed.
 - **JIRA:** link PR; comment summarizing the change.
-- Exit: PR open, validation plan attached to the ticket.
+- **Config fixes → apply to QA via the `qa-sync` skill.** When config
+  edits are done in the edit clone, the copilot ASKS whether to sync them
+  to the client's QA OCI bucket. The steps are pull → 3-way diff → human
+  review → approve plan_id → push → md5 verify. The QA backup is the
+  pre-state; the push log is the "applied to QA" evidence for stage 7.
+  Never auto-push.
+- Exit: PR open, validation plan attached to the ticket, and (config) the
+  fix applied to QA with a push log.
 
 ### 7. VALIDATION GATE  ⛔  — the deciding block
 - Execute the plan from `validate-fix` skill. Evidence or it didn't

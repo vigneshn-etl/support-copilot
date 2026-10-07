@@ -1,0 +1,54 @@
+{
+ "_readme": "Config sources: 'config_repo' = git base branch; each env = base OVERLAID with its OCI bucket (<prefix>configuration/ + override_configuration/ + .delete tombstones). Used by tooling/validation/config_sync.py and tooling/triage/qa_sync.py. QA prefixes verified by `oci os object list` on 2026-10-07. Extra 'tenants' share the bucket under their own prefix.",
+ "client": "AEO",
+ "root": "config",
+ "config_repo": {
+  "repo": "https://github.com/s5-stratos/aeo-configs",
+  "branch": "hindsighting",
+  "local": "repo"
+ },
+ "envs": {
+  "qa": {
+   "bucket": "internal-qa-config",
+   "region": "us-chicago-1",
+   "prefix": "aeo/asst/"
+  },
+  "staging": {
+   "bucket": "aeo-aeo-1-staging-config",
+   "region": "us-ashburn-1",
+   "prefix": "aeo/asst/"
+  }
+ },
+ "tenants": {
+  "aer": {
+   "envs": {
+    "qa": {
+     "bucket": "internal-qa-config",
+     "region": "us-chicago-1",
+     "prefix": "aer/asst/"
+    }
+   },
+   "note": "AEO brand (aeo/aer/tsn/uns = 4 brands of aeo-configs; same branch + code). Confirmed by user 2026-10-07."
+  },
+  "tsn": {
+   "envs": {
+    "qa": {
+     "bucket": "internal-qa-config",
+     "region": "us-chicago-1",
+     "prefix": "tsn/asst/"
+    }
+   },
+   "note": "AEO brand (aeo/aer/tsn/uns = 4 brands of aeo-configs; same branch + code). Confirmed by user 2026-10-07."
+  },
+  "uns": {
+   "envs": {
+    "qa": {
+     "bucket": "internal-qa-config",
+     "region": "us-chicago-1",
+     "prefix": "uns/asst/"
+    }
+   },
+   "note": "AEO brand (aeo/aer/tsn/uns = 4 brands of aeo-configs; same branch + code). Confirmed by user 2026-10-07."
+  }
+ }
+}

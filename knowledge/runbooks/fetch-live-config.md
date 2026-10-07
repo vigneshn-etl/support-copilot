@@ -17,9 +17,18 @@ oci os object sync \
   --prefix aeo/asst/override_configuration/ \
   --dest-dir .
 
-# → downloads the tenant's live override configs into ./aeo/asst/override_configuration/
-#   (includes a .delete marker file listing tombstoned objects)
+# → downloads into ./override_configuration/ — `sync` STRIPS --prefix from local
+#   paths (verified 2026-10-07). Use one dest dir per tenant.
+#   (the tenant root may also hold a .delete marker listing tombstoned paths)
 ```
+
+### All clients (QA verified 2026-10-07)
+
+Every tenant lives in `internal-qa-config` (us-chicago-1) under `<tenant>/asst/`,
+with `configuration/` (base) + `override_configuration/` (hotfixes, these win) +
+optional `.delete`. Tenant → client map: `customers/<CLIENT>/config_sources.json`,
+or `python3 tooling/triage/qa_sync.py targets`. To **push** a ticket fix to QA,
+see `qa-config-sync.md`.
 
 ### TRD buckets (confirmed 2026-08)
 

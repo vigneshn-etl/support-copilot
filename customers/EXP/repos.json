@@ -8,8 +8,8 @@
   },
   "config": {
     "repo": "https://github.com/s5-stratos/express-configs",
-    "branch": "<unconfirmed — main is HEAD; other candidates seen: production-actual, revert_to_prod_planpivot, express_prod_deploy_07.19.2025.001>",
+    "branch": "release/2025.10",
     "local": "",
-    "note": "cloned 2026-08-09 during SUP triage of weekly bulk-plan failure. Repo name is 'express-configs' NOT 'exp-configs'. Which branch is actually live in PROD is unconfirmed — needs OCI live-config check or a human answer."
+    "note": "cloned 2026-08-09 during SUP triage of weekly bulk-plan failure. Repo name is 'express-configs' NOT 'exp-configs'. Which branch is actually live in PROD is unconfirmed — needs OCI live-config check or a human answer. UPDATE 2026-10-07: base branch = release/2025.10 (confirmed by user)."
   }
 }

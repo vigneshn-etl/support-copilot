@@ -1,0 +1,18 @@
+{
+ "_readme": "Config sources: 'config_repo' = git base branch; each env = base OVERLAID with its OCI bucket (<prefix>configuration/ + override_configuration/ + .delete tombstones). Used by tooling/validation/config_sync.py and tooling/triage/qa_sync.py. QA prefixes verified by `oci os object list` on 2026-10-07. Extra 'tenants' share the bucket under their own prefix.",
+ "client": "BELK",
+ "root": "config",
+ "config_repo": {
+  "repo": "https://github.com/s5-stratos/belk-configs",
+  "branch": "assortment-planning",
+  "local": "repo"
+ },
+ "envs": {
+  "qa": {
+   "bucket": "internal-qa-config",
+   "region": "us-chicago-1",
+   "prefix": "belk/asst/"
+  }
+ },
+ "_note": "belkap/ prefix in internal-qa-config is stale (all objects 2025-04-24) \u2014 not a live tenant; ignore."
+}

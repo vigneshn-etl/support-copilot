@@ -11,6 +11,7 @@ the chosen workflow. Keep options short; each maps to a concrete next step.
 > validate metrics, and resolve. What would you like to do?
 >
 > *(Already have a ticket? Just paste the ticket id or text and I'll start.)*
+> *(New here or stuck? Type `help` anytime, or `help <topic>`. Full guide: `GUIDE.md`.)*
 
 ## Menu — USER (default)
 
@@ -72,13 +73,14 @@ Every ticket I capture a **Technical** learning (the mechanism) and a
 
 | Pick | Drive into |
 |---|---|
-| 1 Solve | `triage-ticket` skill (stages 1–5) → `validate-fix` (6–7) → `ticket-retro` (8) |
+| 1 Solve | `triage-ticket` skill (stages 1–5) → config fix? offer `qa-sync` (push to QA OCI) → `validate-fix` (6–7) → `ticket-retro` (8) |
 | 2 Analyze | `triage-ticket` stages 1–5; stop at the root-cause summary + confidence |
 | 3 Lineage | `tooling/lineage/query.py` (find/upstream/downstream/impact) or lineage-viz |
 | 4 Validate | compose flow (`tooling/validation`) / Data Validation Studio |
 | 5 Understand | `knowledge/INDEX.md` → the right primer/glossary/cheatsheet; cite it |
 | 6 Capture | `tooling/triage/learn.py` |
 | 7 Metrics (admin) | `tooling/metrics/rollup.py` / dashboard |
+| help / ? / "what can you do" | `copilot-help` skill → answers from `GUIDE.md`, offers to start the feature |
 | 8 Build (admin) | admin persona: propose, edit the brain, keep INDEX coherent |
 
 After finishing a pick, offer the next sensible step (e.g. after Analyze → "want

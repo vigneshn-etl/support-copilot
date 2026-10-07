@@ -1,0 +1,72 @@
+{
+ "_readme": "Config sources: 'config_repo' = git base branch; each env = base OVERLAID with its OCI bucket (<prefix>configuration/ + override_configuration/ + .delete tombstones). Used by tooling/validation/config_sync.py and tooling/triage/qa_sync.py. QA prefixes verified by `oci os object list` on 2026-10-07. Extra 'tenants' share the bucket under their own prefix.",
+ "client": "KW",
+ "root": "config",
+ "config_repo": {
+  "repo": "git@github.com:s5-stratos/loft-configs.git",
+  "branch": "planning_strategy",
+  "local": "repo"
+ },
+ "envs": {
+  "qa": {
+   "bucket": "internal-qa-config",
+   "region": "us-chicago-1",
+   "prefix": "loft/asst/"
+  },
+  "staging": {
+   "bucket": "knit-knit-1-staging-config",
+   "region": "us-ashburn-1",
+   "prefix": "loft/asst/"
+  },
+  "prod": {
+   "bucket": "knit-knit-1-prod-config",
+   "region": "us-ashburn-1",
+   "prefix": "loft/asst/"
+  }
+ },
+ "default_tenant": "loft",
+ "tenants": {
+  "ann": {
+   "config_repo": {
+    "repo": "git@github.com:s5-stratos/ann-configs.git",
+    "branch": "planning_strategy",
+    "local": "repo"
+   },
+   "envs": {
+    "qa": {
+     "bucket": "internal-qa-config",
+     "region": "us-chicago-1",
+     "prefix": "ann/asst/"
+    }
+   }
+  },
+  "atfs": {
+   "config_repo": {
+    "repo": "git@github.com:s5-stratos/atfs-configs.git",
+    "branch": "planning_strategy",
+    "local": "repo"
+   },
+   "envs": {
+    "qa": {
+     "bucket": "internal-qa-config",
+     "region": "us-chicago-1",
+     "prefix": "atfs/asst/"
+    }
+   }
+  },
+  "los": {
+   "config_repo": {
+    "repo": "git@github.com:s5-stratos/los-configs.git",
+    "branch": "planning_strategy",
+    "local": "repo"
+   },
+   "envs": {
+    "qa": {
+     "bucket": "internal-qa-config",
+     "region": "us-chicago-1",
+     "prefix": "los/asst/"
+    }
+   }
+  }
+ }
+}
