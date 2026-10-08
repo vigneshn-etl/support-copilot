@@ -155,6 +155,32 @@ PROD-EE-20260809 (EE/Evereve new-store onboarding missing backtest backfill
 (Torrid duplicate MERGE key — new stylecolor sent without S5_ID, backfilled
 next day, raw-code identity collides with real UUID identity).
 
+Backfilled notes (`draft: true` — assignee review pending; each lists what is
+inferred):
+- **TRD:** SUP-4030 (MFP outbound data for Looker), SUP-4153 (MFP recon On
+  Order placement + First MD units), SUP-4168 (StyleColorReview TY vs LY
+  inflated), SUP-4186 (enable Visual Line Plan in Top Down), SUP-4437 (load
+  `cc_orig_retail_char`), SUP-4449 (Orig Retail config wheel "undefined"),
+  SUP-4533 (purge previous-day bad S5_ID records; permanent fix for
+  PROD-TRD-20260813).
+- **BLK (Belk):** SUP-4034 (don't copy Publish on clone), SUP-4082 (remove
+  Flow Type filter, TY/LY grid), SUP-4116 (History Grid level combos error),
+  SUP-4167 (VPN ID not carried to Line Adopt/outbound), SUP-4301 (intraday
+  improvements), SUP-4419 (Total View value reverts to NONE), SUP-4453 (recon
+  view fields), SUP-4455 (published POs missing from outbound archive),
+  SUP-4483 (VPN searchable everywhere), SUP-4497 (Total View ranging mass
+  edit not applied), SUP-4520 (placeholder colors inherit parent style name).
+- **AEO:** SUP-4182 (3 new Style Color Attr columns), SUP-4183 (reprocess new
+  staging data — runbook), SUP-4193 (color image unstable across pivots),
+  SUP-4330 (APS metrics stores vs eComm), SUP-4402 (Hindsight view config).
+- **EE:** SUP-3742 (clear search between view types), SUP-4146 (duplicate
+  SKU size attrs double on-order/receipts), SUP-4364 (size attrs not linked
+  to PIM SKUs, Reg vs Petite).
+- **EXP:** SUP-4304 (update exit date / remove from assortment to rebuy),
+  SUP-4493 (`store_master_new_tbl` duplicates).
+- **BD:** SUP-4155 (Market Factor 4-decimal precision). **KW:** SUP-2132
+  (Pricing mass edit ignores session size-concept filter).
+
 ## Skills (`.claude/skills/`)
 
 | Skill | Covers |
