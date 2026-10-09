@@ -136,6 +136,10 @@ def check_sql(sql: str) -> str:
     if ";" in core:
         raise SqlNotAllowed("multiple statements are not allowed")
 
+    # psql/vsql meta-commands (\! shell, \o file, \g ...) live outside literals
+    if "\\" in core:
+        raise SqlNotAllowed("backslash meta-commands are not allowed")
+
     if not _ALLOWED_START.match(core):
         raise SqlNotAllowed("only SELECT / WITH / SHOW / EXPLAIN / DESCRIBE are allowed")
 

@@ -67,6 +67,8 @@ from the main tables, so you can prove the UI right or wrong.
 `check in TRD QA how many styles have str_dc_flag='Y'` runs a SELECT over SSH
 against QA Vertica/PG/CH. Writes are blocked by a guard.
 Ask `which databases can you query?` to see the targets.
+Nothing to set up beyond ssh access to `qa-processor` and the `automaton` group;
+credentials live on the host. Not connecting? Run `tooling/db/check_access.sh [CLIENT]`.
 
 ### ☁️ 6. Push a config fix to QA (OCI)
 Once your config edits are in `JIRAs/<SUP-ID>/<repo>/`, the copilot **offers**

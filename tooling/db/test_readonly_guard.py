@@ -57,6 +57,10 @@ BLOCKED = [
     "   ",
     "-- just a comment",
     "WITH x AS (SELECT 1) DELETE FROM t",   # CTE then write
+    # psql/vsql client meta-commands (\! runs a shell on the host)
+    "SELECT 1\n\\! id",
+    "SELECT 1 \\g /tmp/x",
+    "SELECT 1\n\\o /tmp/x",
 ]
 
 # --- must be ALLOWED (real composed / detail / probe queries) -----------------

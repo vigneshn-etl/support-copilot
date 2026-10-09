@@ -25,6 +25,11 @@ Connections are defined per customer in
 `{SQL}` is replaced with the (shell-quoted) statement. `ssh` may be any
 alias from your ~/.ssh/config (ProxyJump/bastion supported for free).
 
+Preferred: gated mode — { "ssh": "qa-processor-ro", "gate": "TRD" }. The ssh
+key is bound to tooling/db/remote/s5_ro_gate.py on the host (forced command),
+which re-checks the SQL and holds the read-only credentials. No passwords in
+this file. Setup: tooling/db/remote/README.md.
+
 Tools exposed:
   db_targets()                          list configured client/env/engine
   db_query(client, env, engine, sql, max_rows=200)
@@ -42,14 +47,34 @@ from readonly_guard import check_sql, SqlNotAllowed  # single source of truth
 SSH_TIMEOUT = 60
 
 
+def _defaults():
+    try:
+        d = json.loads((Path(__file__).resolve().parent / "connections.defaults.json").read_text())
+    except Exception:
+        return {}
+    return {env: {"ssh": v["ssh"], "gate_cmd": v.get("gate_cmd", "python3 ~/.s5_ro/s5_ro_gate.py"),
+                  "engines": v.get("engines", [])}
+            for env, v in d.items() if not env.startswith("_")}
+
+
 def connections():
     out = {}
-    for f in HUB.glob("customers/*/db/connections.json"):
-        client = f.parent.parent.name
-        try:
-            out[client] = json.loads(f.read_text())
-        except Exception as e:
-            out[client] = {"_error": str(e)}
+    defaults = _defaults()
+    for cdir in sorted(p for p in HUB.glob("customers/*") if p.is_dir()):
+        client = cdir.name
+        conf = {env: {e: {"ssh": v["ssh"], "gate": client, "gate_cmd": v["gate_cmd"]}
+                      for e in v["engines"]} for env, v in defaults.items()}
+        f = cdir / "db" / "connections.json"
+        if f.exists():
+            try:
+                for env, engines in json.loads(f.read_text()).items():
+                    if env.startswith("_"):
+                        continue
+                    conf.setdefault(env, {}).update(engines)
+            except Exception as e:
+                conf["_error"] = str(e)
+        if conf:
+            out[client] = conf
     return out
 
 
@@ -75,14 +100,21 @@ def tool_query(args):
     # crude but effective row cap for bare SELECTs without LIMIT
     if re.match(r"^\s*select\b", sql, re.I) and not re.search(r"\blimit\s+\d+", sql, re.I):
         sql = f"{sql} LIMIT {max_rows}"
-    remote_cmd = conf["cmd"].replace("{SQL}", shlex.quote(sql))
+    if conf.get("gate"):
+        # forced-command gate (tooling/db/remote/s5_ro_gate.py): no secrets
+        # here, SQL over stdin, key can run nothing else
+        # login mode runs the gate explicitly; forced-command mode ignores it
+        gate_cmd = conf.get("gate_cmd", "python3 ~/.s5_ro/s5_ro_gate.py")
+        remote_cmd, stdin = f"{gate_cmd} {conf['gate']} {engine}", sql
+    else:
+        remote_cmd, stdin = conf["cmd"].replace("{SQL}", shlex.quote(sql)), None
     cmd = ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10",
            # hosts with a RemoteCommand in ssh_config refuse CLI commands
            # ("Cannot execute command-line and remote command.") — override:
            "-o", "RemoteCommand=none", "-T",
            conf["ssh"], remote_cmd]
     try:
-        r = subprocess.run(cmd, capture_output=True, text=True,
+        r = subprocess.run(cmd, capture_output=True, text=True, input=stdin,
                            timeout=SSH_TIMEOUT)
     except subprocess.TimeoutExpired:
         return f"error: query timed out after {SSH_TIMEOUT}s"
@@ -103,8 +135,11 @@ def tool_query(args):
 _IDENTITY_SQL = {
     "postgres":   "SELECT current_user AS db_user, "
                   "current_setting('is_superuser') AS is_superuser",
-    "vertica":    "SELECT current_user AS db_user",
-    "clickhouse": "SELECT currentUser() AS db_user",
+    "vertica":    "SELECT user_name AS db_user, is_super_user AS is_superuser "
+                  "FROM v_catalog.users WHERE user_name = current_user",
+    # CH: 2nd column = "can this session write" (readonly=0), reported as is_superuser
+    "clickhouse": "SELECT currentUser() AS db_user, "
+                  "if(getSetting('readonly') = 0, 'on', 'off') AS is_superuser",
 }
 
 
