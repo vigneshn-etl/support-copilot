@@ -1,0 +1,8 @@
+{
+  "_readme": "Shared defaults, no secrets (tracked). Every customers/<CLIENT>/ gets these unless its db/connections.json overrides an env/engine. Passwords live only in /data/external/support-copilot/targets.json on qa-processor.",
+  "qa": {
+    "ssh": "qa-processor",
+    "gate_cmd": "python3 /data/external/support-copilot/s5_ro_gate.py",
+    "engines": ["postgres", "vertica", "clickhouse"]
+  }
+}

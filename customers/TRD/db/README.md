@@ -14,7 +14,12 @@ wrong silently ran everything as an admin account.
   proxy: it collapses every connection to the superuser-ish app account `psql`
   regardless of the `-U` you pass. (`current_user` came back `psql`, not the
   read-only role, through that path.)
-- Vertica still connects as `s5_copilot_ro` via the `vsql` wrapper.
+- Vertica: `s5_copilot_ro` did **not** exist until 2026-10-01 (the earlier
+  claim here was wrong; `/usr/local/bin/vsql` wraps the real binary with
+  `-U dbadmin`). Now created with SELECT on `public` + `s5_ro_pool`.
+- Since 2026-10-01 all queries go through the read-only gate
+  (`tooling/db/remote/README.md`, login mode): no passwords on the laptop;
+  creds live in `~/.s5_ro/targets.json` on qa-processor.
 - The app-level `check_sql()` guard (SELECT/WITH/SHOW/EXPLAIN/DESCRIBE only) is
   now **defense-in-depth on top of real DB permissions**, not the only thing
   preventing a write.

@@ -1,8 +1,20 @@
 {
-  "_readme": "Copy to connections.json (gitignored) and fill in. 'ssh' can be any ~/.ssh/config alias (bastion/ProxyJump supported). Use a READ-ONLY db user in the remote command.",
+  "_readme": "Copy to connections.json (gitignored). Preferred: gated mode {ssh, gate} -- no passwords here; see tooling/db/remote/README.md. Legacy {ssh, cmd} still works but puts credentials in the command line.",
   "qa": {
-    "postgres":   { "ssh": "opc@<qa-pg-vm>",   "cmd": "psql -U readonly_user -d <dbname> -X -A -F'\t' -c {SQL}" },
-    "clickhouse": { "ssh": "opc@<qa-ch-vm>",   "cmd": "clickhouse-client --user readonly_user --format TabSeparatedWithNames --query {SQL}" },
-    "vertica":    { "ssh": "opc@<qa-vert-vm>", "cmd": "vsql -U readonly_user -A -F'\t' -c {SQL}" }
+    "postgres": {
+      "ssh": "qa-processor",
+      "gate": "TRD",
+      "gate_cmd": "python3 /data/external/support-copilot/s5_ro_gate.py"
+    },
+    "vertica": {
+      "ssh": "qa-processor",
+      "gate": "TRD",
+      "gate_cmd": "python3 /data/external/support-copilot/s5_ro_gate.py"
+    },
+    "clickhouse": {
+      "ssh": "qa-processor",
+      "gate": "TRD",
+      "gate_cmd": "python3 /data/external/support-copilot/s5_ro_gate.py"
+    }
   }
 }

@@ -1,0 +1,27 @@
+{
+  "_readme": "Lives ONLY on the QA host at ~/.s5_ro/targets.json, mode 600. Never copy it back to the hub. One entry per CLIENT/engine; always a read-only DB account.",
+  "TRD": {
+    "postgres": {
+      "host": "172.16.231.92",
+      "port": 5432,
+      "database": "trd",
+      "user": "s5_copilot_ro",
+      "password": "<fill on host>"
+    },
+    "vertica": {
+      "host": "trd-vertica.public",
+      "database": "",
+      "user": "s5_copilot_ro",
+      "password": "<fill on host>"
+    }
+  },
+  "_default": {
+    "clickhouse": {
+      "host": "clickhouse-0.public",
+      "port": 9000,
+      "database": "{client}",
+      "user": "{client}",
+      "password": ""
+    }
+  }
+}
