@@ -99,42 +99,49 @@ def _copy_tree(src, dst):
     shutil.copytree(src, dst)
 
 
+LAYERS = ("configuration", "override_configuration")          # bucket layers, later wins
+
+
 def build_effective(client, env):
-    """effective = copy of repo, with the env overlay applied on top and any
-    paths listed in `.delete` markers removed. Returns {files, deleted, fingerprint}."""
+    """effective = repo, then the bucket's configuration/, then override_configuration/,
+    then paths listed in the tenant's `.delete` removed. Returns {files, deleted, fingerprint}."""
     p, cfg = paths(client, env)
     repo, overlay, eff = p["repo"], p["overlay"], p["effective"]
     prefix = cfg["envs"][env]["prefix"].strip("/")
     if not repo.exists():
         raise RuntimeError(f"base repo not cloned yet: {repo}")
     _copy_tree(repo, eff)                                   # start from base
-    deleted = 0
     overlay_root = overlay / prefix if (overlay / prefix).exists() else overlay
-    applied = 0
-    if overlay_root.exists():
-        for f in overlay_root.rglob("*"):
-            rel = f.relative_to(overlay_root)
-            if f.is_dir():
-                continue
-            if f.name == ".delete":                          # tombstones
-                for line in f.read_text().splitlines():
-                    line = line.strip()
-                    if not line:
-                        continue
-                    victim = eff / line
-                    if victim.exists():
-                        victim.unlink(); deleted += 1
-                continue
-            target = eff / rel
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(f, target); applied += 1
+    applied, per_layer = 0, {}
+    for layer in LAYERS:
+        src = overlay_root / layer
+        if not src.exists():
+            continue
+        n = 0
+        for f in src.rglob("*"):
+            if f.is_file():
+                target = eff / f.relative_to(src)
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(f, target)
+                n += 1
+        per_layer[layer] = n
+        applied += n
+    deleted = 0
+    tomb = overlay_root / ".delete"
+    if tomb.exists():
+        for line in tomb.read_text().splitlines():
+            victim = eff / line.strip().lstrip("/")
+            if line.strip() and victim.is_file():
+                victim.unlink()
+                deleted += 1
     fp = _fingerprint(eff)
     total = sum(1 for _ in eff.rglob("*") if _.is_file())
     (p["status"]).write_text(json.dumps(
         {"env": env, "last_synced": int(time.time()),
-         "fingerprint": fp, "files": total, "overlay_applied": applied,
+         "fingerprint": fp, "files": total, "overlay_applied": applied, "layers": per_layer,
          "tombstoned": deleted}, indent=1))
-    return {"files": total, "overlay_applied": applied, "deleted": deleted, "fingerprint": fp}
+    return {"files": total, "overlay_applied": applied, "layers": per_layer, "deleted": deleted,
+            "fingerprint": fp}
 
 
 def _fingerprint(root):
@@ -162,16 +169,26 @@ def _build_catalog(config_dir, db):
 
 
 def sync_env(client, env, print_cmds=False):
-    steps = repo_cmds(client) + [overlay_cmd(client, env)]
+    p, _ = paths(client, env)
+    fresh = p["overlay"].with_name(p["overlay"].name + ".new")     # sync never deletes: start empty
+    ocmd = overlay_cmd(client, env)
+    ocmd[ocmd.index("--dest-dir") + 1] = str(fresh)
+    steps = repo_cmds(client) + [ocmd]
     if print_cmds:
         return {"commands": [" ".join(c) for c in steps]}
+    if fresh.exists():
+        shutil.rmtree(fresh)
+    fresh.mkdir(parents=True)
     results = [_run(c) for c in steps]
     failed = [r for r in results if r["rc"] != 0]
     if failed:
+        shutil.rmtree(fresh, ignore_errors=True)
         return {"ok": False, "results": results,
                 "hint": "needs git creds + OCI CLI (oci setup config) with bucket access; run on your Mac + VPN"}
+    if p["overlay"].exists():
+        shutil.rmtree(p["overlay"])
+    fresh.rename(p["overlay"])
     built = build_effective(client, env)
-    p, _ = paths(client, env)
     catalog_built = _build_catalog(p["effective"], p["effective"] / "lineage" / "catalog.db")
     return {"ok": True, "results": results, "effective": built, "catalog_built": catalog_built}
 

@@ -1,0 +1,6 @@
+population_id,step,rule_id,kind,source_id,time_window,condition,row_filter,applies_when,status,version,approved_by,approved_at,notes
+HIST_STD,1,flow,having,flowflag,receipt,avg(dmd_u) > 10 OR avg(shp_u) > 10 OR avg(eoh_u) > 5,,,draft,1,,,item flows: averages over the receipt window
+HIST_STD,2,hist,having,history,selected,sum(dmd_u) > 10 OR sum(shp_u) > 10 OR sum(eoh_u) > 5,,,draft,1,,,item sold or held stock in the selected weeks (price-status filter applies)
+HIST_STD,3,onorder,where,onorder,none,,on_order_u > 0,FP in price_status,draft,1,,,open on-order keeps an item in even without history (full price only)
+HIST_STD,4,flow_status,classify,flowflag,receipt,"multiIf(max(flow_flag) > 1000000, 0, max(flow_flag) > 0, 1, 2)",rec_u >= 0,,draft,1,,,0 New / 1 Carryover / 2 Sell Down
+HIST_STD,5,population,combine,,,flow AND (hist OR onorder),,,draft,1,,,items in the screen; rows are split by flow_status

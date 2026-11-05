@@ -1,0 +1,471 @@
+{
+ "status": "MATCH",
+ "warnings": [],
+ "provenance": {
+  "population": [
+   "flow v1 (draft)",
+   "hist v1 (draft)",
+   "onorder v1 (draft)",
+   "flow_status v1 (draft)",
+   "population v1 (draft)"
+  ],
+  "metrics": {
+   "Count": "cccount v1 (draft)",
+   "R$ Sales": "net_sls_r v1 (draft)",
+   "Unit Sales": "net_sls_u v1 (draft)",
+   "FGM %": "net_sls_margin_pct v1 (draft)",
+   "Funded APS": "funded_aps_u v1 (draft)",
+   "Unit EOP": "last_value_eoh_u v1 (draft)",
+   "Unit Avg EOP WOH": "stk_sls_u v1 (draft)"
+  },
+  "skipped": {}
+ },
+ "request": {
+  "client": "TRD",
+  "env": "qa",
+  "scope": {
+   "productLevel": "department",
+   "productMember": "DP-123",
+   "locationLevel": "channel",
+   "locationMember": "CH-2",
+   "historyStart": "2025_W22",
+   "historyEnd": "2025_W25"
+  },
+  "general": {},
+  "filters": {
+   "merchcat": [
+    "FP",
+    "MD"
+   ]
+  },
+  "flowStatus": null,
+  "aggBy": "level:stylecolor",
+  "history": true,
+  "pivot": "HistoryFit",
+  "views": [
+   "HistoryRollUp"
+  ],
+  "conditions_by_dimension": {
+   "prodlife": {
+    "merchcat": [
+     "FP",
+     "MD"
+    ]
+   }
+  },
+  "metrics": [
+   {
+    "label": "Count",
+    "data_index": "cccount",
+    "view_formula": "sum(1)",
+    "viewdefn": "HistoryRollUp",
+    "renderer": "thousand"
+   },
+   {
+    "label": "R$ Sales",
+    "data_index": "net_sls_r",
+    "view_formula": "sum(net_sls_r)",
+    "viewdefn": "HistoryRollUp",
+    "renderer": "usMoneyRounded"
+   },
+   {
+    "label": "Unit Sales",
+    "data_index": "net_sls_u",
+    "view_formula": "sum(shp_u) - sum(ret_u)",
+    "viewdefn": "HistoryRollUp",
+    "renderer": "thousand"
+   },
+   {
+    "label": "FGM %",
+    "data_index": "net_sls_margin_pct",
+    "view_formula": "(sum(net_sls_r) - sum(net_sls_c)) / sum(net_sls_r)",
+    "viewdefn": "HistoryRollUp",
+    "renderer": "percent"
+   },
+   {
+    "label": "Funded APS",
+    "data_index": "funded_aps_u",
+    "view_formula": "(sum(funded_shp_u) - sum(funded_ret_u))/ sum(strcntwk_funded)",
+    "viewdefn": "HistoryRollUp",
+    "renderer": "twoDecimal"
+   },
+   {
+    "label": "Unit EOP",
+    "data_index": "last_value_eoh_u",
+    "view_formula": "sum(last_value_eoh_u)",
+    "viewdefn": "HistoryRollUp",
+    "renderer": "thousand"
+   },
+   {
+    "label": "Unit Avg EOP WOH",
+    "data_index": "stk_sls_u",
+    "view_formula": "(sum(sum_eoh_u)) / (sum(shp_u) - sum(ret_u))",
+    "viewdefn": "HistoryRollUp",
+    "renderer": "oneDecimal"
+   }
+  ]
+ },
+ "engine": "spec",
+ "resolved": {
+  "pivot": "HistoryFit",
+  "engine": "spec",
+  "family": "HIST_STD",
+  "views": [
+   "HistoryRollUp"
+  ],
+  "ctes": null,
+  "grain": [
+   "g_stylecolor",
+   "class"
+  ],
+  "weeks": [
+   "2025_W22",
+   "2025_W25"
+  ],
+  "metrics": [
+   {
+    "label": "Count",
+    "data_index": "cccount",
+    "view_formula": "sum(1)",
+    "viewdefn": "HistoryRollUp",
+    "renderer": "thousand"
+   },
+   {
+    "label": "R$ Sales",
+    "data_index": "net_sls_r",
+    "view_formula": "sum(net_sls_r)",
+    "viewdefn": "HistoryRollUp",
+    "renderer": "usMoneyRounded"
+   },
+   {
+    "label": "Unit Sales",
+    "data_index": "net_sls_u",
+    "view_formula": "sum(shp_u) - sum(ret_u)",
+    "viewdefn": "HistoryRollUp",
+    "renderer": "thousand"
+   },
+   {
+    "label": "FGM %",
+    "data_index": "net_sls_margin_pct",
+    "view_formula": "(sum(net_sls_r) - sum(net_sls_c)) / sum(net_sls_r)",
+    "viewdefn": "HistoryRollUp",
+    "renderer": "percent"
+   },
+   {
+    "label": "Funded APS",
+    "data_index": "funded_aps_u",
+    "view_formula": "(sum(funded_shp_u) - sum(funded_ret_u))/ sum(strcntwk_funded)",
+    "viewdefn": "HistoryRollUp",
+    "renderer": "twoDecimal"
+   },
+   {
+    "label": "Unit EOP",
+    "data_index": "last_value_eoh_u",
+    "view_formula": "sum(last_value_eoh_u)",
+    "viewdefn": "HistoryRollUp",
+    "renderer": "thousand"
+   },
+   {
+    "label": "Unit Avg EOP WOH",
+    "data_index": "stk_sls_u",
+    "view_formula": "(sum(sum_eoh_u)) / (sum(shp_u) - sum(ret_u))",
+    "viewdefn": "HistoryRollUp",
+    "renderer": "oneDecimal"
+   }
+  ],
+  "criteria": {
+   "flow": "avg(dmd_u) > 10 OR avg(shp_u) > 10 OR avg(eoh_u) > 5",
+   "hist": "sum(dmd_u) > 10 OR sum(shp_u) > 10 OR sum(eoh_u) > 5",
+   "onorder": "on_order_u > 0",
+   "flow_status": "multiIf(max(flow_flag) > 1000000, 0, max(flow_flag) > 0, 1, 2)",
+   "population": "flow AND (hist OR onorder)"
+  }
+ },
+ "sql": {
+  "rows": "WITH\nP AS (\n-- scope: products in department DP-123, latest version, product filters\nSELECT product, total_brand, division, group_id, department, class, subclass, style, stylecolor FROM trd_stylecolor_hier_attr\nWHERE department = 'DP-123' \nORDER BY updated_at DESC LIMIT 1 BY product\n),\nL AS (\n-- scope: locations in channel CH-2, location filters\nSELECT location, channel, selling_channel, area, region, district FROM trd_store_hier_attr\nWHERE channel = 'CH-2' \nORDER BY updated_at DESC LIMIT 1 BY location\n),\nW_selected AS (\n-- weeks: selected window (2025_W22 .. 2025_W25, 4 weeks)\nSELECT arrayJoin(['2025_W22', '2025_W23', '2025_W24', '2025_W25']) AS wk\n),\nW_receipt AS (\n-- weeks: receipt window (2025_W22 .. 2025_W25, 4 weeks)\nSELECT arrayJoin(['2025_W22', '2025_W23', '2025_W24', '2025_W25']) AS wk\n),\npop_flow AS (\n-- population rule HIST_STD.flow [TY] v1 (draft): item flows: averages over the receipt window\nSELECT stylecolor AS item FROM trd_sku_temp_flow_flag\nWHERE stylecolor IN (SELECT product FROM P) AND time IN (SELECT wk FROM W_receipt)\nGROUP BY stylecolor\nHAVING avg(dmd_u) > 10 OR avg(shp_u) > 10 OR avg(eoh_u) > 5\n),\npop_hist AS (\n-- population rule HIST_STD.hist [TY] v1 (draft): item sold or held stock in the selected weeks (price-status filter applies)\nSELECT product AS item FROM trd_p_history_agg\nWHERE product IN (SELECT product FROM P) AND time IN (SELECT wk FROM W_selected) AND prodlife IN ('FP', 'MD') AND cluster IN ('A', 'AA', 'B', 'C', 'D', 'E', 'NA', 'WEB')\nGROUP BY product\nHAVING sum(dmd_u) > 10 OR sum(shp_u) > 10 OR sum(eoh_u) > 5\n),\npop_onorder AS (\n-- population rule HIST_STD.onorder [TY] v1 (draft): open on-order keeps an item in even without history (full price only)\nSELECT DISTINCT product AS item FROM trd_p_onorder_agg\nWHERE product IN (SELECT product FROM P) AND (on_order_u > 0)\n),\npop_flow_status AS (\n-- population rule HIST_STD.flow_status [TY] v1 (draft): 0 New / 1 Carryover / 2 Sell Down\nSELECT stylecolor AS item, toUInt8(multiIf(max(flow_flag) > 1000000, 0, max(flow_flag) > 0, 1, 2)) AS class FROM trd_sku_temp_flow_flag\nWHERE stylecolor IN (SELECT product FROM P) AND time IN (SELECT wk FROM W_receipt) AND (rec_u >= 0)\nGROUP BY stylecolor\n),\nQ AS (\n-- population HIST_STD [TY]: flow AND (hist OR onorder)\nSELECT item, class FROM pop_flow_status\nWHERE (item IN (SELECT item FROM pop_flow) AND ( item IN (SELECT item FROM pop_hist) OR item IN (SELECT item FROM pop_onorder) ))\n  AND class IN (0, 1, 2)\n),\nU AS (\n-- scan history (trd_p_history_agg) TY window=selected locations=scope: cc_count, eoh_u_last, eoh_u_sum, funded_ret_u, funded_shp_u, ret_c, ret_r, ret_u, shp_c, shp_r, shp_u, strcntwk_funded\nSELECT h.stylecolor AS g_stylecolor, qq.class AS class, toFloat64(uniqExactIf(a.product, (a.strcntwk > 0.000001))) AS m_cc_count, toFloat64(sumIf(a.eoh_u, a.time = (SELECT max(wk) FROM W_selected))) AS m_eoh_u_last, toFloat64(sum(a.eoh_u)) AS m_eoh_u_sum, toFloat64(sumIf(a.ret_u, (a.strcntwk_funded > 0.000001))) AS m_funded_ret_u, toFloat64(sumIf(a.shp_u, (a.strcntwk_funded > 0.000001))) AS m_funded_shp_u, toFloat64(sum(a.ret_c)) AS m_ret_c, toFloat64(sum(a.ret_r)) AS m_ret_r, toFloat64(sum(a.ret_u)) AS m_ret_u, toFloat64(sum(a.shp_c)) AS m_shp_c, toFloat64(sum(a.shp_r)) AS m_shp_r, toFloat64(sum(a.shp_u)) AS m_shp_u, toFloat64(sumIf(a.strcntwk_funded, (a.strcntwk_funded > 0.000001))) AS m_strcntwk_funded\nFROM trd_p_history_agg AS a\nANY LEFT JOIN Q AS qq ON a.product = qq.item\nANY LEFT JOIN P AS h ON a.product = h.product\nANY LEFT JOIN L AS l ON a.location = l.location\nWHERE a.product IN (SELECT item FROM Q) AND a.time IN (SELECT wk FROM W_selected) AND a.location IN (SELECT location FROM L) AND a.prodlife IN ('FP', 'MD') AND a.cluster IN ('A', 'AA', 'B', 'C', 'D', 'E', 'NA', 'WEB')\nGROUP BY g_stylecolor, class\n),\nG AS (\n-- metrics at grain g_stylecolor, class\nSELECT g_stylecolor, class, sum(m_cc_count) AS cc_count, sum(m_eoh_u_last) AS eoh_u_last, sum(m_eoh_u_sum) AS eoh_u_sum, sum(m_funded_ret_u) AS funded_ret_u, sum(m_funded_shp_u) AS funded_shp_u, sum(m_ret_c) AS ret_c, sum(m_ret_r) AS ret_r, sum(m_ret_u) AS ret_u, sum(m_shp_c) AS shp_c, sum(m_shp_r) AS shp_r, sum(m_shp_u) AS shp_u, sum(m_strcntwk_funded) AS strcntwk_funded, cc_count AS cccount, shp_r - ret_r AS net_sls_r, shp_u - ret_u AS net_sls_u, shp_c - ret_c AS net_sls_c, net_sls_r - net_sls_c AS net_sls_margin_r, if((net_sls_r) > 0, round((net_sls_margin_r) / (net_sls_r), 4), 0) AS net_sls_margin_pct, if((strcntwk_funded) > 0, round((funded_shp_u - funded_ret_u) / (strcntwk_funded), 4), 0) AS funded_aps_u, eoh_u_last AS last_value_eoh_u, eoh_u_sum AS sum_eoh_u, if((net_sls_u) > 0, round((sum_eoh_u) / (net_sls_u), 4), 0) AS stk_sls_u\nFROM U\nGROUP BY g_stylecolor, class\n)\nSELECT g_stylecolor, class, cccount, net_sls_r, net_sls_u, net_sls_margin_pct, funded_aps_u, last_value_eoh_u, stk_sls_u\nFROM G\nORDER BY g_stylecolor, class",
+  "totals": "WITH\nP AS (\n-- scope: products in department DP-123, latest version, product filters\nSELECT product, total_brand, division, group_id, department, class, subclass, style, stylecolor FROM trd_stylecolor_hier_attr\nWHERE department = 'DP-123' \nORDER BY updated_at DESC LIMIT 1 BY product\n),\nL AS (\n-- scope: locations in channel CH-2, location filters\nSELECT location, channel, selling_channel, area, region, district FROM trd_store_hier_attr\nWHERE channel = 'CH-2' \nORDER BY updated_at DESC LIMIT 1 BY location\n),\nW_selected AS (\n-- weeks: selected window (2025_W22 .. 2025_W25, 4 weeks)\nSELECT arrayJoin(['2025_W22', '2025_W23', '2025_W24', '2025_W25']) AS wk\n),\nW_receipt AS (\n-- weeks: receipt window (2025_W22 .. 2025_W25, 4 weeks)\nSELECT arrayJoin(['2025_W22', '2025_W23', '2025_W24', '2025_W25']) AS wk\n),\npop_flow AS (\n-- population rule HIST_STD.flow [TY] v1 (draft): item flows: averages over the receipt window\nSELECT stylecolor AS item FROM trd_sku_temp_flow_flag\nWHERE stylecolor IN (SELECT product FROM P) AND time IN (SELECT wk FROM W_receipt)\nGROUP BY stylecolor\nHAVING avg(dmd_u) > 10 OR avg(shp_u) > 10 OR avg(eoh_u) > 5\n),\npop_hist AS (\n-- population rule HIST_STD.hist [TY] v1 (draft): item sold or held stock in the selected weeks (price-status filter applies)\nSELECT product AS item FROM trd_p_history_agg\nWHERE product IN (SELECT product FROM P) AND time IN (SELECT wk FROM W_selected) AND prodlife IN ('FP', 'MD') AND cluster IN ('A', 'AA', 'B', 'C', 'D', 'E', 'NA', 'WEB')\nGROUP BY product\nHAVING sum(dmd_u) > 10 OR sum(shp_u) > 10 OR sum(eoh_u) > 5\n),\npop_onorder AS (\n-- population rule HIST_STD.onorder [TY] v1 (draft): open on-order keeps an item in even without history (full price only)\nSELECT DISTINCT product AS item FROM trd_p_onorder_agg\nWHERE product IN (SELECT product FROM P) AND (on_order_u > 0)\n),\npop_flow_status AS (\n-- population rule HIST_STD.flow_status [TY] v1 (draft): 0 New / 1 Carryover / 2 Sell Down\nSELECT stylecolor AS item, toUInt8(multiIf(max(flow_flag) > 1000000, 0, max(flow_flag) > 0, 1, 2)) AS class FROM trd_sku_temp_flow_flag\nWHERE stylecolor IN (SELECT product FROM P) AND time IN (SELECT wk FROM W_receipt) AND (rec_u >= 0)\nGROUP BY stylecolor\n),\nQ AS (\n-- population HIST_STD [TY]: flow AND (hist OR onorder)\nSELECT item, class FROM pop_flow_status\nWHERE (item IN (SELECT item FROM pop_flow) AND ( item IN (SELECT item FROM pop_hist) OR item IN (SELECT item FROM pop_onorder) ))\n  AND class IN (0, 1, 2)\n),\nU AS (\n-- scan history (trd_p_history_agg) TY window=selected locations=scope: cc_count, eoh_u_last, eoh_u_sum, funded_ret_u, funded_shp_u, ret_c, ret_r, ret_u, shp_c, shp_r, shp_u, strcntwk_funded\nSELECT h.stylecolor AS g_stylecolor, qq.class AS class, toFloat64(uniqExactIf(a.product, (a.strcntwk > 0.000001))) AS m_cc_count, toFloat64(sumIf(a.eoh_u, a.time = (SELECT max(wk) FROM W_selected))) AS m_eoh_u_last, toFloat64(sum(a.eoh_u)) AS m_eoh_u_sum, toFloat64(sumIf(a.ret_u, (a.strcntwk_funded > 0.000001))) AS m_funded_ret_u, toFloat64(sumIf(a.shp_u, (a.strcntwk_funded > 0.000001))) AS m_funded_shp_u, toFloat64(sum(a.ret_c)) AS m_ret_c, toFloat64(sum(a.ret_r)) AS m_ret_r, toFloat64(sum(a.ret_u)) AS m_ret_u, toFloat64(sum(a.shp_c)) AS m_shp_c, toFloat64(sum(a.shp_r)) AS m_shp_r, toFloat64(sum(a.shp_u)) AS m_shp_u, toFloat64(sumIf(a.strcntwk_funded, (a.strcntwk_funded > 0.000001))) AS m_strcntwk_funded\nFROM trd_p_history_agg AS a\nANY LEFT JOIN Q AS qq ON a.product = qq.item\nANY LEFT JOIN P AS h ON a.product = h.product\nANY LEFT JOIN L AS l ON a.location = l.location\nWHERE a.product IN (SELECT item FROM Q) AND a.time IN (SELECT wk FROM W_selected) AND a.location IN (SELECT location FROM L) AND a.prodlife IN ('FP', 'MD') AND a.cluster IN ('A', 'AA', 'B', 'C', 'D', 'E', 'NA', 'WEB')\nGROUP BY g_stylecolor, class\n),\nG AS (\n-- metrics at grain g_stylecolor, class\nSELECT g_stylecolor, class, sum(m_cc_count) AS cc_count, sum(m_eoh_u_last) AS eoh_u_last, sum(m_eoh_u_sum) AS eoh_u_sum, sum(m_funded_ret_u) AS funded_ret_u, sum(m_funded_shp_u) AS funded_shp_u, sum(m_ret_c) AS ret_c, sum(m_ret_r) AS ret_r, sum(m_ret_u) AS ret_u, sum(m_shp_c) AS shp_c, sum(m_shp_r) AS shp_r, sum(m_shp_u) AS shp_u, sum(m_strcntwk_funded) AS strcntwk_funded, cc_count AS cccount, shp_r - ret_r AS net_sls_r, shp_u - ret_u AS net_sls_u, shp_c - ret_c AS net_sls_c, net_sls_r - net_sls_c AS net_sls_margin_r, if((net_sls_r) > 0, round((net_sls_margin_r) / (net_sls_r), 4), 0) AS net_sls_margin_pct, if((strcntwk_funded) > 0, round((funded_shp_u - funded_ret_u) / (strcntwk_funded), 4), 0) AS funded_aps_u, eoh_u_last AS last_value_eoh_u, eoh_u_sum AS sum_eoh_u, if((net_sls_u) > 0, round((sum_eoh_u) / (net_sls_u), 4), 0) AS stk_sls_u\nFROM U\nGROUP BY g_stylecolor, class\n)\nSELECT count() AS t0, sum(net_sls_r) AS t1, sum(shp_u) - sum(ret_u) AS t2, (sum(net_sls_r) - sum(net_sls_c)) / sum(net_sls_r) AS t3, (sum(funded_shp_u) - sum(funded_ret_u))/ sum(strcntwk_funded) AS t4, sum(last_value_eoh_u) AS t5, (sum(sum_eoh_u)) / (sum(shp_u) - sum(ret_u)) AS t6\nFROM G"
+ },
+ "totals": {
+  "Count": 18,
+  "R$ Sales": 32.670000076293945,
+  "Unit Sales": 3.0,
+  "FGM %": -0.45039480715432634,
+  "Funded APS": 0.05128205128205128,
+  "Unit EOP": 40709.0,
+  "Unit Avg EOP WOH": 30365.333333333332
+ },
+ "rows": [
+  {
+   "g_stylecolor": "19542103_TIEDYE",
+   "class": 2,
+   "cccount": 1.0,
+   "net_sls_r": 0.0,
+   "net_sls_u": 0.0,
+   "net_sls_margin_pct": 0.0,
+   "funded_aps_u": 0.0,
+   "last_value_eoh_u": 7.0,
+   "stk_sls_u": 0.0
+  },
+  {
+   "g_stylecolor": "19542201_TIEDYE",
+   "class": 2,
+   "cccount": 1.0,
+   "net_sls_r": 0.0,
+   "net_sls_u": 0.0,
+   "net_sls_margin_pct": 0.0,
+   "funded_aps_u": 0.0,
+   "last_value_eoh_u": 7.0,
+   "stk_sls_u": 0.0
+  },
+  {
+   "g_stylecolor": "19542246_GREY",
+   "class": 2,
+   "cccount": 1.0,
+   "net_sls_r": 32.670000076293945,
+   "net_sls_u": 3.0,
+   "net_sls_margin_pct": -0.4504,
+   "funded_aps_u": 0.5,
+   "last_value_eoh_u": 7.0,
+   "stk_sls_u": 11.3333
+  },
+  {
+   "g_stylecolor": "19686132_BLACK",
+   "class": 2,
+   "cccount": 1.0,
+   "net_sls_r": 0.0,
+   "net_sls_u": 0.0,
+   "net_sls_margin_pct": 0.0,
+   "funded_aps_u": 0.0,
+   "last_value_eoh_u": 7.0,
+   "stk_sls_u": 0.0
+  },
+  {
+   "g_stylecolor": "42910175_NONEC",
+   "class": 2,
+   "cccount": 1.0,
+   "net_sls_r": 0.0,
+   "net_sls_u": 0.0,
+   "net_sls_margin_pct": 0.0,
+   "funded_aps_u": 0.0,
+   "last_value_eoh_u": 1773.0,
+   "stk_sls_u": 0.0
+  },
+  {
+   "g_stylecolor": "43935450_ANTIQUEITE",
+   "class": 0,
+   "cccount": 1.0,
+   "net_sls_r": 0.0,
+   "net_sls_u": 0.0,
+   "net_sls_margin_pct": 0.0,
+   "funded_aps_u": 0.0,
+   "last_value_eoh_u": 3196.0,
+   "stk_sls_u": 0.0
+  },
+  {
+   "g_stylecolor": "43955764_COBIPLHITE",
+   "class": 0,
+   "cccount": 1.0,
+   "net_sls_r": 0.0,
+   "net_sls_u": 0.0,
+   "net_sls_margin_pct": 0.0,
+   "funded_aps_u": 0.0,
+   "last_value_eoh_u": 2670.0,
+   "stk_sls_u": 0.0
+  },
+  {
+   "g_stylecolor": "43955764_OXSTFOBLUE",
+   "class": 0,
+   "cccount": 1.0,
+   "net_sls_r": 0.0,
+   "net_sls_u": 0.0,
+   "net_sls_margin_pct": 0.0,
+   "funded_aps_u": 0.0,
+   "last_value_eoh_u": 2560.0,
+   "stk_sls_u": 0.0
+  },
+  {
+   "g_stylecolor": "43956798_DASWROETTE",
+   "class": 0,
+   "cccount": 1.0,
+   "net_sls_r": 0.0,
+   "net_sls_u": 0.0,
+   "net_sls_margin_pct": 0.0,
+   "funded_aps_u": 0.0,
+   "last_value_eoh_u": 2773.0,
+   "stk_sls_u": 0.0
+  },
+  {
+   "g_stylecolor": "43956915_WIPEDUBLUE",
+   "class": 0,
+   "cccount": 1.0,
+   "net_sls_r": 0.0,
+   "net_sls_u": 0.0,
+   "net_sls_margin_pct": 0.0,
+   "funded_aps_u": 0.0,
+   "last_value_eoh_u": 2366.0,
+   "stk_sls_u": 0.0
+  },
+  {
+   "g_stylecolor": "43956924_WIPEWOROSE",
+   "class": 0,
+   "cccount": 1.0,
+   "net_sls_r": 0.0,
+   "net_sls_u": 0.0,
+   "net_sls_margin_pct": 0.0,
+   "funded_aps_u": 0.0,
+   "last_value_eoh_u": 2772.0,
+   "stk_sls_u": 0.0
+  },
+  {
+   "g_stylecolor": "43971006_COPLFOBLUE",
+   "class": 0,
+   "cccount": 1.0,
+   "net_sls_r": 0.0,
+   "net_sls_u": 0.0,
+   "net_sls_margin_pct": 0.0,
+   "funded_aps_u": 0.0,
+   "last_value_eoh_u": 2276.0,
+   "stk_sls_u": 0.0
+  },
+  {
+   "g_stylecolor": "43985378_DEEPBLACK",
+   "class": 0,
+   "cccount": 1.0,
+   "net_sls_r": 0.0,
+   "net_sls_u": 0.0,
+   "net_sls_margin_pct": 0.0,
+   "funded_aps_u": 0.0,
+   "last_value_eoh_u": 2426.0,
+   "stk_sls_u": 0.0
+  },
+  {
+   "g_stylecolor": "43985403_PAFLSUZZLE",
+   "class": 0,
+   "cccount": 1.0,
+   "net_sls_r": 0.0,
+   "net_sls_u": 0.0,
+   "net_sls_margin_pct": 0.0,
+   "funded_aps_u": 0.0,
+   "last_value_eoh_u": 2851.0,
+   "stk_sls_u": 0.0
+  },
+  {
+   "g_stylecolor": "44005452_DELULU",
+   "class": 0,
+   "cccount": 1.0,
+   "net_sls_r": 0.0,
+   "net_sls_u": 0.0,
+   "net_sls_margin_pct": 0.0,
+   "funded_aps_u": 0.0,
+   "last_value_eoh_u": 1376.0,
+   "stk_sls_u": 0.0
+  },
+  {
+   "g_stylecolor": "44005452_FIRE",
+   "class": 0,
+   "cccount": 1.0,
+   "net_sls_r": 0.0,
+   "net_sls_u": 0.0,
+   "net_sls_margin_pct": 0.0,
+   "funded_aps_u": 0.0,
+   "last_value_eoh_u": 4422.0,
+   "stk_sls_u": 0.0
+  },
+  {
+   "g_stylecolor": "44020359_GOOFF",
+   "class": 0,
+   "cccount": 1.0,
+   "net_sls_r": 0.0,
+   "net_sls_u": 0.0,
+   "net_sls_margin_pct": 0.0,
+   "funded_aps_u": 0.0,
+   "last_value_eoh_u": 4708.0,
+   "stk_sls_u": 0.0
+  },
+  {
+   "g_stylecolor": "44020359_SNATCHED",
+   "class": 0,
+   "cccount": 1.0,
+   "net_sls_r": 0.0,
+   "net_sls_u": 0.0,
+   "net_sls_margin_pct": 0.0,
+   "funded_aps_u": 0.0,
+   "last_value_eoh_u": 4512.0,
+   "stk_sls_u": 0.0
+  }
+ ],
+ "row_count": 18,
+ "timing_ms": {
+  "totals_ms": 13534,
+  "rows_ms": 11422
+ },
+ "compare": {
+  "totals": [
+   {
+    "metric": "Count",
+    "expected": 18,
+    "expected_value": 18.0,
+    "db": 18,
+    "diff": 0.0,
+    "tolerance": 0.5,
+    "match": true
+   },
+   {
+    "metric": "R$ Sales",
+    "expected": "$32.67",
+    "expected_value": 32.67,
+    "db": 32.670000076293945,
+    "diff": 7.629394360719743e-08,
+    "tolerance": 0.005,
+    "match": true
+   },
+   {
+    "metric": "Unit Sales",
+    "expected": "3",
+    "expected_value": 3.0,
+    "db": 3.0,
+    "diff": 0.0,
+    "tolerance": 0.5,
+    "match": true
+   },
+   {
+    "metric": "FGM %",
+    "expected": "-45.04%",
+    "expected_value": -0.45039999999999997,
+    "db": -0.45039480715432634,
+    "diff": 5.1928456736294315e-06,
+    "tolerance": 5e-05,
+    "match": true
+   },
+   {
+    "metric": "Funded APS",
+    "expected": "0.05",
+    "expected_value": 0.05,
+    "db": 0.05128205128205128,
+    "diff": 0.0012820512820512775,
+    "tolerance": 0.005,
+    "match": true
+   },
+   {
+    "metric": "Unit EOP",
+    "expected": "40,709",
+    "expected_value": 40709.0,
+    "db": 40709.0,
+    "diff": 0.0,
+    "tolerance": 0.5,
+    "match": true
+   },
+   {
+    "metric": "Unit Avg EOP WOH",
+    "expected": "30365.3",
+    "expected_value": 30365.3,
+    "db": 30365.333333333332,
+    "diff": 0.03333333333284827,
+    "tolerance": 0.05,
+    "match": true
+   }
+  ],
+  "rows": null
+ },
+ "elapsed_ms": 28750
+}

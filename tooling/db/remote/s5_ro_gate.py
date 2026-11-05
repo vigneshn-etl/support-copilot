@@ -49,7 +49,7 @@ TARGETS = BASE / "targets.json"
 AUDIT = BASE / "audit.log"
 MAX_SQL_BYTES = 200_000
 MAX_OUT_LINES = 2_100          # hub caps at 2000 rows; a little slack for headers
-TIMEOUT = 90
+TIMEOUT = 300                  # validation queries over TY/LY/LLY populations need minutes on CH 21.4
 
 BIN = {
     "postgres": "/usr/bin/psql",

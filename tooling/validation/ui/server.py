@@ -34,10 +34,12 @@ except Exception:
     members_mod = None
 
 HUB = VALID.parent.parent                # support-copilot
-CONFIG_DIR = os.environ.get("CONFIG_DIR", "")
+CLIENT = os.environ.get("CLIENT", "TRD")
+ENV = os.environ.get("DVS_ENV", "qa")
+# default: what QA actually runs (git base + OCI overlay), when it has been pulled
+CONFIG_DIR = os.environ.get("CONFIG_DIR") or str(cfgsync.effective_dir(CLIENT, ENV) or "")
 CATALOG_DB = os.environ.get(
     "CATALOG_DB", str(HUB / "customers" / "TRD" / "lineage" / "catalog.db"))
-CLIENT = os.environ.get("CLIENT", "TRD")
 CH_DSN = os.environ.get("CH_DSN", "")     # read-only ClickHouse DSN (server-side only)
 
 # Config source switching: 'repo' = whatever CONFIG_DIR/CATALOG_DB you launched
@@ -106,6 +108,204 @@ def views(module: str, screen: str):
         "WHERE vi.tab=? AND vi.screen=? ORDER BY vi.view", (module, screen)).fetchall()
     con.close()
     return [dict(r) for r in rows]
+
+
+# ---- metric map (customers/<CLIENT>/metrics/metric_map.csv, built by metric_map.py)
+_MDIR = HUB / "customers" / CLIENT / "metrics"
+METRIC_MAP = os.environ.get("METRIC_MAP") or str(
+    _MDIR / f"metric_map_{ENV}.csv" if (_MDIR / f"metric_map_{ENV}.csv").exists() else _MDIR / "metric_map.csv")
+_MM = {"mtime": None, "rows": []}
+
+
+def metric_rows():
+    import csv
+    p = Path(METRIC_MAP)
+    if not p.exists():
+        raise HTTPException(500, f"metric map not found: {p} — run metric_map.py")
+    if _MM["mtime"] != p.stat().st_mtime:
+        with open(p, newline="") as f:
+            _MM["rows"] = list(csv.DictReader(f))
+        _MM["mtime"] = p.stat().st_mtime
+    return _MM["rows"]
+
+
+@app.get("/api/metrics/search")
+def metrics_search(q: str, limit: int = 300):
+    """display name / dataIndex search -> every screen occurrence, grouped by name."""
+    ql = q.strip().lower()
+    if len(ql) < 2:
+        return {"groups": [], "total": 0}
+    hits = [(i, r) for i, r in enumerate(metric_rows())
+            if ql in r["display_name"].lower() or ql in r["data_index"].lower()]
+    # exact name matches first, then by name, then resolved first
+    hits.sort(key=lambda x: (x[1]["display_name"].lower() != ql, x[1]["display_name"].lower(),
+                             x[1]["status"] != "resolved", x[1]["top_nav"], x[1]["left_nav"]))
+    groups = {}
+    for i, r in hits[:limit]:
+        g = groups.setdefault(r["display_name"], [])
+        g.append({"id": i, **{k: r[k] for k in (
+            "data_index", "top_nav", "left_nav", "screen_view", "viewdefn", "view_section",
+            "pivot", "status", "variants", "base_formula", "modules")}})
+    return {"groups": [{"name": k, "rows": v} for k, v in groups.items()], "total": len(hits)}
+
+
+@app.get("/api/metrics/row/{rid}")
+def metrics_row(rid: int):
+    rows = metric_rows()
+    if not 0 <= rid < len(rows):
+        raise HTTPException(404, "no such metric row")
+    return {"id": rid, **rows[rid]}
+
+
+# ---- v2: the simple Studio (scope bar like Assortment UI) on the validation core
+import validate as vcore
+from fastapi import Body
+import spec_api
+
+def _studio_user():
+    u = os.environ.get("STUDIO_USER")
+    if not u:
+        try:
+            u = subprocess.run(["git", "config", "user.email"], capture_output=True, text=True,
+                               cwd=str(HUB)).stdout.strip().split("@")[0]
+        except Exception:
+            u = ""
+    return u or "unknown"
+
+spec_api.CTX.update({"spec_dir": HUB / "customers" / CLIENT / "spec",
+                     "metric_map_rows": lambda: metric_rows(), "user": _studio_user()})
+app.include_router(spec_api.router)
+
+import sync_api
+
+
+def _on_qa_config(cfg_dir, qa_map):
+    """after Pull metrics from QA: compose against the fresh QA config and map."""
+    global CONFIG_DIR, METRIC_MAP
+    CONFIG_DIR, METRIC_MAP = str(cfg_dir), str(qa_map)
+    _V2.clear()
+    vcore._MAP.clear()
+
+
+sync_api.CTX.update({"client": CLIENT, "env": ENV, "on_config": _on_qa_config})
+app.include_router(sync_api.router)
+
+
+@app.on_event("startup")
+def _warm():
+    v2_ctx()
+
+_V2 = {}
+
+
+def v2_ctx():
+    if "ctx" not in _V2:
+        _V2["ctx"] = vcore.context(CLIENT, CONFIG_DIR or None)
+        spec_api.CTX["schema"] = _V2["ctx"]["schema"]
+        sync_api.CTX["dims"] = spec_api.CTX["dims"] = _V2["ctx"]["dims"]
+    return _V2["ctx"]
+
+
+def _screen_rows():
+    return [r for r in metric_rows() if r.get("pivot")]
+
+
+@app.get("/api/v2/meta")
+def v2_meta():
+    d = v2_ctx()["dims"]
+    return {"client": CLIENT,
+            "product_levels": list(d["product"]["levels"]),
+            "location_levels": list(d["location"]["levels"]),
+            "price_status": d["filters"]["merchcat"].get("all", []),
+            "flow_status": [{"id": int(k), "name": v} for k, v in d["flow_status"]["values"].items()],
+            "attribute_filters": {
+                "product": sorted({c for c in v2_ctx()["schema"].get(d["product"]["hier_table"], set())
+                                   if c.endswith("_name") or c.startswith(("cc_", "sty_", "irw_"))}),
+                "location": d["filters"].get("location_attributes", [])}}
+
+
+@app.get("/api/v2/members/{kind}")
+def v2_members(kind: str):
+    if members_mod is None:
+        raise HTTPException(500, "members provider unavailable")
+    try:
+        rows = members_mod.get_members(CLIENT, kind)
+    except Exception as e:
+        raise HTTPException(502, f"{e}")
+    if kind == "week":
+        rows = sorted(rows, key=lambda r: r["id"])
+    return rows
+
+
+@app.get("/api/v2/db")
+def v2_db():
+    """quick read-only gate probe (the Studio shows a status pill)."""
+    from core import run as R
+    try:
+        R.query(CLIENT, "qa", "SELECT 1", timeout=20)
+        return {"ok": True}
+    except Exception as e:
+        return {"ok": False, "error": str(e)[:200]}
+
+
+@app.get("/api/v2/screens")
+def v2_screens():
+    """{top_nav: {left_nav: [screen_view…]}} for every screen that shows pivot data."""
+    tree = {}
+    for r in _screen_rows():
+        tree.setdefault(r["top_nav"], {}).setdefault(r["left_nav"], [])
+        v = r["screen_view"] or "(main)"
+        if v not in tree[r["top_nav"]][r["left_nav"]]:
+            tree[r["top_nav"]][r["left_nav"]].append(v)
+    return tree
+
+
+@app.get("/api/v2/screen")
+def v2_screen(top: str, left: str, view: str):
+    """data calls (one per pivot) on a screen, each with its metrics."""
+    v = "" if view == "(main)" else view
+    calls = {}
+    for r in _screen_rows():
+        if r["top_nav"] != top or r["left_nav"] != left or r["screen_view"] != v:
+            continue
+        c = calls.setdefault((r["pivot"], r["viewdefn"]), {"pivot": r["pivot"], "viewdefns": [], "metrics": [],
+                                          "route": None, "top_nav_id": r["top_nav_id"],
+                                          "screen_id": r["screen_id"]})
+        if r["viewdefn"] not in c["viewdefns"]:
+            c["viewdefns"].append(r["viewdefn"])
+        key = (r["display_name"], r["data_index"], r["view_formula"])
+        if key not in {(m["label"], m["data_index"], m["view_formula"]) for m in c["metrics"]}:
+            c["metrics"].append({"label": r["display_name"], "data_index": r["data_index"],
+                                 "view_formula": r["view_formula"], "viewdefn": r["viewdefn"],
+                                 "status": r["status"], "renderer": r["renderer"],
+                                 "variants": r.get("variants", "")})
+    # rollup bars first (that's what people check), then by size
+    return sorted(calls.values(), key=lambda c: (not any("rollup" in v.lower() for v in c["viewdefns"]),
+                                                 -len(c["metrics"])))
+
+
+@app.get("/api/v2/route")
+def v2_route(url: str):
+    """paste an S5 URL -> top/left/view (via the confdefn route + metric map)."""
+    out = rr.resolve_url(CONFIG_DIR, url)
+    views = set(out.get("views") or [])
+    for r in _screen_rows():
+        if r["viewdefn"] in views or (out.get("pivot") and r["pivot"] == out["pivot"]):
+            return {"top": r["top_nav"], "left": r["left_nav"], "view": r["screen_view"] or "(main)",
+                    "pivot": out.get("pivot"), "warnings": out.get("warnings", [])}
+    raise HTTPException(404, f"route not matched: {out.get('warnings')}")
+
+
+@app.post("/api/v2/validate")
+def v2_validate(req: dict = Body(...), rows_limit: int = 500, sql_only: bool = False):
+    req.setdefault("client", CLIENT)
+    req.setdefault("env", "qa")
+    res = vcore.validate(req, v2_ctx(), sql_only=sql_only)
+    if res.get("rows") and len(res["rows"]) > rows_limit:
+        res["rows_truncated"] = len(res["rows"])
+        res["rows"] = res["rows"][:rows_limit]
+    res["request_json"] = {k: v for k, v in req.items()}
+    return res
 
 
 @app.get("/api/pivot")

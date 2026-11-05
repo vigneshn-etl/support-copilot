@@ -1,0 +1,178 @@
+{
+  "_readme": "TRD scope/filter -> SQL map for the validation core. Maintained by hand like an ETL constant table; verify with `python3 tooling/validation/validate.py --check-dimensions`. Sources: trd-configs uidefn/filter/AssortmentFilterConfig.filterdefn, darwin PivotParamGenerator/PivotMemberIds, pivot/include/filtered_members_create_sclr.ftl.",
+  "client": "TRD",
+  "tenant": "trd",
+  "product": {
+    "hier_table": "trd_stylecolor_hier_attr",
+    "key": "product",
+    "latest_by": "updated_at",
+    "base_key": "product",
+    "base_grain": "stylecolor",
+    "levels": {
+      "total_brand": {
+        "id": "total_brand",
+        "name": "total_brand_name"
+      },
+      "division": {
+        "id": "division",
+        "name": "division_name"
+      },
+      "group": {
+        "id": "group_id",
+        "name": "group_name"
+      },
+      "department": {
+        "id": "department",
+        "name": "department_name"
+      },
+      "class": {
+        "id": "class",
+        "name": "class_name"
+      },
+      "subclass": {
+        "id": "subclass",
+        "name": "subclass_name"
+      },
+      "style": {
+        "id": "style",
+        "name": "style_name"
+      },
+      "stylecolor": {
+        "id": "stylecolor",
+        "name": "stylecolor_name"
+      }
+    }
+  },
+  "location": {
+    "hier_table": "trd_store_hier_attr",
+    "key": "location",
+    "latest_by": "updated_at",
+    "base_key": "location",
+    "base_grain": "store",
+    "levels": {
+      "channel": {
+        "id": "channel",
+        "name": "channel_name"
+      },
+      "selling_channel": {
+        "id": "selling_channel",
+        "name": "selling_channel_name"
+      },
+      "area": {
+        "id": "area",
+        "name": "area_name"
+      },
+      "region": {
+        "id": "region",
+        "name": "region_name"
+      },
+      "district": {
+        "id": "district",
+        "name": "district_name"
+      },
+      "store": {
+        "id": "location",
+        "name": "strname"
+      }
+    }
+  },
+  "time": {
+    "table": "trd_time_attributes",
+    "week": "week",
+    "ty_week": "cctytime",
+    "base_col": "time",
+    "levels": [
+      "week",
+      "month",
+      "quarter",
+      "half",
+      "year"
+    ],
+    "_note": "week ids are zero-padded 'YYYY_Www' so string order == calendar order. cctytime = the TY week a (LY) week maps to; darwin LEAF_TIME = history weeks on history models, else assortment weeks."
+  },
+  "filters": {
+    "merchcat": {
+      "kind": "leaf",
+      "dimension": "prodlife",
+      "param": "LEAF_PRODLIFE",
+      "base_col": "prodlife",
+      "_note": "conditionType=level on dimension prodlife (level merchcat). Absent -> every prodlife leaf member (darwin leafValueRecords: FP, MD, OOL).",
+      "all": [
+        "FP",
+        "MD",
+        "OOL"
+      ]
+    },
+    "grade": {
+      "kind": "leaf",
+      "dimension": "cluster",
+      "param": "LEAF_CLUSTER",
+      "base_col": "cluster",
+      "all": [
+        "A",
+        "AA",
+        "B",
+        "C",
+        "D",
+        "E",
+        "NA",
+        "WEB"
+      ]
+    },
+    "rcpt_weeks": {
+      "kind": "general",
+      "param": "rcpt_weeks"
+    },
+    "ly_rcpt_weeks": {
+      "kind": "general",
+      "param": "ly_rcpt_weeks"
+    },
+    "sales_weeks": {
+      "kind": "general",
+      "param": "sales_weeks"
+    },
+    "ly_sales_weeks": {
+      "kind": "general",
+      "param": "ly_sales_weeks"
+    },
+    "_attribute_default": {
+      "product": {
+        "kind": "attribute",
+        "table": "trd_stylecolor_hier_attr",
+        "_note": "filterId == hier column; applied while building the scoped product set"
+      },
+      "location": {
+        "kind": "attribute",
+        "table": "trd_store_hier_attr",
+        "_note": "filterId == hier column; applied while building the scoped location set"
+      }
+    },
+    "location_attributes": [
+      "str_store_banner",
+      "str_capacity",
+      "str_capacity_volume",
+      "str_fxt_casual_3",
+      "str_clearance_store",
+      "str_store_climate",
+      "str_corp_rank",
+      "str_hazmat",
+      "str_geo_region",
+      "str_selling_channel",
+      "selling_channel_name",
+      "strname"
+    ]
+  },
+  "flow_status": {
+    "values": {
+      "0": "New",
+      "1": "Carryover",
+      "2": "Sell Down"
+    },
+    "default": [
+      0,
+      1,
+      2
+    ],
+    "_rule": "s5flowstatus = 0 if max(flow_flag) > 1000000, 1 if > 0, else 2 (history_product_ty.ftl)"
+  }
+}
