@@ -1,0 +1,39 @@
+# Example scenario (SUP-4628, BELK). Routes come from the browser URL or
+# tooling/validation/route_resolver.py; metric names = column headers as shown.
+ticket: SUP-4628
+title: "[BLK] Add New KPI's to Views (Assortment only)"
+client: BELK
+env: qa
+scope:                         # omit time etc. to take it from the UI's scope bar
+  product: DP-145 ANNE KLEIN
+  location: Belk
+setScope:                      # applied before the cases (the M2M login user has no saved scope)
+  product: DP-145 ANNE KLEIN
+  location: Belk
+  assortmentWeeks: ["2026-W41", "2026-W41"]   # calendar year of the week (FY27-W41 = Nov 2026)   # fiscal year-week, as qa-automation config/data
+allowWrites: false             # true only after a human OK for this scenario
+cases:
+  - id: TC-1
+    module: Assortment Build
+    screen: Style Color Review
+    view: Summary View
+    route: "#/bottom-up/assortment-build/style-color-review/summary-view"
+    steps:
+      - search: "477351138"
+    metric: ST % / FP ST %
+    row: Style 477351138.001
+    expect:
+      - noFailedRequests: true
+    shot: page
+  - id: TC-2
+    module: Assortment Build
+    screen: Style Color Review
+    view: Grid View Tabs
+    route: "#/bottom-up/assortment-build/style-color-review/asst-styclr-grid-view-tabs/asst-styclr-grid-view-quick"
+    metric: FP ST %
+    expect:
+      # with a known scope use equals/approx, e.g. { ..., col: "FP ST %", equals: "63.7%" }
+      - cell: { row: "477351138.001", col: "ST %", notEmpty: true }
+      - cell: { row: "477351138.001", col: "FP ST %", notEmpty: true }
+      - noFailedRequests: true
+    shot: grid

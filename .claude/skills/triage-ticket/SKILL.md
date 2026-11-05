@@ -60,7 +60,7 @@ needs, and fetch what you can yourself:
 | Wrong/missing data, all screens | lineage upstream + batch flow logs for the flow (`flows` field on edges) | lineage MCP; ask user for batch log if needed |
 | Metric wrong on SOME views (QA/staging) | **live config from OCI, diffed vs repo** | knowledge/runbooks/fetch-live-config.md |
 | Metric wrong on SOME views (prod) | repo viewdefn/pivot diff vs sibling metric | config repo + combined lineage |
-| UI behavior (refresh/filter/click) | repro via browser; ticket Looms/screenshots | knowledge/runbooks/ui-repro.md |
+| UI behavior (refresh/filter/click) | **ui-pilot** scenario `--mode repro` (console + API errors captured); ticket Looms/screenshots | ui-pilot skill · knowledge/runbooks/ui-repro.md |
 | Data right in DB, wrong on screen | pivot SQL grain check (bottomLevels) + viewdefn formula | trd-configs lineage + CLAUDE.md traps |
 | Inbound/load failure | reject exports, intermediate export files (line vs record count) | see note SUP-4254 |
 

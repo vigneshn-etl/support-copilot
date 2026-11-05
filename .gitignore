@@ -43,3 +43,12 @@ tooling/validation/ui/.venv/
 # Validation Studio's local config clone + pulled OCI overlay — regenerable
 # via tooling/validation/config_sync.py, same reasoning as tickets/*/live-config/
 customers/*/config/
+
+node_modules/
+# UTD screenshots + built docx: bulky, attach to JIRA instead
+tickets/*/utd/shots/
+tickets/*/utd/*.docx
+# ui-pilot bundles: keep summary.json, drop bulk
+tickets/*/ui/*/shots/
+tickets/*/ui/*/trace.zip
+tooling/utd_builder/.npm-cache/

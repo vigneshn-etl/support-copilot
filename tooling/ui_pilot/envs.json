@@ -1,0 +1,12 @@
+{
+  "_readme": "Client -> vault code (OCI secret '<vault>-fusionauth') + env -> base URL. Source: s5-stratos/qa-automation config/environments.js. A scenario can also set `url` directly.",
+  "AEO":  { "vault": "aeo",  "qa": "https://qa.aeo.oci.s5stratos.com",           "stage": "https://staging.aeo.s5stratos.com" },
+  "BELK": { "vault": "belk", "qa": "https://qa.belk.oci.s5stratos.com",          "stage": "https://belk.staging.s5stratos.com" },
+  "BOD":  { "vault": "bd",   "qa": "https://qa.boden.oci.s5stratos.com",         "stage": "https://upgrade.boden.s5stratos.com" },
+  "EE":   { "vault": "eve",  "qa": "https://qa.evereve.oci.s5stratos.com",       "stage": "https://asst.upgrade.evereve.s5stratos.com" },
+  "EXP":  { "vault": "exp",  "qa": "https://qa.express.oci.s5stratos.com",       "stage": "https://upgrade.express.s5stratos.com" },
+  "LOFT": { "vault": "loft", "qa": "https://qa.loft.oci.s5stratos.com",          "stage": "https://asst.upgrade.loft.s5stratos.com" },
+  "LP":   { "vault": "lp",   "qa": "https://qa.lillypulitzer.oci.s5stratos.com", "stage": "https://upgrade.lillypulitzer.s5stratos.com" },
+  "TB":   { "vault": "tb",   "qa": "https://qa.toryburch.oci.s5stratos.com",     "stage": "https://upgrade.tb.s5stratos.com" },
+  "TRD":  { "vault": "trd",  "qa": "https://qa.torrid.oci.s5stratos.com",        "stage": "https://asst.upgrade.torrid.s5stratos.com" }
+}

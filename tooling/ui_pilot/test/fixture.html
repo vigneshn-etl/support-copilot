@@ -1,0 +1,55 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>fixture</title>
+<style>
+  body { font: 13px sans-serif; margin: 0; }
+  .ag-root-wrapper { width: 900px; border: 1px solid #ccc; margin: 8px; }
+  .ag-header { display: flex; background: #eee; }
+  .ag-header-cell { width: 120px; flex: none; padding: 4px; }
+  .ag-body-viewport { height: 300px; overflow-y: auto; position: relative; }
+  #spacer { display: flex; }
+  .ag-center-cols-viewport { overflow-x: auto; width: 760px; }
+  .ag-pinned-left-cols-container, .ag-center-cols-container { position: relative; }
+  .ag-pinned-left-cols-container { width: 120px; flex: none; }
+  .ag-row { display: flex; height: 24px; position: absolute; }
+  .ag-cell { width: 120px; flex: none; padding: 2px 4px; }
+</style></head>
+<body>
+<div data-qa="TopNav">S5 fixture</div>
+<div>Product - DP-145 ANNE KLEIN | Location - Belk | FY27-W48-Dec-W5 to FY28-W01-Feb-W1</div>
+<input data-qa="SubheaderSearchInput">
+<button id="save">Save</button>
+<div class="ag-root-wrapper">
+  <div class="ag-header" id="hdr"></div>
+  <div class="ag-body-viewport" id="vp">
+    <div id="spacer">
+      <div class="ag-pinned-left-cols-container" id="left"></div>
+      <div class="ag-center-cols-viewport" id="cv"><div class="ag-center-cols-container" id="center"></div></div>
+    </div>
+  </div>
+</div>
+<script>
+  // Virtualized like AG Grid: only ~15 rows and ~7 center columns exist in the DOM.
+  const ROWS = 200, COLS = 30, RH = 24, CW = 120;
+  const colName = (c) => c === 0 ? 'Style Color' : c === 25 ? 'FP ST %' : `Metric ${c}`;
+  const val = (r, c) => c === 0 ? `4773511${String(r).padStart(2, '0')}.001` : c === 25 ? (r === 150 ? 'undefined' : `${(r % 90) + 0.5}%`) : `${r * c}`;
+  const vp = document.getElementById('vp'), cv = document.getElementById('cv');
+  for (const id of ['left', 'center']) document.getElementById(id).style.height = ROWS * RH + 'px';
+  document.getElementById('center').style.width = COLS * CW + 'px';
+  function render() {
+    const r0 = Math.floor(vp.scrollTop / RH), c0 = Math.max(1, Math.floor(cv.scrollLeft / CW));
+    const rows = [...Array(15).keys()].map((i) => r0 + i).filter((r) => r < ROWS);
+    const cols = [...Array(7).keys()].map((i) => c0 + i).filter((c) => c < COLS);
+    document.getElementById('hdr').innerHTML = [0, ...cols].map((c) => `<div class="ag-header-cell" col-id="c${c}"><span class="ag-header-cell-text">${colName(c)}</span></div>`).join('');
+    document.getElementById('left').innerHTML = rows.map((r) => `<div class="ag-row" row-index="${r}" style="top:${r * RH}px"><div class="ag-cell" col-id="c0">${val(r, 0)}</div></div>`).join('');
+    document.getElementById('center').innerHTML = rows.map((r) => `<div class="ag-row" row-index="${r}" style="top:${r * RH}px;left:${c0 * CW}px">${cols.map((c) => `<div class="ag-cell" col-id="c${c}">${val(r, c)}</div>`).join('')}</div>`).join('');
+  }
+  vp.addEventListener('scroll', render); cv.addEventListener('scroll', render); render();
+  // Each route change: one console error + one failing pivot call (like a broken screen).
+  window.addEventListener('hashchange', () => {
+    if (!location.hash.endsWith('/d')) return;
+    console.error('fixture: deliberate console error');
+    fetch('/api/pivot3/listData', { method: 'POST', body: JSON.stringify({ pivot: 'Fixture' }) });
+  });
+  document.getElementById('save').onclick = () => fetch('/api/save', { method: 'POST' });
+</script>
+</body></html>

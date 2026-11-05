@@ -26,6 +26,10 @@ FEATURES = {
     "tool:knowledge": ["full-text search"],
     "tool:lineage": ["what feeds"],
     "tool:db": ["query live qa databases"],
+    "tool:utd_builder": ["unit test document"],
+    "skill:utd-builder": ["unit test doc for sup-1234"],
+    "tool:ui_pilot": ["ui-pilot"],
+    "skill:ui-pilot": ["reproduce sup-1234 in the ui"],
 }
 # internal/experimental — deliberately not advertised to users
 INTERNAL = {"tool:pyspark"}

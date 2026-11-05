@@ -1,3 +1,5 @@
+> **Prefer `tooling/ui_pilot/` (skill `ui-pilot`)** for repeatable repro/verify with captured evidence; use the interactive steps below to explore when a scenario can't be written yet.
+
 # Runbook: reproduce a UI issue
 
 ## Interactive (triage-time) — Claude in Chrome
