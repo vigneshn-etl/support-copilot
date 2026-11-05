@@ -351,14 +351,29 @@ def rollup_sql(formula):
                   formula, flags=re.I)
 
 
-def compose(req, spec, dims, weeks):
+def _q_literal(name, rows):
+    """an item set fetched beforehand, as a literal CTE (two-phase run)."""
+    if not rows:
+        return f"-- {name}: no items (fetched beforehand)\nSELECT '' AS item, toUInt8(0) AS class WHERE 0"
+    body = ",".join(f"({q(i)},{int(float(c or 0))})" for i, c in rows)
+    return (f"-- {name}: {len(rows)} items fetched beforehand (two-phase run)\n"
+            f"SELECT tupleElement(t, 1) AS item, toUInt8(tupleElement(t, 2)) AS class FROM (SELECT arrayJoin([{body}]) AS t)")
+
+
+def compose(req, spec, dims, weeks, items=None):
+    """items: optional {'Q': [(item, class)], 'Q_ly': …} fetched by a first query (see q_queries)."""
     """req: normalized (scope ids, filters, general, flowStatus, aggBy, pivot, metrics[{label,
     data_index, view_formula}]); weeks: {'selected': [...], 'receipt': [...]}."""
-    warnings, prov = [], {}
+    warnings, prov, q_queries = [], {}, {}
     pivot = req["pivot"]
     scr = spec["screens"].get(pivot)
     if not scr:
         raise ValueError(f"no spec for data call '{pivot}' (screens.csv) — add the screen family first")
+    if (scr.get("item_grain") or "stylecolor") != "stylecolor":    # e.g. sku: items from the SKU hierarchy
+        key = f"product_{scr['item_grain']}"
+        if key not in dims:
+            raise ValueError(f"screen {pivot}: item_grain {scr['item_grain']} needs dimensions.json {key}")
+        dims = {**dims, "product": dims[key]}
     pop = [p for p in spec["populations"] if p["population_id"] == scr["population_id"]]
     if not pop:
         raise ValueError(f"population {scr['population_id']} has no rules")
@@ -459,7 +474,10 @@ def compose(req, spec, dims, weeks):
                                  f"or explicit {w}@{p} weeks")
 
     # ---- 2 POPULATION
-    srcs = spec["sources"]
+    srcs = dict(spec["sources"])
+    for a, b in (dims["product"].get("sources") or {}).items():   # same measure, this grain's table
+        if b in srcs:
+            srcs[a] = srcs[b]
     def level_where(s, alias=""):
         parts = []
         for lc in [x.strip() for x in (s.get("level_filters") or "").split(",") if x.strip()]:
@@ -495,7 +513,16 @@ def compose(req, spec, dims, weeks):
             if r.get("row_filter"):
                 where.append(f"({flags(r['row_filter'])})")
             head = f"-- population rule {r['population_id']}.{r['rule_id']} [{per.upper()}] v{r['version']} ({r['status']}): {r.get('notes', '')}\n"
-            if r["kind"] == "having":
+            gl = (r.get("group_level") or "").strip()
+            if gl and r["kind"] in ("having", "where"):  # decided per group (e.g. stylecolor), every item of it in
+                lvl, key = dims["product"]["levels"][gl]["id"], dims["product"]["key"]
+                grp = (f"SELECT h.__grp AS grp FROM (SELECT * FROM {s['table']} WHERE {' AND '.join(where)}) AS a\n"
+                       f"  ANY LEFT JOIN (SELECT {key} AS __k, {lvl} AS __grp FROM P) AS h ON a.{s['item_key']} = h.__k\n"
+                       + (f"  GROUP BY h.__grp HAVING {flags(r['condition'])}" if r["kind"] == "having"
+                          else "  GROUP BY h.__grp"))
+                sql = (f"{head}-- decided per {gl}: every item of a passing {gl}\n"
+                       f"SELECT {key} AS item FROM P WHERE {lvl} IN (\n{grp})")
+            elif r["kind"] == "having":
                 sql = (f"{head}SELECT {s['item_key']} AS item FROM {s['table']}\nWHERE {' AND '.join(where)}\n"
                        f"GROUP BY {s['item_key']}\nHAVING {flags(r['condition'])}")
             elif r["kind"] == "where":
@@ -545,7 +572,10 @@ def compose(req, spec, dims, weeks):
         else:
             qsql = (f"-- population {scr['population_id']} [{per.upper()}]: {combine['condition']}\n"
                     f"SELECT {dims['product']['key']} AS item, toUInt8(0) AS class FROM P WHERE ({combine_sql(combine['condition']).replace('item IN', dims['product']['key'] + ' IN')})")
+        if items is not None and f"Q{x}" in items:
+            qsql = _q_literal(f"Q{x}", items[f"Q{x}"])
         ctes.append((f"Q{x}", qsql))
+        q_queries[f"Q{x}"] = "WITH\n" + ",\n".join(f"{n} AS (\n{b}\n)" for n, b in ctes) + f"\nSELECT item, class FROM Q{x}"
 
     # rows = items of every row period (e.g. TY items + LY-only items); one class per item, TY's first
     multi = len(row_pers) > 1
@@ -585,8 +615,10 @@ def compose(req, spec, dims, weeks):
                        if k in ms else f"toFloat64(0) AS {mcol[k]}")
         head = (f"-- scan {sid} ({s['table']}) {per.upper()} window={win} locations={lset}: "
                 f"{', '.join(k[0] for k in ms)}\n")
-        parts.append(f"{head}SELECT {', '.join(sel)}\nFROM {s['table']} AS a\n" + "\n".join(joins) +
-                     f"\nWHERE {' AND '.join(where)}" + (f"\nGROUP BY {', '.join(gk)}" if gk else ""))
+        # filter the facts before the joins: CH 21.4 does not push WHERE below a JOIN
+        parts.append(f"{head}SELECT {', '.join(sel)}\nFROM (SELECT * FROM {s['table']} AS a\n"
+                     f"      WHERE {' AND '.join(where)}) AS a\n" + "\n".join(joins) +
+                     (f"\nGROUP BY {', '.join(gk)}" if gk else ""))
     ctes.append(("U", "\nUNION ALL\n".join(parts)))
 
     # ---- 4 METRICS at the grain
@@ -650,7 +682,7 @@ def compose(req, spec, dims, weeks):
     lines = sql_rows.count("\n") + 1
     return {"engine": "spec", "family": scr["population_id"], "grain": gk,
             "columns": [pcol(n, p) for n, p in mets], "measures": [pcol(n, p) for n, p in meas],
-            "periods": periods, "post": post, "sql_rows": sql_rows, "sql_totals": sql_totals, "totals_map": tmap,
+            "periods": periods, "post": post, "q_queries": q_queries, "sql_rows": sql_rows, "sql_totals": sql_totals, "totals_map": tmap,
             "warnings": warnings, "provenance": {
                 "population": [f"{r['rule_id']} v{r['version']} ({r['status']})" for r in pop],
                 "metrics": {m["label"]: f"{m['metric_id']}{'' if m['period'] == 'ty' else '@' + m['period']} "

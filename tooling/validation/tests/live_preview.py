@@ -18,7 +18,11 @@ def preview_spec(client, pivots, screens=None, populations=None):
         base["populations"] = [x for x in base["populations"]
                                if (x["population_id"], x["rule_id"]) != (r["population_id"], r["rule_id"])]
         base["populations"].append({"status": "draft", "version": "1", "notes": "", **r})
+    late = {}
     for p, over in (screens or {}).items():
+        if p not in base["screens"] and "population_id" not in over:
+            late[p] = over                                 # settings on top of the import's proposed screen
+            continue
         base["screens"][p] = {"pivot": p, "time_mode": "history", "split_by_class": "yes", "status": "draft",
                               "version": "1", **base["screens"].get(p, {}), **over}
     rep = QI.translate(client, pivots, base)
@@ -40,8 +44,11 @@ def preview_spec(client, pivots, screens=None, populations=None):
             spec["populations"] += [dict(r, status="draft", version="1") for r in s["population"]]
         if s["status"] == "new":
             spec["screens"][s["pivot"]] = {"pivot": s["pivot"], "population_id": s["population_id"],
-                                           "time_mode": s["time_mode"], "split_by_class": s["split_by_class"],
+                                           "time_mode": s["time_mode"], "split_by_class": s["split_by_class"], "item_grain": s.get("item_grain", "stylecolor"),
                                            "status": "draft", "version": "1"}
+    for p, over in late.items():
+        if p in spec["screens"]:
+            spec["screens"][p] = {**spec["screens"][p], **over}
     binds = {(b["pivot"], b["viewdefn"], b["data_index"]): b for b in spec["bindings"]}
     for b in rep["bindings"]:
         if b["status"] in ("new", "unbound"):

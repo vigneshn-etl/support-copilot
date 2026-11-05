@@ -174,5 +174,60 @@
       2
     ],
     "_rule": "s5flowstatus = 0 if max(flow_flag) > 1000000, 1 if > 0, else 2 (history_product_ty.ftl)"
+  },
+  "product_sku": {
+    "_readme": "SKU-grain screens (screens.item_grain = sku): items are SKUs of trd_sku_hier_attr_view (QA history_base_tables_sku.ftl); sources: the catalog source each measure reads at this grain (a measure means the same at any grain)",
+    "hier_table": "trd_sku_hier_attr_view",
+    "key": "product",
+    "latest_by": "updated_at",
+    "base_key": "product",
+    "base_grain": "sku",
+    "levels": {
+      "total_brand": {
+        "id": "total_brand",
+        "name": "total_brand_name"
+      },
+      "division": {
+        "id": "division",
+        "name": "division_name"
+      },
+      "group": {
+        "id": "group_id",
+        "name": "group_name"
+      },
+      "department": {
+        "id": "department",
+        "name": "department_name"
+      },
+      "class": {
+        "id": "class",
+        "name": "class_name"
+      },
+      "subclass": {
+        "id": "subclass",
+        "name": "subclass_name"
+      },
+      "style": {
+        "id": "style",
+        "name": "style_name"
+      },
+      "stylecolor": {
+        "id": "stylecolor",
+        "name": "stylecolor_name"
+      },
+      "sku": {
+        "id": "product",
+        "name": "sizeattribute"
+      },
+      "size": {
+        "id": "sizeattribute",
+        "name": "sizeattribute"
+      }
+    },
+    "sources": {
+      "history": "history_sku",
+      "flowflag": "flowflag_sku",
+      "onorder": "onorder_sku"
+    }
   }
 }

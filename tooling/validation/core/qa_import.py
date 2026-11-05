@@ -621,6 +621,8 @@ class Translator:
         self.inv_dc = inv_has_dc(self.cfg, self.tenant)
         dp = HUB / "customers" / client.upper() / "metrics" / "dimensions.json"
         prod = json.loads(dp.read_text()).get("product", {}) if dp.exists() else {}
+        sku = json.loads(dp.read_text()).get("product_sku", {}) if dp.exists() else {}
+        self.canon = {b: a for a, b in (sku.get("sources") or {}).items()}   # history_sku -> history
         self.aliases = {prod["base_grain"]: prod["base_key"]} \
             if prod.get("base_grain") and prod.get("base_grain") != prod.get("base_key") else {}
         self.cat_sig = {}
@@ -665,6 +667,9 @@ class Translator:
             raise Blocked(f"{name}: {pm['blocked']}")
         row = {"source_id": rd.source_id, "expr": pm["expr"], "agg": pm["agg"],
                "filter": " AND ".join(pm["conds"]), "time_window": rd.window, "location_set": rd.location_set}
+        cs = self.canon.get(rd.source_id)                 # a SKU read of a measure the catalog has per stylecolor
+        if cs and set(cols_in(row["expr"] + " " + row["filter"])) <= self.sources.get(cs, {}).get("_cols", set()):
+            row["source_id"] = cs
         sig = measure_sig(row)
         mid = self.cat_sig.get(sig)
         notes = pm["notes"] + rd.notes
@@ -678,8 +683,14 @@ class Translator:
             if hit:
                 mid = hit
             else:
-                while mid in self.spec["measures"] or (mid in self.measures and self.measures[mid]["sig"] != sig):
-                    notes.append(f"id {mid} is taken by a different measure")
+                if rd.source_id in self.canon and row["source_id"] == rd.source_id:
+                    mid += "_sku"                         # only readable at SKU grain
+                def taken(i):                             # measures and metrics share one name space
+                    met = self.spec["metrics"].get(i) or (self.metrics.get(i) or {})
+                    return (i in self.spec["measures"] or (i in self.measures and self.measures[i]["sig"] != sig)
+                            or (met and norm(met.get("expr", "")) != i))
+                while taken(mid):
+                    notes.append(f"id {mid} is taken by a different measure or metric")
                     mid = mid + "_qa"
         rec = self.measures.setdefault(mid, {"id": mid, "status": st, "sig": sig, **row, "rollup": "sum",
                                              "label": "", "notes": notes, "from": []})
@@ -1046,14 +1057,14 @@ def screen_for(cfg, pivot, spec):
     thresholds (params.*SELECTION_CRITERIA, set per pivot); thresholds differ -> a population variant."""
     if pivot in spec["screens"]:
         return {"pivot": pivot, "status": "same", **{k: spec["screens"][pivot].get(k, "") for k in
-                                                    ("population_id", "time_mode", "split_by_class")}}
+                                                    ("population_id", "time_mode", "split_by_class", "item_grain")}}
     mine, my_par = pop_includes(cfg, pivot), pop_params(cfg, pivot)
     cands = sorted([(p, s) for p, s in spec["screens"].items() if mine and pop_includes(cfg, p) == mine],
                    key=lambda ps: bool(re.search(r"_(GTM?\d|C[0-9a-f]{6})", ps[1]["population_id"])))
     for p, s in cands:
         if pop_params(cfg, p) == my_par:
             return {"pivot": pivot, "status": "new", "population_id": s["population_id"],
-                    "time_mode": s.get("time_mode") or "history", "split_by_class": s.get("split_by_class") or "yes",
+                    "time_mode": s.get("time_mode") or "history", "split_by_class": s.get("split_by_class") or "yes", "item_grain": s.get("item_grain") or "stylecolor",
                     "notes": [f"same population includes and thresholds as {p}: {', '.join(mine)}; "
                               f"row settings copied from {p} - check split_by_class / row_periods"]}
     if cands:
@@ -1074,7 +1085,7 @@ def screen_for(cfg, pivot, spec):
             if sorted(tuple(str(r.get(k, "")) for k in POP_KEYS[1:]) for r in spec["populations"]
                       if r["population_id"] == pid) == sig:
                 return {"pivot": pivot, "status": "new", "population_id": pid, "time_mode": s.get("time_mode") or "history",
-                        "split_by_class": s.get("split_by_class") or "yes",
+                        "split_by_class": s.get("split_by_class") or "yes", "item_grain": s.get("item_grain") or "stylecolor",
                         "notes": [f"same includes as {p}; thresholds match population {pid}; "
                                   f"row settings copied from {p} - check split_by_class / row_periods"]}
         root = re.sub(r"_(GTM?\d[\w]*|C[0-9a-f]{6})$", "", s["population_id"])   # variants derive from the root
@@ -1082,7 +1093,7 @@ def screen_for(cfg, pivot, spec):
         for r in rules:
             r["population_id"] = pid
         return {"pivot": pivot, "status": "new", "population_id": pid, "time_mode": s.get("time_mode") or "history",
-                "split_by_class": s.get("split_by_class") or "yes", "population": rules,
+                "split_by_class": s.get("split_by_class") or "yes", "item_grain": s.get("item_grain") or "stylecolor", "population": rules,
                 "notes": [f"population {pid} = {s['population_id']} with {pivot}'s thresholds: "
                           + "; ".join(f"{a} -> {b}" for a, b in swap.items()),
                           f"row settings copied from {p} - check split_by_class / row_periods"]}
@@ -1213,6 +1224,7 @@ def apply(store, rep, user, pick=None):
         if s["status"] == "new" and any(b["pivot"] == s["pivot"] for b in new_b):
             store.upsert("screens", {"pivot": s["pivot"], "population_id": s["population_id"],
                                      "time_mode": s["time_mode"], "split_by_class": s["split_by_class"],
+                                     **({"item_grain": s["item_grain"]} if s.get("item_grain", "stylecolor") != "stylecolor" else {}),
                                      "origin": "qa_import", "notes": note(s)}, user)
             added["screens"].append(s["pivot"])
     for b in new_b:

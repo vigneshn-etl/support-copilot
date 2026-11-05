@@ -723,7 +723,15 @@ def build(cfg, client, env, out_csv, schema_path, refresh, conf_glob):
         if vm and model_pivot(cfg, vm, None):
             return vm, model_pivot(cfg, vm, None)
         return s["model"], model_pivot(cfg, s["model"], s["defn_id"])
-    pivots = sorted({binding(s, v)[1] for s in screens for v in s["views"]} - {None})
+    def bindings(s, v):
+        """the view's own model, plus the screen's model when it reads another pivot (a viewdefn shared by
+        screens with different models: Size Views run HistoryAggregateViewsNestedAttributeGrid* on the SKU pivot)"""
+        out = [binding(s, v)]
+        sm = (s["model"], model_pivot(cfg, s["model"], s["defn_id"]))
+        if sm[1] and sm[1] != out[0][1]:
+            out.append(sm)
+        return out
+    pivots = sorted({b[1] for s in screens for v in s["views"] for b in bindings(s, v)} - {None})
     tables = set()
     for p in pivots:
         _, _, _, blocks, creators = pivot_resolver(cfg, p, tenant, schema, {})
@@ -738,12 +746,12 @@ def build(cfg, client, env, out_csv, schema_path, refresh, conf_glob):
     rows, seen = [], set()
     for s in screens:
         for v in s["views"]:
-            model, pv = binding(s, v)
+          for model, pv in bindings(s, v):
             res = out_id = None
             if pv:
                 res, out_id, _, _, _ = pivot_resolver(cfg, pv, tenant, schema_sets, pcache)
             for c in view_columns(cfg, v):
-                key = (s["app"], s["top_nav"], tuple(s["path"]), v, c["section"], c["dataIndex"], c["text"])
+                key = (s["app"], s["top_nav"], tuple(s["path"]), v, c["section"], c["dataIndex"], c["text"], pv)
                 if key in seen:
                     continue
                 seen.add(key)

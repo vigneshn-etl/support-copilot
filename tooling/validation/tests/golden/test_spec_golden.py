@@ -244,10 +244,20 @@ CASES_UP = [
      req([("eop", "sum(eop)")], fs=[2]), {"totals": {"eop": 0}}, WEEKS, SPEC_UP),
 ]
 
+# rule decided per group (QA SKU screens: thresholds per stylecolor, items are its SKUs); here per class:
+# cA (p1 35 u + p2 1 u) passes, so p2 joins although p2 alone fails sum(shp_u) > 3
+SPEC_GRP = {**SPEC, "populations": [dict(r, group_level="class") if r["rule_id"] == "hist" else r
+                                    for r in SPEC["populations"]]}
+CASES_GRP = [
+    ("having decided per class: p2 comes in with its class",
+     req([("net_sls_r", "")]), {"rows": {"p1": {"net_sls_r": 340}, "p2": {"net_sls_r": 10}, "p3": {"net_sls_r": 0}}},
+     WEEKS, SPEC_GRP),
+]
+
 
 def main():
     bad = 0
-    for name, rq, exp, *wk in CASES + CASES_WEEKS + CASES_RCPT + CASES_ROWS + CASES_SHARE + CASES_UP:
+    for name, rq, exp, *wk in CASES + CASES_WEEKS + CASES_RCPT + CASES_ROWS + CASES_SHARE + CASES_UP + CASES_GRP:
         try:
             c = SP.compose(rq, wk[1] if len(wk) > 1 else SPEC, DIMS, wk[0] if wk else WEEKS)
             got_rows, got_tot = {}, {}
