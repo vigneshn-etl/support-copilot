@@ -255,9 +255,34 @@ CASES_GRP = [
 ]
 
 
+# versioned source (QA PS_ASST_PRODUCT_MAX): plan rows of one snapshot, each item's latest updated_at in the window
+PLAN = table(["x_product String", "location String", "time String", "prodlife String", "cluster String",
+              "snapshot_version String", "updated_at DateTime", "shp_r Float64"],
+             [["p1", "s1", "W1", "FP", "A", "RP", "2025-01-01 00:00:00", 500.0],   # older RP version
+              ["p1", "s1", "W1", "FP", "A", "RP", "2025-02-01 00:00:00", 100.0],   # latest in window
+              ["p1", "s1", "W2", "FP", "A", "RP", "2025-02-01 00:00:00", 50.0],
+              ["p1", "s1", "W3", "FP", "A", "RP", "2025-03-01 00:00:00", 888.0],   # newer, outside window
+              ["p1", "s1", "W1", "FP", "A", "OP", "2025-04-01 00:00:00", 999.0],   # other snapshot
+              ["p3", "s1", "W2", "FP", "A", "RP", "2025-01-15 00:00:00", 30.0],
+              ["p3", "s3", "W2", "FP", "A", "RP", "2025-01-15 00:00:00", 777.0],   # s3 not in channel C1
+              ["p9", "s1", "W1", "FP", "A", "RP", "2025-02-01 00:00:00", 999.0]])  # other department
+SPEC_PLAN = {**SPEC,
+             "sources": {**SPEC["sources"], "pr": {"source_id": "pr", "table": PLAN, "item_key": "x_product",
+                                                    "location_key": "location", "time_key": "time",
+                                                    "level_filters": "prodlife,cluster",
+                                                    "row_filter": "snapshot_version = 'RP'", "latest_by": "updated_at"}},
+             "measures": {**SPEC["measures"], "pshp": {**M("pshp", "shp_r")[1], "source_id": "pr"}},
+             "metrics": {**SPEC["metrics"], **dict([MT("plan_r", "simple", "pshp")])}}
+CASES_PLAN = [
+    ("plan snapshot: RP rows of each item's latest version in the window, scope locations",
+     req([("plan_r", ""), ("net_sls_r", "")]),
+     {"rows": {"p1": {"plan_r": 150, "net_sls_r": 340}, "p3": {"plan_r": 30, "net_sls_r": 0}}}, WEEKS, SPEC_PLAN),
+]
+
+
 def main():
     bad = 0
-    for name, rq, exp, *wk in CASES + CASES_WEEKS + CASES_RCPT + CASES_ROWS + CASES_SHARE + CASES_UP + CASES_GRP:
+    for name, rq, exp, *wk in CASES + CASES_WEEKS + CASES_RCPT + CASES_ROWS + CASES_SHARE + CASES_UP + CASES_GRP + CASES_PLAN:
         try:
             c = SP.compose(rq, wk[1] if len(wk) > 1 else SPEC, DIMS, wk[0] if wk else WEEKS)
             got_rows, got_tot = {}, {}

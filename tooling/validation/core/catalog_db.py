@@ -35,7 +35,8 @@ SKIP_CONTENT = set(META) | {"notes", "origin", "ucm_ref", "qa_ref", "created_by"
                             "updated_at"}
 # row shape columns per file (what read() returns, in this order)
 COLUMNS = {
-    "sources": ["source_id", "table", "item_key", "location_key", "time_key", "level_filters", "description"],
+    "sources": ["source_id", "table", "item_key", "location_key", "time_key", "level_filters", "description",
+                "row_filter", "latest_by"],
     "measures": ["measure_id", "label", "source_id", "expr", "agg", "filter", "time_window",
                  "location_set", "rollup"],
     "metrics": ["metric_id", "label", "type", "expr", "denominator", "round", "requirement"],

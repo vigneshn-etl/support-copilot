@@ -76,6 +76,18 @@ def units():
                 "max_updated_at FROM zz_ASST_PRODUCT_MAX_SESSION)", "zz", SRC, False)
     check("assortment latest-version read -> needs engine",
           any("latest updated_at" in b for b in r.blocked), True)
+    PS = ("zz_s_assort a WHERE a.x_product IN (SELECT distinct product FROM zz_TY_PRODUCT_SESSION) AND "
+          "(a.x_product, snapshot_version, a.updated_at) IN (SELECT product, snapshot_version, max_updated_at "
+          "FROM zz_PS_ASST_PRODUCT_MAX_SESSION) AND a.time IN (select ty_week_id from zz_ty_ly_lly_week_SESSION)")
+    vsrc = {k: {"source_id": k, "table": "zz_s_assort", "item_key": "x_product", "location_key": "location",
+                "time_key": "time", "level_filters": "", "row_filter": f"snapshot_version = '{v}'",
+                "latest_by": "updated_at", "_cols": {"x_product", "time", "location", "shp_r"}}
+            for k, v in (("plan_rp", "RP"), ("plan_op", "OP"))}
+    r = QI.Read("r", "zz_s_assort", PS, "zz", vsrc, False, None,
+                {"zz_PS_ASST_PRODUCT_MAX_SESSION": "snapshot_version = 'OP'"})
+    check("plan snapshot read -> the versioned source of its snapshot", (r.source_id, r.blocked), ("plan_op", []))
+    r = QI.Read("r", "zz_s_assort", PS, "zz", vsrc, False, None, {})
+    check("plan read without a known snapshot table blocks", any("latest updated_at" in b for b in r.blocked), True)
     r = QI.Read("r", "zz_p_history_agg", TY_READ.replace("ty_week_id", "ly_week_id"), "zz", SRC, False)
     check("TY products with LY weeks -> mixed periods block", any("mixed periods" in b for b in r.blocked), True)
 

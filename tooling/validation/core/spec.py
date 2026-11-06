@@ -483,6 +483,17 @@ def compose(req, spec, dims, weeks, items=None):
         for lc in [x.strip() for x in (s.get("level_filters") or "").split(",") if x.strip()]:
             parts.append(f"{alias}{lc} IN ({qlist(level_vals.get(lc, []))})")
         return parts
+    def version_where(s, where, alias=""):
+        # versioned source: row filter + each item's latest version in the window (QA PS_ASST_PRODUCT_MAX)
+        rf = (s.get("row_filter") or "").strip()
+        parts = [rf] if rf else []
+        lb = (s.get("latest_by") or "").strip()
+        if lb:
+            key, lk = s["item_key"], s.get("location_key")
+            inner = [w.replace(alias, "") for w in where if not (lk and w.startswith(f"{alias}{lk} "))] + parts
+            parts.append(f"({alias}{key}, {alias}{lb}) IN (SELECT {key}, max({lb}) FROM {s['table']} "
+                         f"WHERE {' AND '.join(inner)} GROUP BY {key})")
+        return parts
     fs = req.get("flowStatus") or dims["flow_status"]["default"]
     rcpt_on = "1" if (req.get("general") or {}).get("rcpt_weeks") else "0"   # QA: on when receipt weeks are picked
     def flags(e):
@@ -605,6 +616,7 @@ def compose(req, spec, dims, weeks, items=None):
         if s.get("location_key") and lset == "scope":
             where.append(f"a.{s['location_key']} IN (SELECT {dims['location']['key']} FROM L)")
         where += level_where(s, "a.")
+        where += version_where(s, where, "a.")
         joins = [f"ANY LEFT JOIN {'R' if multi else 'Q' + x} AS qq ON a.{s['item_key']} = qq.item",
                  f"ANY LEFT JOIN P AS h ON a.{s['item_key']} = h.{dims['product']['key']}"]
         if s.get("location_key"):

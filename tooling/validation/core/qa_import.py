@@ -259,9 +259,27 @@ def inv_has_dc(cfg, tenant):
     return bool(m and re.search(r"\bunion\b", m.group(1), re.I))
 
 
+def plan_versions(cfg, pivot, tenant):
+    """{max table (SESSION form): row filter} from the pivot's prologue, e.g.
+    trd_PS_ASST_PRODUCT_MAX_SESSION -> snapshot_version = 'RP' (max(updated_at) per x_product)."""
+    f = Path(cfg) / "pivot" / f"{pivot}.pivotdefn"
+    if not f.exists():
+        return {}
+    out = {}
+    sql = mm._strip_comments(f.read_text(errors="replace"))
+    for name, body in re.findall(r"CREATE TABLE (?:IF NOT EXISTS )?\$\{TENANT_ID\}_(\w+?)_\$\{SESSION_ID\}\s+"
+                                 r"ENGINE\s*=\s*Memory\s+AS(.*?);", sql, re.S | re.I):
+        if not re.search(r"max\(\s*updated_at\s*\)", body, re.I):
+            continue
+        m = re.search(r"snapshot_version\s*=\s*'([^']*)'", body)
+        out[f"{tenant}_{name}_SESSION"] = f"snapshot_version = '{m.group(1)}'" if m else ""
+    return out
+
+
 class Read:
-    def __init__(self, rid, table, from_sql, tenant, sources, inv_dc, schema_cols=None):
+    def __init__(self, rid, table, from_sql, tenant, sources, inv_dc, schema_cols=None, versions=None):
         self.rid, self.table, self.inv_dc = rid, table, inv_dc
+        self.version = None
         self.inner = inner_items(from_sql)
         self.outer_group = set()
         self.source_id = next((s for s, r in sources.items() if r["table"] == table), None)
@@ -309,8 +327,23 @@ class Read:
                 if gd.get("inv") and inv_dc:
                     self.blocked.append(f"read {rid}: {NEEDS_ENGINE['dc_locations']}")
                 self.locations = "scope"
+            elif role == "latest_version":
+                mt = re.search(r"FROM (\w+)\)$", text)
+                self.version = (versions or {}).get(mt.group(1) if mt else "")
+                if not self.version:
+                    self.blocked.append(f"read {rid}: needs engine support - {NEEDS_ENGINE[role]}")
             elif role in NEEDS_ENGINE:
                 self.blocked.append(f"read {rid}: needs engine support - {NEEDS_ENGINE[role]}")
+        if self.version:                              # versioned source: same table, row filter + latest_by
+            sid = next((k for k, r in sources.items() if r["table"] == table and (r.get("latest_by") or "")
+                        and " ".join((r.get("row_filter") or "").split()) == self.version), None)
+            if sid:
+                self.source_id = sid
+            else:
+                self.blocked.append(f"read {rid}: no versioned source for {table} where {self.version}")
+        elif self.source_id and sources[self.source_id].get("latest_by"):
+            self.source_id = next((k for k, r in sources.items()
+                                   if r["table"] == table and not r.get("latest_by")), None)
         if len(self.periods) > 1:
             self.blocked.append(f"read {rid}: mixed periods {sorted(self.periods)}")
         self.period = next(iter(self.periods), "ty")
@@ -619,6 +652,7 @@ class Translator:
         self.spec, self.schema, self.pivot, self.rows = spec, schema, pivot, rows
         self.sources = {sid: {**s, "_cols": set(schema.get(s["table"], ()))} for sid, s in spec["sources"].items()}
         self.inv_dc = inv_has_dc(self.cfg, self.tenant)
+        self.versions = plan_versions(self.cfg, self.pivot, self.tenant)
         dp = HUB / "customers" / client.upper() / "metrics" / "dimensions.json"
         prod = json.loads(dp.read_text()).get("product", {}) if dp.exists() else {}
         sku = json.loads(dp.read_text()).get("product_sku", {}) if dp.exists() else {}
@@ -643,7 +677,8 @@ class Translator:
         for rid, r in self.L.reads.items():
             bid = int(rid.rsplit("#", 1)[1])
             self.reads[rid] = Read(rid, r["table"], r["from_sql"], self.tenant, self.sources, self.inv_dc,
-                                   set(self.schema.get(from_parts(r["from_sql"])[0] or r["table"]) or ()))
+                                   set(self.schema.get(from_parts(r["from_sql"])[0] or r["table"]) or ()),
+                                   self.versions)
             self.reads[rid].outer_group = _group_keys(self.L.blocks[bid].group_sql or "")
         return self
 
@@ -685,6 +720,8 @@ class Translator:
             else:
                 if rd.source_id in self.canon and row["source_id"] == rd.source_id:
                     mid += "_sku"                         # only readable at SKU grain
+                elif self.sources.get(row["source_id"], {}).get("latest_by"):
+                    mid += "_" + row["source_id"].split("_")[-1]  # plan snapshot: shp_r_rp
                 def taken(i):                             # measures and metrics share one name space
                     met = self.spec["metrics"].get(i) or (self.metrics.get(i) or {})
                     return (i in self.spec["measures"] or (i in self.measures and self.measures[i]["sig"] != sig)
@@ -817,7 +854,7 @@ class Translator:
                 return Ref("metric", hit, per)
             # QA's formula differs from the catalog metric of that id: propose QA's own, never bind to it
             notes = notes + [f"differs from catalog '{mid}' ({cat[mid].get('type')}: {cat[mid].get('expr')})"]
-            mid += "_qa"
+            mid += self._plan_sfx(mine, measures) or "_qa"
         hit = next((k for k in mets if same_as(k)), None)
         if hit:
             if hit not in self.metrics:
@@ -834,6 +871,12 @@ class Translator:
         else:
             self.metrics[mid]["from"].append(src)
         return Ref("metric", mid, per)
+
+    def _plan_sfx(self, expr, measures):
+        """'_rp' when the expanded formula reads only one versioned (plan snapshot) source."""
+        ss = {measures[i]["source_id"] for i in re.findall(r"[A-Za-z_]\w*", str(expr)) if i in measures}
+        vs = {x for x in ss if self.sources.get(x, {}).get("latest_by")}
+        return "_" + next(iter(vs)).split("_")[-1] if len(vs) == 1 else ""
 
     def _note_metric(self, mid, st, row, notes, src, cat):
         rec = self.metrics.setdefault(mid, {"id": mid, "status": st, **row, "label": "", "notes": notes,
