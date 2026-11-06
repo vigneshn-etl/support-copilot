@@ -229,6 +229,10 @@
       "history": "history_sku",
       "flowflag": "flowflag_sku",
       "onorder": "onorder_sku"
+    },
+    "packed_tables": {
+      "_readme": "QA table that packs locations/values into arrays (read via ARRAY JOIN) -> the unpacked table with the same rows (QA 2025_W11+W25: 8,339,725 rows, equal row hashes)",
+      "trd_p_history_sku_loc_arr": "trd_p_history_sku_agg"
     }
   }
 }

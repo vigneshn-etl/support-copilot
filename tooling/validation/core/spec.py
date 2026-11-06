@@ -631,6 +631,14 @@ def compose(req, spec, dims, weeks, items=None):
         parts.append(f"{head}SELECT {', '.join(sel)}\nFROM (SELECT * FROM {s['table']} AS a\n"
                      f"      WHERE {' AND '.join(where)}) AS a\n" + "\n".join(joins) +
                      (f"\nGROUP BY {', '.join(gk)}" if gk else ""))
+    if parts and all(e.startswith("h.") for _, e in g):  # every population item is a row (QA reads all bases)
+        rq = "R" if multi else f"Q{sfx[row_pers[0]]}"
+        sel = [f"{e} AS g_{a}" for a, e in g] + (["qq.class AS class"] if split else []) + \
+              [f"toFloat64(0) AS {mcol[k]}" for k in meas]
+        parts.append(f"-- screen rows: every population item, with or without facts\n"
+                     f"SELECT {', '.join(sel)}\nFROM {rq} AS qq\n"
+                     f"ANY LEFT JOIN P AS h ON qq.item = h.{dims['product']['key']}" +
+                     (f"\nGROUP BY {', '.join(gk)}" if gk else ""))
     ctes.append(("U", "\nUNION ALL\n".join(parts)))
 
     # ---- 4 METRICS at the grain

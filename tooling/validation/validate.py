@@ -288,8 +288,9 @@ def compare(res, expected, req):
 
 
 # ---------------------------------------------------------------- main
-TWO_PHASE_MAX = 2000          # gate returns at most 2100 lines
-TWO_PHASE_MAX_SQL = 150_000   # gate accepts at most 200 KB of SQL
+TWO_PHASE_MAX = 2000          # page size: gate returns at most 2100 lines
+TWO_PHASE_ITEMS = 12_000      # items per period, fetched in pages
+TWO_PHASE_MAX_SQL = 125_000   # gate passes SQL as one argv string (MAX_ARG_STRLEN 128 KiB)
 
 
 def validate(raw, ctx, sql_only=False, with_rows=True):
@@ -341,15 +342,20 @@ def validate(raw, ctx, sql_only=False, with_rows=True):
                 # (CH 21.4 re-runs an inlined CTE per reference); skipped when too big for the gate
                 items, ok, t1 = {}, True, time.time()
                 for qn, qq in comp["q_queries"].items():
-                    cols, _, rows, _ = R.fetch(req["client"], req["env"], qq)
-                    if len(rows) >= TWO_PHASE_MAX:
-                        ok = False
-                        break
-                    items[qn] = [(r[0], r[1]) for r in rows]
-                if ok and sum(len(v) for v in items.values()) * 48 < TWO_PHASE_MAX_SQL:
-                    comp = SP.compose(req, spec, ctx["dims"], weeks, items=items)
-                    res["two_phase"] = {k: len(v) for k, v in items.items()}
-                    res.setdefault("timing_pre", {})["items_ms"] = int((time.time() - t1) * 1000)
+                    items[qn] = []
+                    while ok:                             # paged: the gate returns at most ~2100 lines
+                        cols, _, rows, _ = R.fetch(req["client"], req["env"], f"SELECT item, class FROM ({qq}) "
+                                                   f"ORDER BY item LIMIT {TWO_PHASE_MAX} OFFSET {len(items[qn])}")
+                        items[qn] += [(r[0], r[1]) for r in rows]
+                        if len(rows) < TWO_PHASE_MAX:
+                            break
+                        ok = len(items[qn]) < TWO_PHASE_ITEMS
+                if ok:
+                    c2 = SP.compose(req, spec, ctx["dims"], weeks, items=items)
+                    if max(len(c2["sql_rows"]), len(c2["sql_totals"] or "")) < TWO_PHASE_MAX_SQL:
+                        comp = c2
+                        res["two_phase"] = {k: len(v) for k, v in items.items()}
+                        res.setdefault("timing_pre", {})["items_ms"] = int((time.time() - t1) * 1000)
             res["provenance"] = comp["provenance"]
         res["warnings"] += comp["warnings"]
         res["request"] = {k: v for k, v in req.items() if k != "expected"}

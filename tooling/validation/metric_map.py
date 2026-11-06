@@ -96,9 +96,13 @@ class Pivot:
     def expand(self, sql):
         sql = _expand_includes(sql, self.cfg)
         sql = _strip_comments(sql)
+        blk = {}                                # <#assign X>body</#assign>: a variable, not SQL
+        sql = re.sub(r"<#assign\s+(\w+)\s*>(.*?)</#assign>",
+                     lambda m: blk.__setitem__(m.group(1), m.group(2)) or " ", sql, flags=re.S)
+        pv = {**self.params, **blk}
         for _ in range(6):                      # params may reference params
-            new = _VAR.sub(lambda m: (_strip_comments(self.params[m.group(1)])
-                                      if m.group(1) in self.params else m.group(0)), sql)
+            new = _VAR.sub(lambda m: (_strip_comments(pv[m.group(1)])
+                                      if m.group(1) in pv else m.group(0)), sql)
             if new == sql:
                 break
             sql = new
@@ -108,8 +112,11 @@ class Pivot:
             self.missing_vars.add(m.group(1))
             if m.group(1) == "MAYBE_GROUP_BY":
                 return " GROUP BY "
+            if m.group(1).endswith("_COMMA"):
+                return f"__{m.group(1)}__,"             # 'keys,' then the select list
             return "" if m.group(1).startswith("AGGREGATION_GROUPS") else f"__{m.group(1)}__"
         sql = _VAR.sub(other, sql)
+        sql = re.sub(r"(__\w+_COMMA__,)\s*,", r"\1 ", sql)
         sql = re.sub(r"\$\{[^}]*\}", "__EXPR__", sql)   # ${a.b?c} style leftovers
         return sql
 
@@ -581,6 +588,18 @@ def scan_screens(cfg, conf_glob):
                     for v in o:
                         walk(v, names, persp)
             walk(tab, [], [p for p in (tab.get("inPerspectives") or d.get("perspectives") or [])])
+    for s in list(rows):                                # worklist tabs live in the viewdefn (SKU View)
+        for v in s["views"]:
+            try:
+                vd = json.loads((cfg / "uidefn" / "view" / f"{v}.viewdefn").read_text())
+            except Exception:
+                continue
+            for t in vd.get("tabs") or [] if isinstance(vd, dict) else []:
+                dn = (t.get("componentProps") or {}).get("defns") or {}
+                vs = dn.get("view") if isinstance(dn.get("view"), list) else [dn.get("view")]
+                if dn.get("model") and any(isinstance(x, str) for x in vs):
+                    rows.append(dict(s, path=s["path"] + [t.get("name") or t.get("pathSlot") or v],
+                                     model=dn["model"], defn_id=None, views=[x for x in vs if isinstance(x, str)]))
     return rows
 
 

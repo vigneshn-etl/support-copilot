@@ -295,6 +295,7 @@ class Read:
             rf"\(\s*SELECT\s+location\s*,\s*max\(\s*(\w+)\s*=\s*('[^']*')\s*\)\s+AS\s+(\w+)\s+FROM\s+"
             rf"{tenant}_store_hier_attr\s+GROUP\s+BY\s+location\s*\)", from_sql, re.I)}
         rules = read_rules(tenant)
+        snaps = []
         for c in conds:
             text = " ".join(strip_alias(c).split())
             role, gd = None, {}
@@ -332,9 +333,14 @@ class Read:
                 self.version = (versions or {}).get(mt.group(1) if mt else "")
                 if not self.version:
                     self.blocked.append(f"read {rid}: needs engine support - {NEEDS_ENGINE[role]}")
+            elif role == "snapshot":
+                snaps.append(text)                    # ok if it repeats the version table's filter (checked below)
             elif role in NEEDS_ENGINE:
                 self.blocked.append(f"read {rid}: needs engine support - {NEEDS_ENGINE[role]}")
-        if self.version:                              # versioned source: same table, row filter + latest_by
+        for text in snaps:
+            if text != self.version:
+                self.blocked.append(f"read {rid}: needs engine support - {NEEDS_ENGINE['snapshot']}")
+        if self.version:                            # versioned source: same table, row filter + latest_by
             sid = next((k for k, r in sources.items() if r["table"] == table and (r.get("latest_by") or "")
                         and " ".join((r.get("row_filter") or "").split()) == self.version), None)
             if sid:
@@ -657,8 +663,10 @@ class Translator:
         prod = json.loads(dp.read_text()).get("product", {}) if dp.exists() else {}
         sku = json.loads(dp.read_text()).get("product_sku", {}) if dp.exists() else {}
         self.canon = {b: a for a, b in (sku.get("sources") or {}).items()}   # history_sku -> history
+        self.packed = {k: v for k, v in (sku.get("packed_tables") or {}).items() if not k.startswith("_")}
         self.aliases = {prod["base_grain"]: prod["base_key"]} \
             if prod.get("base_grain") and prod.get("base_grain") != prod.get("base_key") else {}
+        self.levels = prod.get("levels") or {}
         self.cat_sig = {}
         for mid, m in spec["measures"].items():
             self.cat_sig.setdefault(measure_sig(m), mid)
@@ -676,6 +684,9 @@ class Translator:
                                             {t: set(c) for t, c in self.schema.items() if c}, sorted(need))
         for rid, r in self.L.reads.items():
             bid = int(rid.rsplit("#", 1)[1])
+            if r["table"] in self.packed:                 # packed arrays -> the unpacked table (same rows)
+                fs = re.sub(r"\s+ARRAY\s+JOIN\s+.*?(?=\s+WHERE\b|$)", " ", r["from_sql"], flags=re.S | re.I)
+                r = dict(r, table=self.packed[r["table"]], from_sql=fs.replace(r["table"], self.packed[r["table"]]))
             self.reads[rid] = Read(rid, r["table"], r["from_sql"], self.tenant, self.sources, self.inv_dc,
                                    set(self.schema.get(from_parts(r["from_sql"])[0] or r["table"]) or ()),
                                    self.versions)
@@ -693,8 +704,12 @@ class Translator:
         if rd.blocked:
             raise Blocked("; ".join(rd.blocked))
         src = self.sources[rd.source_id]
-        pm = parse_measure(m["expr"], rd, self.tenant, src["_cols"],
-                           {k: v for k, v in self.aliases.items() if v == src.get("item_key")})
+        al = {k: v for k, v in self.aliases.items() if v == src.get("item_key")}
+        if self.aliases and rd.source_id not in self.canon:   # stylecolor-grain source: joined hier names -> own columns
+            al = {k: src["item_key"] for k in self.aliases}
+            al.update({lv["id"]: f"x_{lv['id']}" for lv in self.levels.values()
+                       if f"x_{lv['id']}" in src["_cols"] and lv["id"] not in al})
+        pm = parse_measure(m["expr"], rd, self.tenant, src["_cols"], al)
         if pm.get("const"):
             self.cols[key] = Ref("const", "0", rd.period)
             return self.cols[key]
@@ -862,8 +877,10 @@ class Translator:
             else:
                 self.metrics[hit]["from"].append(src)
             return Ref("metric", hit, per)
-        while mid in self.metrics and not equivalent(mine, expand(mid, "ty", mets, measures)):
-            notes.append(f"id {mid} is taken by a different QA column")
+        while (mid in self.metrics and not equivalent(mine, expand(mid, "ty", mets, measures))) or \
+                (mid not in self.metrics and (mid in cat or ((mid in self.spec["measures"] or mid in self.measures)
+                                                             and mid not in re.findall(r"\w+", str(mine))))):
+            notes.append(f"id {mid} is taken by a different QA column, measure or metric")   # one name space
             mid += "_qa"
         if mid not in self.metrics:
             self.metrics[mid] = {"id": mid, "status": "new", **row, "label": "", "notes": notes, "from": [src],
