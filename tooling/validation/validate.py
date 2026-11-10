@@ -31,7 +31,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import metric_map as mm
-from core import compose as C, run as R, replay as RP, spec as SP
+from core import compose as C, run as R, replay as RP, spec as SP, row_groups as RG
 
 HUB = HERE.parent.parent
 _QA_CFG = HUB / "customers" / "TRD" / "config" / "effective" / "qa"     # QA live config (config_sync.py)
@@ -293,12 +293,14 @@ TWO_PHASE_ITEMS = 12_000      # items per period, fetched in pages
 TWO_PHASE_MAX_SQL = 125_000   # gate passes SQL as one argv string (MAX_ARG_STRLEN 128 KiB)
 
 
-def validate(raw, ctx, sql_only=False, with_rows=True):
+def validate(raw, ctx, sql_only=False, with_rows=True, spec=None):
     t0 = time.time()
     res = {"status": "ERROR", "warnings": []}
     try:
         req = normalize(raw, ctx)
         res["warnings"] += req.pop("warnings")
+        req["all_cols"] = bool(raw.get("_all_cols"))
+        req["metrics"] += raw.get("_extra_metrics") or []      # row-group pass: the rank column
         def wq(s, e):
             if not (s and e):
                 return []
@@ -327,8 +329,12 @@ def validate(raw, ctx, sql_only=False, with_rows=True):
         elif engine == "replay":
             comp = RP.compose(req, ctx, wh, wa)
         else:
-            spec = SP.load(ctx["mdir"].parent / "spec")
+            spec = spec or SP.load(ctx["mdir"].parent / "spec")
             scr = spec["screens"].get(req["pivot"]) or {}
+            if scr.get("row_groups") and not sql_only:   # rows are rank groups (Pareto Summary)
+                res.update(row_groups(raw, ctx, spec, scr))
+                res["elapsed_ms"] = int((time.time() - t0) * 1000)
+                return res
             sel = wh if scr.get("time_mode", "history") == "history" else wa
             rc = req["general"].get("rcpt_weeks") or []
             weeks = {"selected": sel, "receipt": wq(min(rc), max(rc)) if rc else sel}
@@ -337,6 +343,9 @@ def validate(raw, ctx, sql_only=False, with_rows=True):
                 if lw:
                     weeks[key] = wq(min(lw), max(lw))
             comp = SP.compose(req, spec, ctx["dims"], weeks)
+            res["metric_exprs"], res["periods"] = comp["metric_exprs"], comp["periods"]
+            res["out_cols"] = [m["col"] for m in comp["out_metrics"]]
+            res["out_metric_ids"] = [(m["data_index"], m["metric_id"], m["period"]) for m in comp["out_metrics"]]
             if not sql_only and comp.get("q_queries"):
                 # two-phase: fetch each period's items once, then run the screen over a literal item list
                 # (CH 21.4 re-runs an inlined CTE per reference); skipped when too big for the gate
@@ -398,6 +407,44 @@ def validate(raw, ctx, sql_only=False, with_rows=True):
         res["error"] = f"{type(e).__name__}: {e}"
     res["elapsed_ms"] = int((time.time() - t0) * 1000)
     return res
+
+
+def row_groups(raw, ctx, spec, scr):
+    """rank groups (Pareto Summary): each period's items fetched on their own (row_periods = p, only that
+    period's columns, so the rows are exactly its items), grouped in python, metrics recomputed on the sums."""
+    groups, rank = RG.parse(scr["row_groups"])
+    sp = lambda p: {**spec, "screens": {**spec["screens"], raw["defnId"]: {**scr, "row_groups": "", "row_periods": p}}}
+    full = validate({**raw, "_all_cols": True}, ctx, sql_only=True, spec=sp("ty"))
+    if full["status"] == "ERROR":
+        return {"status": "ERROR", "error": f"row groups: {full.get('error')}", "warnings": full["warnings"]}
+    one = {}                                              # columns whose formula stays inside one period
+    for di, mid, per in full["out_metric_ids"]:
+        mets, meas = SP.closure_p(spec, [(mid, per)])
+        ps = {x[1] for x in mets + meas} | {per}
+        if len(ps) == 1:
+            one.setdefault(per, []).append(di)
+    env, warn, items = {}, list(full["warnings"]), {}
+    for p in [x for x in SP.PERIODS if x in full["periods"]]:
+        extra = [{"label": f"rank {rank}@{p}", "data_index": rank, "period": p, "view_formula": ""}]
+        r = validate({**raw, "metrics": one.get(p, []) or [rank], "_all_cols": True, "_extra_metrics": extra},
+                     ctx, spec=sp(p))
+        if r["status"] == "ERROR":
+            return {"status": "ERROR", "error": f"row groups, {p} pass: {r.get('error')}", "warnings": warn}
+        warn += [w for w in r["warnings"] if w not in warn]
+        rows = r.get("rows") or []
+        if not rows:
+            continue
+        key = next(k for k in rows[0] if k.startswith("g_"))
+        mine = [c for c in rows[0] if not c.startswith("g_") and c != "class" and
+                (re.search(r"__(ly|lly)$", c) is None if p == "ty" else c.endswith(f"__{p}"))]
+        for g, sums in RG.group(rows, groups, SP.pcol(rank, p), key, mine).items():
+            env.setdefault(g, {}).update(sums)
+        items[p] = len(rows)
+    RG.evaluate(env, full["metric_exprs"])
+    cols = list(dict.fromkeys(full["out_cols"]))
+    return {"status": "OK", "warnings": warn, "row_groups": {"kind": scr["row_groups"], "items": items},
+            "rows": [{"g_group": g, **{c: e.get(c) for c in cols}} for g, e in env.items()],
+            "row_count": len(env), "totals": {}}
 
 
 def check_dimensions(ctx, env):

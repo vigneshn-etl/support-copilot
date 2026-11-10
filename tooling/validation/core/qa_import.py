@@ -928,6 +928,12 @@ class Translator:
                 if self.metrics.get(ref.id, {}).get("status") == "differs":
                     b["notes"].append(f"metric {ref.id}: QA differs from the catalog")
             except Blocked as e:
+                bm = self._band_metric(k[1])
+                if bm and ("rank band" in str(e) or self._ranked(k[1])):   # curated band metric in the catalog
+                    b.update(metric_id=bm, period="ty", rollup_formula="", status="ok",
+                             notes=[f"rank band: catalog band metric {bm}"])
+                    out.append(self._vs_catalog(b, cat.get(k)))
+                    continue
                 if "needs engine support" in str(e) or self._ranked(k[1]):
                     b.update(status="blocked", metric_id="", period="", rollup_formula="",
                              why=str(e) if "needs engine" in str(e) else
@@ -949,6 +955,14 @@ class Translator:
             b["status"] = "ok"
             out.append(self._vs_catalog(b, cat.get(k)))
         return out
+
+    def _band_metric(self, col):
+        """a catalog band metric (or one derived from bands) for a QA rank-band column."""
+        mets = self.spec["metrics"]
+        def banded(i, d=0):
+            m = mets.get(i)
+            return bool(m) and d < 5 and (m["type"] == "band" or any(banded(x, d + 1) for x in SP.idents(m["expr"])))
+        return col if banded(col) else None
 
     def _ranked(self, col):
         """the QA metric map shows the column is a rank band (the layering can't follow it)."""
@@ -1107,6 +1121,12 @@ def pop_params(cfg, pivot):
 
 
 def _pop_slug(changed):
+    def always(c):                                    # constant comparison that holds, e.g. 1>0, 1 = 1
+        m = re.fullmatch(r"\(?\s*(\d+)\s*(>=|>|=)\s*(\d+)\s*\)?", c.strip())
+        a, op, b = (int(m.group(1)), m.group(2), int(m.group(3))) if m else (0, "", 0)
+        return bool(m) and (a > b if op == ">" else a >= b if op == ">=" else a == b)
+    if changed and all(always(c) for c in changed):
+        return "ALL"                                  # every item
     nums = sorted({n for c in changed for n in re.findall(r"[<>]=?\s*(-?\d+(?:\.\d+)?)", c)})
     return ("GT" + nums[0].replace("-", "M").replace(".", "_")) if len(nums) == 1 else \
         "C" + hashlib.md5("|".join(changed).encode()).hexdigest()[:6]

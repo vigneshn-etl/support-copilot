@@ -557,6 +557,9 @@ def render(node, depth=0):
 
 
 # ---------------------------------------------------------------- screens
+PARETO = ("ParetoSummary", "ParetoDetails")   # assortmentui ParetoAnalysis.epic.ts: defns.view[0] as its own defn
+
+
 def scan_screens(cfg, conf_glob):
     rows = []
     for conf in sorted((cfg / "uidefn" / "conf").glob(conf_glob)):
@@ -567,7 +570,7 @@ def scan_screens(cfg, conf_glob):
         except Exception:
             continue
         for tab in d.get("tabs", []):
-            def walk(o, names, persp):
+            def walk(o, names, persp, comp=None):
                 if isinstance(o, dict):
                     ip = o.get("inPerspectives")
                     p2 = [p for p in persp if not ip or p in ip]
@@ -577,13 +580,17 @@ def scan_screens(cfg, conf_glob):
                     if isinstance(dn, dict) and dn.get("view"):
                         views = dn["view"] if isinstance(dn["view"], list) else [dn["view"]]
                         api = (cp.get("dataApi") or o.get("dataApi") or {}).get("defnId")
-                        rows.append({"app": conf.stem, "top_nav": tab.get("name") or tab.get("id"),
-                                     "top_nav_id": tab.get("id"), "screen_id": o.get("id"),
-                                     "path": nm, "modules": p2, "model": dn.get("model"),
-                                     "defn_id": api, "views": [v for v in views if isinstance(v, str)]})
+                        vs = [v for v in views if isinstance(v, str)]
+                        base = {"app": conf.stem, "top_nav": tab.get("name") or tab.get("id"),
+                                "top_nav_id": tab.get("id"), "screen_id": o.get("id"),
+                                "path": nm, "modules": p2, "model": dn.get("model"), "defn_id": api}
+                        if (o.get("component") or comp) in PARETO and vs:   # summary = view[0] fetched on its own model
+                            rows.append({**base, "model": vs[0], "defn_id": None, "views": vs[:1]})
+                            vs = vs[1:]
+                        rows.append({**base, "views": vs})
                     for k, v in o.items():
                         if k != "defns":
-                            walk(v, nm, p2)
+                            walk(v, nm, p2, o.get("component") if k == "componentProps" else None)
                 elif isinstance(o, list):
                     for v in o:
                         walk(v, names, persp)

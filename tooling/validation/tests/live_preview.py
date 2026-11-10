@@ -1,7 +1,7 @@
 """Live preview of a QA import before applying it: catalog + import proposals (in memory) -> engine -> QA CH.
 
   python3 tests/live_preview.py req.json --pivot P [--pivot P2] [--screen '{"P": {"row_periods": "ty,ly"}}']
-         [--populations rules.json] [--sources sources.json] [--out result.json]
+         [--populations rules.json] [--sources sources.json] [--metrics metrics.json] [--out result.json]
 Prints status, warnings and totals; --out keeps the full result (rows too). Nothing is written to the catalog.
 """
 import argparse, json, sys
@@ -12,10 +12,13 @@ import validate as V
 from core import spec as SP, qa_import as QI
 
 
-def preview_spec(client, pivots, screens=None, populations=None, sources=None):
+def preview_spec(client, pivots, screens=None, populations=None, sources=None, metrics=None):
     base = SP.load(QI.HUB / "customers" / client.upper() / "spec")
     for r in sources or []:                                # draft sources (e.g. plan snapshots before they are applied)
         base["sources"][r["source_id"]] = {"status": "draft", "version": "1", "description": "", **r}
+    for r in metrics or []:                                # draft metrics (e.g. curated band metrics)
+        base["metrics"][r["metric_id"]] = {"status": "draft", "version": "1", "label": r["metric_id"],
+                                           "denominator": "", "round": "", **r}
     for r in populations or []:                            # draft rules / screens first, so the translator sees them
         base["populations"] = [x for x in base["populations"]
                                if (x["population_id"], x["rule_id"]) != (r["population_id"], r["rule_id"])]
@@ -70,12 +73,14 @@ def main():
     ap.add_argument("--screen", default="{}")
     ap.add_argument("--populations", help="json file: population rules to add (preview only)")
     ap.add_argument("--sources", help="json file: sources to add (preview only)")
+    ap.add_argument("--metrics", help="json file: metrics to add (preview only)")
     ap.add_argument("--out")
     a = ap.parse_args()
     raw = json.load(open(a.request))
     spec, _ = preview_spec(raw.get("client", "TRD"), a.pivot, json.loads(a.screen),
                            json.load(open(a.populations)) if a.populations else None,
-                           json.load(open(a.sources)) if a.sources else None)
+                           json.load(open(a.sources)) if a.sources else None,
+                           json.load(open(a.metrics)) if a.metrics else None)
     SP.load = lambda *x, **k: spec
     res = V.validate(raw, V.context(raw.get("client", "TRD")), with_rows=bool(a.out))
     if a.out:

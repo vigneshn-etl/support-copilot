@@ -27,11 +27,12 @@ AGGS = ("sum", "sum_funded", "last_at_max_week", "first_at_min_week", "count_dis
 LEGACY_AGGS = {"snapshot_last": "last_at_max_week", "snapshot_first": "first_at_min_week"}
 FUNDED = "strcntwk_funded > 0.000001"
 WINDOWS = ("selected", "receipt", "none")
-METRIC_TYPES = ("simple", "derived", "ratio")
+METRIC_TYPES = ("simple", "derived", "ratio", "band")   # band: quintile of the item's score (post step)
 PERIODS = ("ty", "ly", "lly")            # ly weeks = calendar weeks whose cctytime is a ty week
 PREV = {"ly": "ty", "lly": "ly"}
 AT = re.compile(r"@(ty|ly|lly)\b")
 ACTIVE = ("approved", "draft")
+BUILTINS = ("__items",)                 # 1 per item row (row-group screens count items with it)
 
 
 def q(v):
@@ -139,7 +140,7 @@ def lint(spec, schema, dims=None):
         if m["type"] == "ratio" and not m.get("denominator"):
             err("metrics", mid, "ratio needs a denominator")
         for i in idents(m["expr"]) + idents(m.get("denominator", "")):
-            if i not in names:
+            if i not in names and i not in BUILTINS:
                 err("metrics", mid, f"{i} is not a measure or metric")
             elif i == mid and i not in spec["measures"]:
                 err("metrics", mid, "refers to itself")
@@ -216,6 +217,8 @@ def closure_p(spec, wants):
             order.append((n, p))
         elif n in spec["measures"]:
             meas.add((n, p))
+        elif n in BUILTINS:
+            return
         else:
             raise ValueError(f"'{n}' is not a spec measure or metric")
     for n, p in wants:
@@ -305,21 +308,49 @@ def _py(e):
     return re.sub(r"(?<![<>!=])=(?!=)", "==", e)
 
 
+def _multi_if(*a):
+    for i in range(0, len(a) - 1, 2):
+        if a[i]:
+            return a[i + 1]
+    return a[-1]
+
+
+def band_of(scores):
+    """{key: raw band}: keys with score > 0 ranked ascending (ties by key) and cut into quintiles of
+    their count, else 0 (QA history_bands_ty.ftl: rowNumberInBlock()+1 over ORDER BY score)."""
+    pos = sorted((v, k) for k, v in scores.items() if v > 0)
+    n, out = len(pos), {k: 0 for k in scores}
+    for i, (_, k) in enumerate(pos, 1):
+        out[k] = 1 if i <= 0.2 * n else 2 if i <= 0.4 * n else 3 if i <= 0.6 * n else 4 if i <= 0.8 * n else 5
+    return out
+
+
 def apply_post(rows, post):
-    """share-of-total columns on the fetched rows: totals over all rows, then each row's value."""
+    """columns on the fetched rows: share of total (totals over all rows), then each row's value;
+    bands rank the rows by their score (raw band 0 shown as 1)."""
     if not post:
         return rows
     num = lambda v: float(v) if v not in (None, "", "\\N", "nan") else 0.0
     tot = {f"__t_{t}": sum(num(r.get(t)) for r in rows) for p in post for t in p["totals"]}
-    fn = {"_if": lambda c, a, b: a if c else b, "_round": lambda x, n=0: round(x, int(n))}
-    code = [(p["col"], compile(_py(p["expr"]), p["col"], "eval")) for p in post]
-    for r in rows:
-        env = {**{k: num(v) for k, v in r.items() if not k.startswith("g_")}, **tot}
-        for c, cc in code:
+    fn = {"_if": lambda c, a, b: a if c else b, "_round": lambda x, n=0: round(x, int(n)), "multiIf": _multi_if}
+    envs = [{**{k: num(v) for k, v in r.items() if not k.startswith("g_")}, **tot} for r in rows]
+    for p in post:
+        cc = compile(_py(p.get("band") or p["expr"]), p["col"], "eval")
+        vals = []
+        for env in envs:
             try:
-                env[c] = r[c] = eval(cc, {"__builtins__": {}, **fn}, env)
+                vals.append(eval(cc, {"__builtins__": {}, **fn}, env))
             except ZeroDivisionError:
-                env[c] = r[c] = 0.0
+                vals.append(0.0)
+        if p.get("band") is not None:
+            keys = ["|".join(str(r.get(k)) for k in p["key"]) for r in rows]
+            raw = band_of({k: (v if isinstance(v, (int, float)) else 0.0) for k, v in zip(keys, vals)})
+            for r, env, k in zip(rows, envs, keys):
+                env[f"__raw_{p['col']}"] = raw[k]
+                env[p["col"]] = r[p["col"]] = raw[k] or 1
+        else:
+            for r, env, v in zip(rows, envs, vals):
+                env[p["col"]] = r[p["col"]] = v
     return rows
 
 
@@ -428,7 +459,7 @@ def compose(req, spec, dims, weeks, items=None):
             periods.insert(PERIODS.index(p) - 1, PREV[p])
     periods = [p for p in PERIODS if p in periods]
     sfx = {p: "" if p == "ty" else f"_{p}" for p in PERIODS}
-    names = set(spec["metrics"]) | set(spec["measures"])
+    names = set(spec["metrics"]) | set(spec["measures"]) | set(BUILTINS)
 
     # ---- 1 SCOPE
     P_lv, L_lv = dims["product"]["levels"], dims["location"]["levels"]
@@ -644,6 +675,10 @@ def compose(req, spec, dims, weeks, items=None):
     # ---- 4 METRICS at the grain
     gsel = [f"{'max' if spec['measures'][mid]['rollup'] == 'max' else 'sum'}"
             f"({mcol[(mid, per)]}) AS {pcol(mid, per)}" for mid, per in meas]
+    uses = {i for n, _ in mets for i in idents(spec["metrics"][n]["expr"]) if i in BUILTINS}
+    if req.get("all_cols") or uses:                       # an item row counts 1
+        gsel += [f"toFloat64(1) AS {pcol(b, p)}" for b in BUILTINS for p in periods]
+    metric_exprs = []
     late, late_sel = set(), []                            # total(x): needs every row first
     for mid, per in mets:
         if mid in spec["measures"]:
@@ -651,7 +686,8 @@ def compose(req, spec, dims, weeks, items=None):
         m = spec["metrics"][mid]
         mm_ = {**m, "expr": at_period(m["expr"], per, names), "denominator": at_period(m.get("denominator", ""), per, names)}
         deps = {(i, ip or per) for i, ip in refs(m["expr"]) + refs(m.get("denominator", ""))}
-        if TOTAL.search(m["expr"] + " " + (m.get("denominator") or "")) or deps & late:
+        metric_exprs.append((pcol(mid, per), _metric_sql(mm_), m["type"]))
+        if TOTAL.search(m["expr"] + " " + (m.get("denominator") or "")) or deps & late or m["type"] == "band":
             late.add((mid, per))
             late_sel.append((mm_, pcol(mid, per)))
         else:
@@ -660,9 +696,15 @@ def compose(req, spec, dims, weeks, items=None):
              f"SELECT {', '.join(gk + gsel)}\nFROM U" + (f"\nGROUP BY {', '.join(gk)}" if gk else "")]
     # share of total (total(x) = sum of x over the screen's rows): evaluated on the fetched rows, since
     # CH 21.4 re-runs an inlined CTE per reference and window functions need a setting readonly can't set
+    bands = {c for m_, c in late_sel if m_["type"] == "band"}
     post = [{"col": c, "expr": _metric_sql({**m_, "expr": TOTAL.sub(lambda t: f"__t_{t.group(1)}", m_["expr"]),
                                             "denominator": TOTAL.sub(lambda t: f"__t_{t.group(1)}", m_["denominator"])}),
              "totals": sorted(set(TOTAL.findall(m_["expr"] + " " + m_["denominator"])))} for m_, c in late_sel]
+    for p_, (m_, c) in zip(post, late_sel):              # bands rank the rows (items); a band inside a band = raw
+        if m_["type"] == "band":
+            p_["band"], p_["key"] = re.sub(r"\b(%s)\b" % "|".join(map(re.escape, bands)), r"__raw_\1", p_["expr"]), gk
+            if not all(e.startswith("h.") for _, e in g) or len(levels) > 1:
+                warnings.append(f"{c}: bands are ranked over the rows; at grain {gk} QA ranks items first")
     late_cols = {c for _, c in late_sel}
     post_need = {i for p_ in post for i in idents(p_["expr"]) if not i.startswith("__t_")} | \
                 {t for p_ in post for t in p_["totals"]}
@@ -682,6 +724,10 @@ def compose(req, spec, dims, weeks, items=None):
     with_sql = "WITH\n" + ",\n".join(f"{n} AS (\n{b}\n)" for n, b in ctes)
     out_cols = list(dict.fromkeys(gk + [m["col"] for m in out_metrics if m["col"] not in late_cols]
                                   + sorted(post_need - late_cols)))
+    if req.get("all_cols"):                               # row-group screens: every measure, metric and count
+        out_cols = list(dict.fromkeys(out_cols + [pcol(n, p) for n, p in meas]
+                                      + [pcol(b, p) for b in BUILTINS for p in periods]
+                                      + [c for c, _, _ in metric_exprs if c not in late_cols]))
     sql_rows = f"{with_sql}\nSELECT {', '.join(out_cols)}\nFROM G" + (f"\nORDER BY {', '.join(gk)}" if gk else "")
 
     # ---- 5 ROLLUP (the screen's own formula, owned by the spec binding)
@@ -702,7 +748,7 @@ def compose(req, spec, dims, weeks, items=None):
     lines = sql_rows.count("\n") + 1
     return {"engine": "spec", "family": scr["population_id"], "grain": gk,
             "columns": [pcol(n, p) for n, p in mets], "measures": [pcol(n, p) for n, p in meas],
-            "periods": periods, "post": post, "q_queries": q_queries, "sql_rows": sql_rows, "sql_totals": sql_totals, "totals_map": tmap,
+            "periods": periods, "post": post, "metric_exprs": metric_exprs, "out_metrics": out_metrics, "q_queries": q_queries, "sql_rows": sql_rows, "sql_totals": sql_totals, "totals_map": tmap,
             "warnings": warnings, "provenance": {
                 "population": [f"{r['rule_id']} v{r['version']} ({r['status']})" for r in pop],
                 "metrics": {m["label"]: f"{m['metric_id']}{'' if m['period'] == 'ty' else '@' + m['period']} "

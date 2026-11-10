@@ -42,7 +42,8 @@ COLUMNS = {
     "metrics": ["metric_id", "label", "type", "expr", "denominator", "round", "requirement"],
     "populations": ["population_id", "step", "rule_id", "kind", "source_id", "time_window",
                     "condition", "row_filter", "applies_when", "group_level"],
-    "screens": ["pivot", "population_id", "time_mode", "split_by_class", "row_periods", "row_filter", "item_grain"],
+    "screens": ["pivot", "population_id", "time_mode", "split_by_class", "row_periods", "row_filter", "item_grain",
+                "row_groups"],
     "bindings": ["pivot", "viewdefn", "data_index", "label", "metric_id", "period", "rollup_formula"],
 }
 TAIL = ["status", "version", "approved_by", "approved_at", "origin", "notes"]

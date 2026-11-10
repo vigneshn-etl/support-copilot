@@ -227,6 +227,17 @@ CASES_SHARE = [
      WEEKS, SPEC_SHARE),
 ]
 
+# rank bands (QA history_bands_ty.ftl): items with eop > 0 ranked ascending, cut into quintiles of their
+# count -> p3 (9) is 1 of 2 (1 <= 0.6 * 2: band 3), p1 (70) 2 of 2 (2 > 0.8 * 2: band 5); composite ranks 0.5 * raw band
+SPEC_BAND = {**SPEC, "metrics": {**SPEC["metrics"], **dict([MT("eop_band", "band", "eop"),
+                                                            MT("comp_band", "band", "0.5 * eop_band")])}}
+CASES_BAND = [
+    ("band: quintiles of the items with a positive score; a band inside a band is the raw band",
+     req([("eop_band", ""), ("comp_band", "")]),
+     {"rows": {"p1": {"eop_band": 5, "comp_band": 5}, "p3": {"eop_band": 3, "comp_band": 3}}},
+     WEEKS, SPEC_BAND),
+]
+
 # class decided per group (QA style review: a style is Carryover if any of its colors is, else New if any is,
 # else Sell Down), here per department: p1 (Carryover) and p3 (Sell Down) share D1 -> both Carryover
 UP = {"population_id": "P", "step": "3", "rule_id": "grp", "kind": "classify_up", "source_id": "",
@@ -282,7 +293,7 @@ CASES_PLAN = [
 
 def main():
     bad = 0
-    for name, rq, exp, *wk in CASES + CASES_WEEKS + CASES_RCPT + CASES_ROWS + CASES_SHARE + CASES_UP + CASES_GRP + CASES_PLAN:
+    for name, rq, exp, *wk in CASES + CASES_WEEKS + CASES_RCPT + CASES_ROWS + CASES_SHARE + CASES_BAND + CASES_UP + CASES_GRP + CASES_PLAN:
         try:
             c = SP.compose(rq, wk[1] if len(wk) > 1 else SPEC, DIMS, wk[0] if wk else WEEKS)
             got_rows, got_tot = {}, {}
