@@ -557,7 +557,7 @@ def render(node, depth=0):
 
 
 # ---------------------------------------------------------------- screens
-PARETO = ("ParetoSummary", "ParetoDetails")   # assortmentui ParetoAnalysis.epic.ts: defns.view[0] as its own defn
+PARETO = ("ParetoSummary", "ParetoDetails")   # assortmentui ParetoAnalysis: view[0] on its own model; view[3] reads its Total
 
 
 def scan_screens(cfg, conf_glob):
@@ -585,8 +585,9 @@ def scan_screens(cfg, conf_glob):
                                 "top_nav_id": tab.get("id"), "screen_id": o.get("id"),
                                 "path": nm, "modules": p2, "model": dn.get("model"), "defn_id": api}
                         if (o.get("component") or comp) in PARETO and vs:   # summary = view[0] fetched on its own model
-                            rows.append({**base, "model": vs[0], "defn_id": None, "views": vs[:1]})
-                            vs = vs[1:]
+                            own = [v for i, v in enumerate(vs) if i in (0, 3)]   # rollUp (view[3]) reads its Total row
+                            rows.append({**base, "model": vs[0], "defn_id": None, "views": own})
+                            vs = [v for v in vs if v not in own]
                         rows.append({**base, "views": vs})
                     for k, v in o.items():
                         if k != "defns":
