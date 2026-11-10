@@ -201,6 +201,12 @@ def _top_kw(s, kw, start=0):
     return -1
 
 
+def _alias_after(txt, i):
+    """the alias following a FROM source at txt[i:] ('t AS a', 't a'), else None."""
+    m = re.match(r"\s*(?:as\s+)?([A-Za-z_]\w*)", txt[i:], re.I)
+    return m.group(1) if m and m.group(1).lower() not in _KW else None
+
+
 def _item(it):
     """select item -> (alias, expr, is_star)."""
     if it == "*" or re.fullmatch(r"\w+\.\*", it):
@@ -220,7 +226,7 @@ def _item(it):
 
 class Block:
     __slots__ = ("id", "items", "star", "sources", "where", "having", "creates", "text", "arrayjoin",
-                 "stmt_creates", "from_sql", "group_sql")
+                 "stmt_creates", "from_sql", "group_sql", "aliases", "star_q")
 
 
 def parse_blocks(sql):
@@ -252,13 +258,14 @@ def parse_blocks(sql):
             b = Block()
             b.id, b.text, b.creates = len(blocks), body, None
             b.items, b.star, b.sources, b.where, b.having = {}, False, [], "", ""
-            b.arrayjoin = {}
+            b.arrayjoin, b.aliases, b.star_q = {}, [], set()   # star_q: 'a' for a.*, '' for bare *
             b.stmt_creates, b.from_sql, b.group_sql = creates, "", ""
             sel_list = body if f < 0 else body[:f]
             for it in _split_top(sel_list):
                 a, e, st = _item(it)
                 if st:
                     b.star = True
+                    b.star_q.add(it.strip()[:-2] if it.strip() != "*" else "")
                 elif a:
                     b.items.setdefault(a, []).append(e)
             if f >= 0:
@@ -302,13 +309,13 @@ def parse_blocks(sql):
                 # sources: subqueries (by absolute position) + table names
                 abs0 = p + 6 + f + 4
                 fdm = _depth_map(frm)
-                i = 0
+                srcs, i = [], 0                 # (position, source): FROM text order, main table first
                 while i < len(frm):
                     if frm[i] == "(" and fdm[i] == 0:
                         j = i + 1
                         while j < len(frm) and not (frm[j] == ")" and fdm[j] == 0):
                             j += 1
-                        b.sources.append(("sub", abs0 + i, abs0 + j))
+                        srcs.append((i, ("sub", abs0 + i, abs0 + j), _alias_after(frm, j + 1)))
                         i = j + 1
                         continue
                     i += 1
@@ -321,10 +328,13 @@ def parse_blocks(sql):
                     frm = frm[:aj.start()]
                 flat = frm
                 while re.search(r"\([^()]*\)", flat):
-                    flat = re.sub(r"\([^()]*\)", " __SUB__ ", flat)
-                for t in re.findall(r"(?:^|\bjoin\b|,)\s*([A-Za-z_][\w.]*)", flat, re.I):
-                    if t.lower() not in _KW and t != "__SUB__":
-                        b.sources.append(("table", t.split(".")[-1]))
+                    flat = re.sub(r"\([^()]*\)", lambda m: "#" * len(m.group(0)), flat)   # keep positions
+                for m in re.finditer(r"(?:^|\bjoin\b|,)\s*([A-Za-z_][\w.]*)", flat, re.I):
+                    t = m.group(1)
+                    if t.lower() not in _KW:
+                        srcs.append((m.start(1), ("table", t.split(".")[-1]), _alias_after(flat, m.end(1))))
+                srcs.sort(key=lambda x: x[0])
+                b.sources, b.aliases = [s for _, s, _ in srcs], [a for _, _, a in srcs]
             blocks.append(b)
             local[p] = (b, base)
         # resolve subquery sources to the blocks inside them (direct children)
@@ -402,34 +412,40 @@ class Resolver:
             else:
                 e = variants[0]
                 masked, ids, subqs = self._idents(e)
-                if re.fullmatch(r"(?:\w+\.)?" + re.escape(name), e.strip()):
-                    node = self.src(bid, name, depth + 1)       # bare passthrough
+                q = re.fullmatch(r"(?:(\w+)\.)?" + re.escape(name), e.strip())
+                if q:
+                    node = self.src(bid, name, depth + 1, q.group(1))       # bare passthrough
                 else:
                     kids = {}
                     for ident in dict.fromkeys(ids):
                         bare = ident.split(".")[-1]
                         if bare == name or "." in ident or bare not in b.items:
-                            kids[ident] = self.src(bid, bare, depth + 1)
+                            kids[ident] = self.src(bid, bare, depth + 1, ident.split(".")[-2] if "." in ident else None)
                         else:
                             kids[ident] = self.col(bid, bare, False, depth + 1)
                     node = {"kind": "expr", "name": name, "bid": bid, "expr": " ".join(e.split()),
                             "masked": " ".join(masked.split()), "kids": kids, "subqs": subqs,
                             "where": b.where, "having": b.having}
         else:
-            node = self.src(bid, name, depth + 1)
+            node = self.src(bid, name, depth + 1, via_star=True)
         self.memo[key] = node
         return node
 
-    def src(self, bid, name, depth):
-        """name as a column of block bid's FROM sources."""
+    def src(self, bid, name, depth, qual=None, via_star=False):
+        """name as a column of block bid's FROM sources; alias qual's (or, via_star, the a.* aliases') first:
+        CH 21.4 falls back to the other sources when the alias lacks the column."""
         b = self.b[bid]
+        keep = {qual} if qual else (b.star_q if via_star and b.star_q and "" not in b.star_q else None)
+        if keep and not any(a in keep for a in b.aliases):
+            keep = None                                     # qualifier is a table name, not an alias
         if name in b.arrayjoin and b.arrayjoin[name] != name:
             n = self.src(bid, b.arrayjoin[name].split(".")[-1], depth + 1)
             if n["kind"] == "leaf":
                 n = dict(n, note=f"ARRAY JOIN {b.arrayjoin[name]} as {name}")
             return n
         found = []
-        for s in b.sources:
+        order = sorted(zip(b.sources, b.aliases), key=lambda x: bool(keep) and x[1] not in keep)
+        for s, al in order:
             if s[0] == "table":
                 t = s[1]
                 if t in self.creators:
@@ -751,13 +767,11 @@ def build(cfg, client, env, out_csv, schema_path, refresh, conf_glob):
             return vm, model_pivot(cfg, vm, None)
         return s["model"], model_pivot(cfg, s["model"], s["defn_id"])
     def bindings(s, v):
-        """the view's own model, plus the screen's model when it reads another pivot (a viewdefn shared by
-        screens with different models: Size Views run HistoryAggregateViewsNestedAttributeGrid* on the SKU pivot)"""
-        out = [binding(s, v)]
+        """the screen's defns.model when it resolves, else the viewdefn's own model"""
         sm = (s["model"], model_pivot(cfg, s["model"], s["defn_id"]))
-        if sm[1] and sm[1] != out[0][1]:
-            out.append(sm)
-        return out
+        if sm[1]:
+            return [sm]                     # defns.model wins (NestedAttribute.epic: modelDefn || view[0])
+        return [binding(s, v)]
     pivots = sorted({b[1] for s in screens for v in s["views"] for b in bindings(s, v)} - {None})
     tables = set()
     for p in pivots:
