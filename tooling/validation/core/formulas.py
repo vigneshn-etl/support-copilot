@@ -70,6 +70,38 @@ class Layering:
             self.reads[rid] = {"table": table, "from_sql": b.from_sql}
         return rid
 
+    def _sumif_pushdown(self, node):
+        """sumIf(x.m, cond) over one read's sum(col) measure, cond on that read's raw columns
+        -> the read-level measure sumIf(col, cond) (QA pre-aggregates by prodlife, then sumIf: FP units)."""
+        w = re.fullmatch(r"\s*sumIf\(\s*([A-Za-z_][\w.]*)\s*,\s*(.+)\)\s*", node["expr"], re.I | re.S)
+        if not w or w.group(1) not in node["kids"]:
+            return None
+        cond_ids = [i for i in node["kids"] if i != w.group(1)]
+        if not cond_ids or any(self._raw(node["kids"][i]) is False for i in cond_ids):
+            return None
+        tok, _ = self.define(node["kids"][w.group(1)])
+        ms = re.findall(r"\{m:([^}]+)\}", tok)
+        if len(ms) != 1 or re.sub(r"\{m:[^}]+\}|[\s()+0]", "", tok):
+            return None                                 # one measure, the rest constant 0 parts of a union
+        m0 = self.measures[ms[0]]
+        inner = re.fullmatch(r"\s*sum\(\s*(.+?)\s*\)\s*", m0["expr"], re.I | re.S)
+        if not inner:
+            return None
+        cond = re.sub(r"\b[A-Za-z_]\w*\.([A-Za-z_]\w*)", r"\1", w.group(2))
+        mid = f"{m0['read']}:{node['name']}"
+        self.measures.setdefault(mid, {"expr": f"sumIf({inner.group(1)}, {cond})", "read": m0["read"],
+                                       "table": m0["table"]})
+        return "{m:" + mid + "}"
+
+    @staticmethod
+    def _raw(n):
+        """True if n is a raw table column (or a union of them), False otherwise."""
+        if n["kind"] == "leaf":
+            return True
+        if n["kind"] == "union":
+            return all(p["kind"] in ("leaf", "const") for p in n["parts"])
+        return False
+
     def define(self, node):
         """-> (sql token, needs_agg). Registers measures / columns as it goes."""
         k = node["kind"]
@@ -89,6 +121,9 @@ class Layering:
             mid = f"{rid}:{node['name']}"
             self.measures.setdefault(mid, {"expr": node["expr"], "read": rid, "table": table})
             return "{m:" + mid + "}", True
+        pushed = self._sumif_pushdown(node)
+        if pushed:
+            return pushed, True
         subs = {i: self.define(kid) for i, kid in node["kids"].items()}
         w = _WRAP.match(node["masked"])
         if w and w.group(2) in subs and w.group(1).lower() == "sum" and self.grand_total(bid):
