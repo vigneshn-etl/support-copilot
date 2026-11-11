@@ -934,6 +934,13 @@ class Translator:
                              notes=[f"rank band: catalog band metric {bm}"])
                     out.append(self._vs_catalog(b, cat.get(k)))
                     continue
+                if NEEDS_ENGINE["base_grain"] in str(e) and k[1] in self.spec["metrics"]:
+                    # DVS: QA per-colour count bug; bind catalog metric
+                    b.update(metric_id=k[1], period="ty", rollup_formula="", status="ok",
+                             notes=[f"QA counts per finer item then sums/maxes ({str(e).split(NEEDS_ENGINE['base_grain'])[-1].lstrip(': ')[:120]}); "
+                                    f"catalog {k[1]} uses true distinct counts - QA config bug, not copied"])
+                    out.append(self._vs_catalog(b, cat.get(k)))
+                    continue
                 if "needs engine support" in str(e) or self._ranked(k[1]):
                     b.update(status="blocked", metric_id="", period="", rollup_formula="",
                              why=str(e) if "needs engine" in str(e) else
@@ -948,6 +955,9 @@ class Translator:
                     b.update(status="blocked", metric_id="", period="", rollup_formula="", why=str(e))
                 out.append(self._vs_catalog(b, cat.get(k)))
                 continue
+            except RollupBroken as e:
+                b.update(metric_id=ref.id, period=ref.period, rollup_formula="")
+                b["notes"].append(str(e))
             except Blocked2 as e:
                 b.update(status="blocked", metric_id=ref.id, period=ref.period, rollup_formula="", why=str(e))
                 out.append(self._vs_catalog(b, cat.get(k)))
@@ -981,6 +991,9 @@ class Translator:
             try:
                 r = self.column(w)
             except Blocked as e:
+                if "not a column of pivot" in str(e):
+                    raise RollupBroken(f"QA rollup '{f}' uses {w}, which the pivot never outputs "
+                                       f"(QA group rows can't compute it); engine rolls the metric up itself")
                 raise Blocked2(f"rollup '{f}': {e}")
             out.append(f[i:t.start()] + self.name_for(w, r) + ("" if r.period == per else "@" + r.period))
             i = t.end()
@@ -1091,6 +1104,10 @@ class Blocked(Exception):
 
 class Blocked2(Exception):
     pass
+
+
+class RollupBroken(Blocked2):
+    """a QA rollup formula naming a column the pivot never outputs (a QA config bug, not copied)."""
 
 
 # ---------------------------------------------------------------- screens

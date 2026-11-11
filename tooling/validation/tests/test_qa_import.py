@@ -383,8 +383,9 @@ def qa():
     check("qa: only the known stk_sls_u rollup guard differs on HistoryFit",
           sorted(f"{b['viewdefn']}.{b['data_index']}" for b in hf if b["status"] == "changed"),
           ["HistoryRollUp.stk_sls_u"])
-    check("qa: GMROI grid rollup names a column the pivot lacks",
-          "net_margin_r" in B[("HistoryFit", "HistoryStyleColorGridViewGrid", "gmroi")].get("why", ""), True)
+    g = B[("HistoryFit", "HistoryStyleColorGridViewGrid", "gmroi")]
+    check("qa: GMROI grid rollup names a column the pivot lacks -> bound, QA rollup not copied",
+          (g["metric_id"], g["rollup_formula"], any("net_margin_r" in n for n in g["notes"])), ("gmroi", "", True))
     check("qa: walkout measure", (K["wo_sls_u"]["expr"], K["wo_sls_u"]["filter"]),
           ("shp_u - ret_u - sfs_u - bopis_u", "loc.selling_channel = 'CD-1'"))
     check("qa: FP sell-thru is the catalog metric", M["fp_sell_thru_pct"]["status"], "same")
@@ -394,6 +395,11 @@ def qa():
     check("qa: LY transpose column -> net_sls_u @ly", (ly["metric_id"], ly["period"]), ("net_sls_u", "ly"))
     lye = B[("HistoryFitTYLYTranspose", "HistoryStyleColorTYLYGrid", "ly_eoh_u_per_cc_per_store")]
     check("qa: LY EOP per store differs from TY in the pivot (kept apart)", lye["metric_id"].endswith("_qa"), True)
+    sp2 = dict(spec, metrics={**spec["metrics"], "gmroi": next(iter(spec["metrics"].values()))})  # csv seed lacks gmroi
+    st = QI.translate("TRD", ["HistoryFitStyleTYLY"], sp2)["bindings"]
+    sg = next(b for b in st if b["data_index"] == "gmroi")
+    check("qa: per-colour weekcount summed (QA bug) -> catalog gmroi with a note",
+          (sg["metric_id"], any("not copied" in n for n in sg["notes"])), ("gmroi", True))
     check("qa: TY/LY screen needs its own population",
           next(s["status"] for s in rep["screens"] if s["pivot"] == "HistoryFitTYLYTranspose"), "blocked")
 
