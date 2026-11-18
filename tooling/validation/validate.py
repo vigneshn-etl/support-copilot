@@ -248,8 +248,14 @@ def parse_ui(v):
 def compare(res, expected, req):
     out = {"totals": [], "rows": None}
     ok = True
+    one = (res.get("rows") or [None])[0] if len(res.get("rows") or []) == 1 else None
+    lab = {m["label"]: m["data_index"] for m in (res.get("resolved") or {}).get("metrics", [])}
+    rc = row_cols(res) if one else {}
     for label, ev in (expected.get("totals") or {}).items():
         av = res["totals"].get(label)
+        if av is None and one:                    # DVS: no rollup (nested SQL levels); one row = the total
+            di = lab.get(label) or (re.search(r"\((\w+)\)$", label) or [None, label])[1]
+            av = one.get(rc.get(di, ""))
         e, tol = parse_ui(ev)
         tol = max(tol, (expected.get("tolerance") or {}).get(label, 0))
         good = av is not None and isinstance(av, (int, float)) and abs(av - e) <= tol + 1e-9
@@ -301,11 +307,14 @@ def key_weight(k):
 def row_cols(res):
     """screen data_index -> result row column (metric id, '__<period>' when not TY)."""
     prov = (res.get("provenance") or {}).get("metrics") or {}
-    out = {}
+    out = {di: m + ("" if per == "ty" else f"__{per}") for di, m, per in res.get("out_metric_ids") or []}
     for m in res["resolved"]["metrics"]:
         p = prov.get(m["label"], "").split()
         mm_ = re.match(r"(\w+)(?:@(\w+))?", p[0]) if p else None
-        out[m["data_index"]] = (mm_.group(1) + (f"__{mm_.group(2)}" if mm_.group(2) else "")) if mm_ else m["data_index"]
+        if m["data_index"] in out:
+            continue
+        out[m["data_index"]] = (mm_.group(1) + (f"__{mm_.group(2)}" if mm_.group(2) else "")) if mm_ \
+            else m["data_index"]
     return out
 
 
