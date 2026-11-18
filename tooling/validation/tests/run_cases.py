@@ -25,4 +25,9 @@ for p in cases:
     for c in (r.get("compare") or {}).get("totals", []):
         if not c["match"]:
             print(f"        {c['metric']:22} UI={c['expected']!s:12} DB={c['db']}")
+    ck = (r.get("compare") or {}).get("checksums")
+    if ck and (ck["mismatches"] or ck["missing_in_db"] or ck["expected_rows"] not in (None, ck["n_rows"])):
+        print(f"        rows UI={ck['expected_rows']} DB={ck['n_rows']}  missing={ck['missing_in_db'][:5]}")
+        for m in ck["mismatches"][:10]:
+            print(f"        {m['col']:30} UI={m['expected']} DB={m['db']}")
 sys.exit(1 if bad else 0)

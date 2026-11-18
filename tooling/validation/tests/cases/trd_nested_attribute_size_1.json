@@ -1,0 +1,114 @@
+{
+ "client": "TRD",
+ "env": "qa",
+ "route": "#/bottom-up/hindsighting/aggregate-views-size/nested-attribute-size",
+ "defnId": "HistoryAggregateViewsNestedAttribute",
+ "aggBy": "level:size",
+ "viewdefn": "HistoryAggregateViewsNestedAttributeGridSize",
+ "section": "grid",
+ "scope": {
+  "productLevel": "class",
+  "productMember": "CL-3104",
+  "locationLevel": "channel",
+  "locationMember": "CH-2",
+  "historyStart": "2025_W25",
+  "historyEnd": "2025_W25"
+ },
+ "filters": {
+  "merchcat": [
+   "FP",
+   "MD"
+  ]
+ },
+ "_note": "class 3104 size rows from QA's department view; % to total left out (QA: share of department, DVS class scope: share of class); dropped: ['avg_inv_c_pct_ttl', 'avg_inv_u_pct_ttl', 'ly_avg_inv_c_pct_ttl', 'ly_avg_inv_u_pct_ttl', 'ly_net_sls_c_pct_ttl', 'ly_net_sls_r_pct_ttl', 'ly_net_sls_u_pct_ttl', 'ly_rec_c_pct_ttl', 'ly_rec_u_pct_ttl', 'ly_weekcount', 'net_sls_c_pct_ttl', 'net_sls_r_pct_ttl', 'net_sls_u_pct_ttl', 'rec_c_pct_ttl', 'rec_u_pct_ttl', 'weekcount']; part 1/5 (whole screen times out on the 300 s gate)",
+ "expected": {
+  "_source": "QA UI 2026-11-16 (HistoryAggregateViewsNestedAttributeGridSize, tests/capture/ag_capture.js)",
+  "checksums": {
+   "n_rows": 8,
+   "key": "id",
+   "cols": {
+    "net_sls_r": [
+     259258.68,
+     13725286,
+     8
+    ],
+    "ly_net_sls_r": [
+     405982.64,
+     21235377,
+     8
+    ],
+    "var_ly_net_sls_r": [
+     -2.5531,
+     -131.531,
+     8
+    ],
+    "net_sls_u": [
+     10309,
+     545877,
+     8
+    ],
+    "ly_net_sls_u": [
+     15757,
+     824387,
+     8
+    ],
+    "var_ly_net_sls_u": [
+     -2.3879,
+     -122.2945,
+     8
+    ],
+    "net_sls_aur": [
+     198.9473,
+     11093.53,
+     8
+    ],
+    "ly_net_sls_aur": [
+     205.0521,
+     11427.477,
+     8
+    ],
+    "var_ly_net_sls_aur": [
+     -0.2392,
+     -13.0904,
+     8
+    ],
+    "net_sls_margin_r": [
+     141499.52,
+     7488239.4,
+     8
+    ],
+    "ly_net_sls_margin_r": [
+     228014.41,
+     11915198,
+     8
+    ],
+    "var_ly_net_sls_margin_r": [
+     -2.673,
+     -137.7705,
+     8
+    ],
+    "net_sls_margin_pct": [
+     4.3309,
+     241.3411,
+     8
+    ]
+   },
+   "rel_tol": 1e-06
+  }
+ },
+ "metrics": [
+  "net_sls_r",
+  "ly_net_sls_r",
+  "var_ly_net_sls_r",
+  "net_sls_u",
+  "ly_net_sls_u",
+  "var_ly_net_sls_u",
+  "net_sls_aur",
+  "ly_net_sls_aur",
+  "var_ly_net_sls_aur",
+  "net_sls_margin_r",
+  "ly_net_sls_margin_r",
+  "var_ly_net_sls_margin_r",
+  "net_sls_margin_pct"
+ ]
+}

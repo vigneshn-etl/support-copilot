@@ -1,0 +1,214 @@
+{
+ "client": "TRD",
+ "env": "qa",
+ "route": "#/bottom-up/hindsighting/history-grid/history-grid",
+ "defnId": "BU_HistoryGridStyleColor",
+ "aggBy": "level:stylecolor",
+ "viewdefn": "HistoryHistoryGridNestedViewGrid",
+ "section": "grid",
+ "scope": {
+  "productLevel": "department",
+  "productMember": "DP-48",
+  "locationLevel": "channel",
+  "locationMember": "CH-2",
+  "historyStart": "2025_W25",
+  "historyEnd": "2025_W25"
+ },
+ "filters": {
+  "merchcat": [
+   "FP",
+   "MD"
+  ]
+ },
+ "_note": "avail_inv_aut/auc left out: QA shows Infinity on some items (guard checks eoh+shp>0 but divides by eoh+shp-ret); dropped: ['avail_inv_auc', 'avail_inv_aut', 'fp_weekcount', 'weekcount']",
+ "expected": {
+  "_source": "QA UI 2026-11-16 (HistoryHistoryGridNestedViewGrid, tests/capture/ag_capture.js)",
+  "checksums": {
+   "n_rows": 1962,
+   "key": "stylecolor",
+   "cols": {
+    "net_sls_r": [
+     2002387.9,
+     92307877,
+     988
+    ],
+    "net_sls_u": [
+     84046,
+     3926326,
+     970
+    ],
+    "net_sls_margin_pct": [
+     268.8031,
+     13551.66,
+     936
+    ],
+    "net_sls_margin_r": [
+     1175827.6,
+     53776440,
+     990
+    ],
+    "stk_sls_u": [
+     9840.1819,
+     507616.44,
+     906
+    ],
+    "first_value_boh_u": [
+     856407,
+     41976833,
+     1927
+    ],
+    "last_value_eoh_u": [
+     799973,
+     40007062,
+     1927
+    ],
+    "fp_sell_thru_pct": [
+     37.7357,
+     1842.0964,
+     312
+    ],
+    "sell_thru_pct": [
+     164.1449,
+     8274.2244,
+     882
+    ],
+    "avg_wk_sell_thru_pct": [
+     187.2911,
+     9785.3089,
+     889
+    ],
+    "net_sls_c": [
+     826560.24,
+     38531438,
+     974
+    ],
+    "aps_u": [
+     1159.972,
+     60367.99,
+     970
+    ],
+    "aps_r": [
+     24372.239,
+     1271185.5,
+     988
+    ],
+    "funded_aps_u": [
+     18954.043,
+     920003.68,
+     889
+    ],
+    "ttl_storecount": [
+     105468,
+     5204540,
+     1902
+    ],
+    "funded_ttl_storecount": [
+     90815,
+     4485487,
+     1620
+    ],
+    "net_sls_aur": [
+     16339.854,
+     808473.03,
+     936
+    ],
+    "net_sls_auc": [
+     9611.0418,
+     476115.69,
+     937
+    ],
+    "net_sls_disc_pct": [
+     551.0117,
+     27374.665,
+     959
+    ],
+    "ret_u": [
+     9601,
+     464274,
+     632
+    ],
+    "ret_pct_shp_u": [
+     119.5562,
+     6074.4323,
+     602
+    ],
+    "ret_pct_shp_r": [
+     141.8,
+     7147.942,
+     602
+    ],
+    "gmroi": [
+     409.9306,
+     26815.312,
+     902
+    ],
+    "rec_u": [
+     28200,
+     1983645,
+     5
+    ],
+    "rec_c": [
+     291493.21,
+     20506256,
+     5
+    ],
+    "rec_imu": [
+     4.046,
+     265.115,
+     5
+    ],
+    "on_order_u": [
+     44172,
+     2656833,
+     8
+    ],
+    "on_order_u_4wk": [
+     21606,
+     1509278,
+     4
+    ],
+    "eoh_u_per_cc_per_store": [
+     18302.521,
+     1110321.9,
+     1927
+    ],
+    "avg_eoh_u_per_cc_per_store": [
+     245601040,
+     12622653000,
+     1867
+    ],
+    "avg_str_rec_u": [
+     3347.1937,
+     271330.99,
+     5
+    ],
+    "last_value_eoh_c": [
+     7994086.6,
+     398422370,
+     1936
+    ],
+    "sfs_r": [
+     84767.762,
+     4190113.3,
+     417
+    ],
+    "sfs_u": [
+     4234,
+     210805,
+     417
+    ],
+    "bopis_r": [
+     30754.761,
+     1408090.7,
+     179
+    ],
+    "bopis_u": [
+     1333,
+     62108,
+     176
+    ]
+   },
+   "rel_tol": 1e-06
+  }
+ }
+}

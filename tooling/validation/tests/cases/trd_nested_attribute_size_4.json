@@ -1,0 +1,114 @@
+{
+ "client": "TRD",
+ "env": "qa",
+ "route": "#/bottom-up/hindsighting/aggregate-views-size/nested-attribute-size",
+ "defnId": "HistoryAggregateViewsNestedAttribute",
+ "aggBy": "level:size",
+ "viewdefn": "HistoryAggregateViewsNestedAttributeGridSize",
+ "section": "grid",
+ "scope": {
+  "productLevel": "class",
+  "productMember": "CL-3104",
+  "locationLevel": "channel",
+  "locationMember": "CH-2",
+  "historyStart": "2025_W25",
+  "historyEnd": "2025_W25"
+ },
+ "filters": {
+  "merchcat": [
+   "FP",
+   "MD"
+  ]
+ },
+ "_note": "class 3104 size rows from QA's department view; % to total left out (QA: share of department, DVS class scope: share of class); dropped: ['avg_inv_c_pct_ttl', 'avg_inv_u_pct_ttl', 'ly_avg_inv_c_pct_ttl', 'ly_avg_inv_u_pct_ttl', 'ly_net_sls_c_pct_ttl', 'ly_net_sls_r_pct_ttl', 'ly_net_sls_u_pct_ttl', 'ly_rec_c_pct_ttl', 'ly_rec_u_pct_ttl', 'ly_weekcount', 'net_sls_c_pct_ttl', 'net_sls_r_pct_ttl', 'net_sls_u_pct_ttl', 'rec_c_pct_ttl', 'rec_u_pct_ttl', 'weekcount']; part 4/5 (whole screen times out on the 300 s gate)",
+ "expected": {
+  "_source": "QA UI 2026-11-16 (HistoryAggregateViewsNestedAttributeGridSize, tests/capture/ag_capture.js)",
+  "checksums": {
+   "n_rows": 8,
+   "key": "id",
+   "cols": {
+    "avail_inv_u": [
+     109906,
+     5821088,
+     8
+    ],
+    "ly_avail_inv_u": [
+     122699,
+     6452431,
+     8
+    ],
+    "var_ly_avail_inv_u": [
+     0.4546,
+     29.3872,
+     8
+    ],
+    "avail_inv_aut": [
+     415.8425,
+     23171.228,
+     8
+    ],
+    "ly_avail_inv_aut": [
+     391.7177,
+     21812.669,
+     8
+    ],
+    "var_ly_avail_inv_aut": [
+     0.4952,
+     27.9129,
+     8
+    ],
+    "rec_u": [
+     5291,
+     276235,
+     7
+    ],
+    "ly_rec_u": [
+     13360,
+     711613,
+     8
+    ],
+    "var_ly_rec_u": [
+     -5.3546,
+     -303.4791,
+     8
+    ],
+    "rec_c": [
+     64021.099,
+     3342443.5,
+     7
+    ],
+    "ly_rec_c": [
+     146705.5,
+     7812792,
+     8
+    ],
+    "var_ly_rec_c": [
+     -5.0833,
+     -288.8251,
+     8
+    ],
+    "rec_aur": [
+     419.30001,
+     23420.901,
+     7
+    ]
+   },
+   "rel_tol": 1e-06
+  }
+ },
+ "metrics": [
+  "avail_inv_u",
+  "ly_avail_inv_u",
+  "var_ly_avail_inv_u",
+  "avail_inv_aut",
+  "ly_avail_inv_aut",
+  "var_ly_avail_inv_aut",
+  "rec_u",
+  "ly_rec_u",
+  "var_ly_rec_u",
+  "rec_c",
+  "ly_rec_c",
+  "var_ly_rec_c",
+  "rec_aur"
+ ]
+}

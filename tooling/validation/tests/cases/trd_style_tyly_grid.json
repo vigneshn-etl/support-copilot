@@ -1,0 +1,484 @@
+{
+ "client": "TRD",
+ "env": "qa",
+ "route": "#/bottom-up/hindsighting/style-review/tyly-grid-view",
+ "defnId": "HistoryFitStyleTYLYTranspose",
+ "aggBy": "level:style",
+ "viewdefn": "HistoryStyleTYLYGrid",
+ "section": "grid",
+ "scope": {
+  "productLevel": "department",
+  "productMember": "DP-48",
+  "locationLevel": "channel",
+  "locationMember": "CH-2",
+  "historyStart": "2025_W25",
+  "historyEnd": "2025_W25"
+ },
+ "filters": {
+  "merchcat": [
+   "FP",
+   "MD"
+  ]
+ },
+ "_note": "QA bug: TY/LY style pivot takes MAX of per-colour store counts and sums per-colour weekcount; DVS keeps the Style Grid View values (e.g. ty_ttl_storecount 72836 = Style Grid). 12 columns left out; dropped: ['ly_avg_str_rec_u', 'ly_avg_wk_sell_thru_pct', 'ly_eoh_u_per_cc_per_store', 'ly_funded_ttl_storecount', 'ly_gmroi', 'ly_ttl_storecount', 'ty_avg_str_rec_u', 'ty_avg_wk_sell_thru_pct', 'ty_eoh_u_per_cc_per_store', 'ty_funded_ttl_storecount', 'ty_gmroi', 'ty_ttl_storecount']",
+ "expected": {
+  "_source": "QA UI 2026-11-16 (HistoryStyleTYLYGrid, tests/capture/ag_capture.js)",
+  "checksums": {
+   "n_rows": 762,
+   "key": "style",
+   "cols": {
+    "ty_net_sls_u": [
+     83798,
+     4309488,
+     414
+    ],
+    "ly_net_sls_u": [
+     115720,
+     6130394,
+     445
+    ],
+    "ty_aps_u": [
+     427.6674,
+     23481.977,
+     414
+    ],
+    "ly_aps_u": [
+     345.8097,
+     16464.731,
+     445
+    ],
+    "ty_funded_aps_u": [
+     5325.3022,
+     272259.54,
+     405
+    ],
+    "ly_funded_aps_u": [
+     3497.9482,
+     139002.69,
+     434
+    ],
+    "ty_wo_sls_r": [
+     795789.29,
+     40246198,
+     379
+    ],
+    "ty_wo_sls_u": [
+     27631,
+     1401333,
+     360
+    ],
+    "ty_wo_sls_aur": [
+     6481.4323,
+     319697.51,
+     298
+    ],
+    "ty_wo_sls_c": [
+     272020.48,
+     13788153,
+     368
+    ],
+    "ty_wo_aps_u": [
+     39.6966,
+     1907.8113,
+     360
+    ],
+    "ty_wo_funded_aps_u": [
+     52.0173,
+     2511.7682,
+     267
+    ],
+    "ty_funded_cc_rec_u_depth": [
+     11474.605,
+     768166.58,
+     4
+    ],
+    "ly_wo_sls_r": [
+     1143644.3,
+     59227548,
+     413
+    ],
+    "ly_wo_sls_u": [
+     44004,
+     2293407,
+     398
+    ],
+    "ly_wo_sls_aur": [
+     6555.801,
+     332709.82,
+     355
+    ],
+    "ly_wo_sls_c": [
+     423962.32,
+     21879958,
+     402
+    ],
+    "ly_wo_aps_u": [
+     48.8967,
+     2495.2053,
+     398
+    ],
+    "ly_wo_funded_aps_u": [
+     61.3548,
+     3004.5281,
+     324
+    ],
+    "ly_funded_cc_rec_u_depth": [
+     38727,
+     2384063,
+     10
+    ],
+    "ty_net_sls_r": [
+     1998865,
+     102275250,
+     418
+    ],
+    "ly_net_sls_r": [
+     2744852.6,
+     145221120,
+     450
+    ],
+    "ty_net_sls_aur": [
+     7257.321,
+     366584.7,
+     411
+    ],
+    "ly_net_sls_aur": [
+     8238.5714,
+     411482.9,
+     440
+    ],
+    "ty_net_sls_disc_pct": [
+     241.0971,
+     12492.009,
+     414
+    ],
+    "ly_net_sls_disc_pct": [
+     227.018,
+     11400.125,
+     448
+    ],
+    "ty_net_sls_margin_r": [
+     1174835.7,
+     60012023,
+     418
+    ],
+    "ly_net_sls_margin_r": [
+     1618928.3,
+     85740018,
+     450
+    ],
+    "ty_net_sls_margin_pct": [
+     68.3027,
+     2896.8952,
+     411
+    ],
+    "ly_net_sls_margin_pct": [
+     146.4023,
+     7273.9557,
+     440
+    ],
+    "ty_avail_inv_u": [
+     883158,
+     45046543,
+     544
+    ],
+    "ly_avail_inv_u": [
+     1075762,
+     57206214,
+     526
+    ],
+    "ty_stk_sls_u": [
+     6417.0837,
+     348925.25,
+     411
+    ],
+    "ly_stk_sls_u": [
+     7481.4328,
+     369284.48,
+     440
+    ],
+    "ty_fp_sell_thru_pct": [
+     14.3393,
+     725.8537,
+     164
+    ],
+    "ly_fp_sell_thru_pct": [
+     18.1009,
+     931.1345,
+     195
+    ],
+    "ty_sell_thru_pct": [
+     45.1853,
+     2277.6156,
+     414
+    ],
+    "ly_sell_thru_pct": [
+     44.9629,
+     2230.2817,
+     445
+    ],
+    "ty_rec_u": [
+     28200,
+     2231086,
+     4
+    ],
+    "ly_rec_u": [
+     67992,
+     4343687,
+     10
+    ],
+    "ty_rec_c": [
+     291493.21,
+     22770545,
+     4
+    ],
+    "ly_rec_c": [
+     666322.13,
+     42594651,
+     10
+    ],
+    "ty_net_sls_c": [
+     824029.27,
+     42263223,
+     415
+    ],
+    "ly_net_sls_c": [
+     1125924.3,
+     59481100,
+     446
+    ],
+    "ty_aps_c": [
+     4451.8336,
+     240366.4,
+     415
+    ],
+    "ly_aps_c": [
+     3843.4692,
+     184647.58,
+     446
+    ],
+    "ty_aps_r": [
+     9163.642,
+     494850.71,
+     418
+    ],
+    "ly_aps_r": [
+     7617.0699,
+     360807.63,
+     450
+    ],
+    "ty_net_sls_auc": [
+     4351.605,
+     222599.46,
+     411
+    ],
+    "ly_net_sls_auc": [
+     4846.7431,
+     241184.11,
+     440
+    ],
+    "ty_avail_inv_aut": [
+     23144.937,
+     1172256.4,
+     544
+    ],
+    "ly_avail_inv_aut": [
+     19961.357,
+     1000603.3,
+     526
+    ],
+    "ty_avail_inv_c": [
+     8810236.6,
+     446354200,
+     544
+    ],
+    "ly_avail_inv_c": [
+     10448361,
+     551312940,
+     526
+    ],
+    "ty_last_value_eoh_c": [
+     7986207.3,
+     404090980,
+     544
+    ],
+    "ly_last_value_eoh_c": [
+     9322437.1,
+     491831840,
+     526
+    ],
+    "ty_sfs_c": [
+     41703.475,
+     2223713.9,
+     222
+    ],
+    "ty_sfs_r": [
+     84557.882,
+     4495554.7,
+     222
+    ],
+    "ty_sfs_u": [
+     4219,
+     223930,
+     222
+    ],
+    "ty_bopis_c": [
+     13048.229,
+     682607.42,
+     120
+    ],
+    "ty_bopis_r": [
+     30754.761,
+     1600579.5,
+     122
+    ],
+    "ty_bopis_u": [
+     1333,
+     70223,
+     119
+    ],
+    "ly_sfs_c": [
+     39097.206,
+     2217439.5,
+     119
+    ],
+    "ly_sfs_r": [
+     97484.28,
+     5555039.9,
+     119
+    ],
+    "ly_sfs_u": [
+     4153,
+     238263,
+     119
+    ],
+    "ly_bopis_c": [
+     14334.61,
+     768723.33,
+     93
+    ],
+    "ly_bopis_r": [
+     34997.73,
+     1894023.7,
+     93
+    ],
+    "ly_bopis_u": [
+     1536,
+     83024,
+     93
+    ],
+    "ty_rec_aur": [
+     215.6,
+     16065.9,
+     4
+    ],
+    "ty_rec_auc": [
+     41.5661,
+     3074.5902,
+     4
+    ],
+    "ty_rec_imu": [
+     3.2297,
+     243.4298,
+     4
+    ],
+    "ly_rec_aur": [
+     491,
+     29474.7,
+     10
+    ],
+    "ly_rec_auc": [
+     96.0351,
+     5859.2499,
+     10
+    ],
+    "ly_rec_imu": [
+     8.0487,
+     491.4409,
+     10
+    ],
+    "ty_avg_eoh_u_per_cc_per_store": [
+     221173160,
+     4546393800,
+     544
+    ],
+    "ty_dmd_c": [
+     562628.71,
+     28971616,
+     379
+    ],
+    "ly_avg_eoh_u_per_cc_per_store": [
+     3209.4651,
+     154493.06,
+     526
+    ],
+    "ly_dmd_c": [
+     752160.33,
+     40324952,
+     404
+    ],
+    "ty_rec_r": [
+     1530782,
+     120409660,
+     4
+    ],
+    "ly_rec_r": [
+     3386074.8,
+     212988910,
+     10
+    ],
+    "ty_ret_u": [
+     9541,
+     475057,
+     301
+    ],
+    "ty_ret_pct_shp_r": [
+     51.5714,
+     2722.713,
+     298
+    ],
+    "ly_ret_u": [
+     9082,
+     456463,
+     292
+    ],
+    "ly_ret_pct_shp_r": [
+     54.4135,
+     2892.7418,
+     288
+    ],
+    "ty_dmd_r": [
+     1258806,
+     64789825,
+     381
+    ],
+    "ty_dmd_u": [
+     57613,
+     2978879,
+     381
+    ],
+    "ty_dmd_margin_r": [
+     1952548.7,
+     99646516,
+     419
+    ],
+    "ly_dmd_r": [
+     1711430.9,
+     91987811,
+     404
+    ],
+    "ly_dmd_u": [
+     77246,
+     4138519,
+     405
+    ],
+    "ly_dmd_margin_r": [
+     2641914.8,
+     140195180,
+     450
+    ]
+   },
+   "rel_tol": 1e-06
+  }
+ }
+}

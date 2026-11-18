@@ -1,0 +1,564 @@
+{
+ "client": "TRD",
+ "env": "qa",
+ "route": "#/bottom-up/hindsighting/aggregate-views/nested-attribute",
+ "defnId": "HistoryAggregateViewsNestedAttributeStyleColor",
+ "aggBy": "level:class",
+ "viewdefn": "HistoryAggregateViewsNestedAttributeGrid",
+ "section": "grid",
+ "scope": {
+  "productLevel": "department",
+  "productMember": "DP-48",
+  "locationLevel": "channel",
+  "locationMember": "CH-2",
+  "historyStart": "2025_W25",
+  "historyEnd": "2025_W25"
+ },
+ "filters": {
+  "merchcat": [
+   "FP",
+   "MD"
+  ]
+ },
+ "_note": "class rows only (QA '3104. Shirting' = DVS CL-3104); department total row not compared; dropped: ['ly_weekcount', 'weekcount']",
+ "expected": {
+  "_source": "QA UI 2026-11-16 (HistoryAggregateViewsNestedAttributeGrid, tests/capture/ag_capture.js)",
+  "checksums": {
+   "n_rows": 4,
+   "key": "id",
+   "cols": {
+    "net_sls_r": [
+     2002324.3,
+     71805245,
+     4
+    ],
+    "ly_net_sls_r": [
+     2748273.4,
+     97993787,
+     4
+    ],
+    "var_ly_net_sls_r": [
+     -1.1316,
+     -39.6863,
+     4
+    ],
+    "net_sls_u": [
+     84042,
+     3015572,
+     4
+    ],
+    "ly_net_sls_u": [
+     115934,
+     4139452,
+     4
+    ],
+    "var_ly_net_sls_u": [
+     -1.1522,
+     -40.4963,
+     4
+    ],
+    "net_sls_aur": [
+     94.085402,
+     3336.2381,
+     4
+    ],
+    "ly_net_sls_aur": [
+     93.8165,
+     3324.2802,
+     4
+    ],
+    "var_ly_net_sls_aur": [
+     0.0167,
+     0.6939,
+     4
+    ],
+    "net_sls_margin_r": [
+     1175798.8,
+     42145001,
+     4
+    ],
+    "ly_net_sls_margin_r": [
+     1620077.9,
+     57716080,
+     4
+    ],
+    "var_ly_net_sls_margin_r": [
+     -1.1147,
+     -39.0212,
+     4
+    ],
+    "net_sls_margin_pct": [
+     2.3519,
+     83.520599,
+     4
+    ],
+    "ly_net_sls_margin_pct": [
+     2.3432001,
+     83.161903,
+     4
+    ],
+    "var_ly_net_sls_margin_pct": [
+     0.87,
+     35.87,
+     4
+    ],
+    "net_sls_disc_pct": [
+     2.0033,
+     71.0781,
+     4
+    ],
+    "ly_net_sls_disc_pct": [
+     1.9831,
+     70.403,
+     4
+    ],
+    "var_ly_net_sls_disc_pct": [
+     2.02,
+     67.51,
+     4
+    ],
+    "funded_aps_u": [
+     3.7717001,
+     133.5501,
+     4
+    ],
+    "ly_funded_aps_u": [
+     3.9589,
+     139.7762,
+     4
+    ],
+    "var_ly_funded_aps_u": [
+     -0.155,
+     -5.0722,
+     4
+    ],
+    "aps_u": [
+     3.2589999,
+     115.3742,
+     4
+    ],
+    "ly_aps_u": [
+     3.4701,
+     122.4438,
+     4
+    ],
+    "var_ly_aps_u": [
+     -0.186,
+     -6.1312,
+     4
+    ],
+    "funded_ttl_storecount": [
+     2346,
+     83297,
+     4
+    ],
+    "ly_funded_ttl_storecount": [
+     2647,
+     93967,
+     4
+    ],
+    "ttl_storecount": [
+     2365,
+     83975,
+     4
+    ],
+    "ly_ttl_storecount": [
+     2663,
+     94541,
+     4
+    ],
+    "cccount": [
+     2051,
+     73892,
+     4
+    ],
+    "ly_cccount": [
+     1894,
+     68218,
+     4
+    ],
+    "var_ly_cccount": [
+     0.2731,
+     9.7221,
+     4
+    ],
+    "funded_cccount": [
+     1731,
+     62308,
+     4
+    ],
+    "ly_funded_cccount": [
+     1497,
+     53935,
+     4
+    ],
+    "gmroi": [
+     0.59869999,
+     21.223,
+     4
+    ],
+    "ly_gmroi": [
+     0.6726,
+     23.7595,
+     4
+    ],
+    "net_sls_margin_r_per_cc": [
+     2369.3109,
+     83668.875,
+     4
+    ],
+    "ly_net_sls_margin_r_per_cc": [
+     3739.7962,
+     131489.51,
+     4
+    ],
+    "var_ly_net_sls_margin_r_per_cc": [
+     -1.3001,
+     -45.6624,
+     4
+    ],
+    "fp_sell_thru_pct": [
+     0.31339999,
+     11.1038,
+     4
+    ],
+    "ly_fp_sell_thru_pct": [
+     0.3896,
+     13.7596,
+     4
+    ],
+    "sell_thru_pct": [
+     0.38699999,
+     13.7157,
+     4
+    ],
+    "ly_sell_thru_pct": [
+     0.431,
+     15.2384,
+     4
+    ],
+    "avg_wk_sell_thru_pct": [
+     0.41470001,
+     14.6919,
+     4
+    ],
+    "ly_avg_wk_sell_thru_pct": [
+     0.47439999,
+     16.7626,
+     4
+    ],
+    "stk_sls_u": [
+     37.793,
+     1344.1548,
+     4
+    ],
+    "ly_stk_sls_u": [
+     34.2732,
+     1221.976,
+     4
+    ],
+    "net_sls_c": [
+     826525.47,
+     29660242,
+     4
+    ],
+    "ly_net_sls_c": [
+     1128195.6,
+     40277709,
+     4
+    ],
+    "var_ly_net_sls_c": [
+     -1.1562,
+     -40.6449,
+     4
+    ],
+    "net_sls_auc": [
+     38.8879,
+     1378.2556,
+     4
+    ],
+    "ly_net_sls_auc": [
+     38.8935,
+     1378.5978,
+     4
+    ],
+    "var_ly_net_sls_auc": [
+     -0.0079,
+     -0.2958,
+     4
+    ],
+    "avail_inv_u": [
+     883232,
+     31779146,
+     4
+    ],
+    "ly_avail_inv_u": [
+     1076913,
+     38573423,
+     4
+    ],
+    "var_ly_avail_inv_u": [
+     -0.814,
+     -28.688,
+     4
+    ],
+    "avail_inv_aut": [
+     183.1898,
+     6490.6822,
+     4
+    ],
+    "ly_avail_inv_aut": [
+     176.4577,
+     6251.9392,
+     4
+    ],
+    "var_ly_avail_inv_aut": [
+     0.1496,
+     5.3175,
+     4
+    ],
+    "rec_u": [
+     28200,
+     994943,
+     3
+    ],
+    "ly_rec_u": [
+     67992,
+     2421965,
+     4
+    ],
+    "var_ly_rec_u": [
+     -2.6446,
+     -94.4186,
+     4
+    ],
+    "rec_u_pct_ttl": [
+     0.9999,
+     35.2781,
+     3
+    ],
+    "ly_rec_u_pct_ttl": [
+     1,
+     35.6213,
+     4
+    ],
+    "rec_c": [
+     291493.21,
+     10260471,
+     3
+    ],
+    "ly_rec_c": [
+     666322.15,
+     23718309,
+     4
+    ],
+    "var_ly_rec_c": [
+     -2.5677,
+     -91.8101,
+     4
+    ],
+    "rec_c_pct_ttl": [
+     1,
+     35.1998,
+     3
+    ],
+    "ly_rec_c_pct_ttl": [
+     1.0001,
+     35.5994,
+     4
+    ],
+    "rec_aur": [
+     164.0391,
+     5781.2687,
+     3
+    ],
+    "ly_rec_aur": [
+     198.6305,
+     7042.1614,
+     4
+    ],
+    "var_ly_rec_aur": [
+     -0.7831,
+     -28.4959,
+     4
+    ],
+    "rec_auc": [
+     31.547101,
+     1110.5207,
+     3
+    ],
+    "ly_rec_auc": [
+     38.2948,
+     1357.2593,
+     4
+    ],
+    "var_ly_rec_auc": [
+     -0.8935,
+     -32.5328,
+     4
+    ],
+    "rec_imu": [
+     2.4245999,
+     85.692798,
+     3
+    ],
+    "ly_rec_imu": [
+     3.2307,
+     114.6989,
+     4
+    ],
+    "rec_u_per_cc": [
+     61.631498,
+     2143.9876,
+     3
+    ],
+    "ly_rec_u_per_cc": [
+     166.9186,
+     5850.2274,
+     4
+    ],
+    "var_ly_rec_u_per_cc": [
+     -2.7494,
+     -98.1136,
+     4
+    ],
+    "funded_cc_rec_u_depth": [
+     70.5312,
+     2454.7507,
+     3
+    ],
+    "ly_funded_cc_rec_u_depth": [
+     217.0703,
+     7601.4533,
+     4
+    ],
+    "var_ly_funded_cc_rec_u_depth": [
+     -2.8675,
+     -102.2007,
+     4
+    ],
+    "lly_funded_cc_rec_u_depth": [
+     124.9363,
+     4493.0414,
+     3
+    ],
+    "var_lly_funded_cc_rec_u_depth": [
+     -2.1699,
+     -78.6023,
+     3
+    ],
+    "eoh_u_per_cc_per_store": [
+     1337.9333,
+     48139.297,
+     4
+    ],
+    "ly_eoh_u_per_cc_per_store": [
+     1442.5216,
+     51685.703,
+     4
+    ],
+    "var_ly_eoh_u_per_cc_per_store": [
+     -0.0813,
+     -2.5252,
+     4
+    ],
+    "net_sls_r_per_cc": [
+     4048.0238,
+     142880.88,
+     4
+    ],
+    "ly_net_sls_r_per_cc": [
+     6351.1202,
+     223302.18,
+     4
+    ],
+    "var_ly_net_sls_r_per_cc": [
+     -1.3165,
+     -46.3054,
+     4
+    ],
+    "net_sls_r_pct_ttl": [
+     1,
+     35.8609,
+     4
+    ],
+    "ly_net_sls_r_pct_ttl": [
+     1,
+     35.6565,
+     4
+    ],
+    "net_sls_u_pct_ttl": [
+     1.0001,
+     35.8852,
+     4
+    ],
+    "ly_net_sls_u_pct_ttl": [
+     1,
+     35.7053,
+     4
+    ],
+    "avg_inv_u_pct_ttl": [
+     1,
+     36.0033,
+     4
+    ],
+    "ly_avg_inv_u_pct_ttl": [
+     1,
+     35.8317,
+     4
+    ],
+    "net_sls_c_pct_ttl": [
+     1,
+     35.8854,
+     4
+    ],
+    "ly_net_sls_c_pct_ttl": [
+     0.9999,
+     35.6974,
+     4
+    ],
+    "avg_inv_c_pct_ttl": [
+     1,
+     36.0088,
+     4
+    ],
+    "ly_avg_inv_c_pct_ttl": [
+     1,
+     35.8308,
+     4
+    ],
+    "ret_u": [
+     9605,
+     346074,
+     4
+    ],
+    "ly_ret_u": [
+     9146,
+     328651,
+     4
+    ],
+    "var_ly_ret_u": [
+     0.31,
+     10.6745,
+     4
+    ],
+    "ret_pct_shp_u": [
+     0.4067,
+     14.4606,
+     4
+    ],
+    "ly_ret_pct_shp_u": [
+     0.2885,
+     10.3078,
+     4
+    ],
+    "var_ly_ret_pct_shp_u": [
+     11.82,
+     415.28,
+     4
+    ]
+   },
+   "rel_tol": 1e-06
+  }
+ }
+}

@@ -1,0 +1,169 @@
+{
+ "client": "TRD",
+ "env": "qa",
+ "route": "#/bottom-up/hindsighting/aggregate-views-size/worklist-view-sku/nested-sku",
+ "defnId": "HistoryGridSKU_TopMem",
+ "aggBy": "level:sku",
+ "viewdefn": "HistoryHistoryGridNestedViewGridSKU",
+ "section": "grid",
+ "scope": {
+  "productLevel": "department",
+  "productMember": "DP-48",
+  "locationLevel": "channel",
+  "locationMember": "CH-2",
+  "historyStart": "2025_W25",
+  "historyEnd": "2025_W25"
+ },
+ "filters": {
+  "merchcat": [
+   "FP",
+   "MD"
+  ]
+ },
+ "_note": "avail_inv_aut/auc left out: QA Infinity on some SKUs (guard quirk); dropped: ['avail_inv_auc', 'avail_inv_aut']",
+ "expected": {
+  "_source": "QA UI 2026-11-16 (HistoryHistoryGridNestedViewGridSKU, tests/capture/ag_capture.js)",
+  "checksums": {
+   "n_rows": 3798,
+   "key": "id",
+   "cols": {
+    "net_sls_r": [
+     1976291.4,
+     99399965,
+     3372
+    ],
+    "net_sls_u": [
+     82456,
+     4133060,
+     3309
+    ],
+    "net_sls_margin_pct": [
+     1429.7356,
+     70897.572,
+     3260
+    ],
+    "net_sls_margin_r": [
+     1165767.5,
+     58665793,
+     3376
+    ],
+    "stk_sls_u": [
+     52040.797,
+     2698084,
+     3240
+    ],
+    "first_value_boh_u": [
+     851436,
+     43123217,
+     3765
+    ],
+    "last_value_eoh_u": [
+     796684,
+     40406364,
+     3789
+    ],
+    "last_value_eoh_c": [
+     7955463.1,
+     403594570,
+     3790
+    ],
+    "sell_thru_pct": [
+     437.0585,
+     21808.748,
+     3307
+    ],
+    "avg_wk_sell_thru_pct": [
+     513.6665,
+     25272.895,
+     3307
+    ],
+    "net_sls_c": [
+     810523.92,
+     40734173,
+     3343
+    ],
+    "ttl_storecount": [
+     299353,
+     15086879,
+     3773
+    ],
+    "funded_ttl_storecount": [
+     283207,
+     14304202,
+     3769
+    ],
+    "net_sls_aur": [
+     64810.342,
+     3266780.9,
+     3241
+    ],
+    "net_sls_auc": [
+     32773.652,
+     1652735,
+     3241
+    ],
+    "net_sls_disc_pct": [
+     1878.3088,
+     94808.53,
+     3343
+    ],
+    "ret_u": [
+     9184,
+     458081,
+     2139
+    ],
+    "ret_pct_shp_u": [
+     508.455,
+     25629.059,
+     2104
+    ],
+    "ret_pct_shp_r": [
+     579.1128,
+     28908.424,
+     2103
+    ],
+    "gmroi": [
+     524.7355,
+     25773.555,
+     3372
+    ],
+    "rec_u": [
+     28200,
+     1448503,
+     38
+    ],
+    "rec_c": [
+     291493.21,
+     15330506,
+     38
+    ],
+    "rec_aur": [
+     2014.2,
+     88981.6,
+     38
+    ],
+    "rec_auc": [
+     383.84,
+     17068.17,
+     38
+    ],
+    "rec_imu": [
+     30.7684,
+     1312.8792,
+     38
+    ],
+    "on_order_u": [
+     30912,
+     1460269,
+     43
+    ],
+    "on_order_u_4wk": [
+     15553,
+     704846,
+     26
+    ]
+   },
+   "rel_tol": 1e-06
+  }
+ }
+}

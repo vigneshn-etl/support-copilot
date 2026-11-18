@@ -1,0 +1,114 @@
+{
+ "client": "TRD",
+ "env": "qa",
+ "route": "#/bottom-up/hindsighting/aggregate-views-size/nested-attribute-size",
+ "defnId": "HistoryAggregateViewsNestedAttribute",
+ "aggBy": "level:size",
+ "viewdefn": "HistoryAggregateViewsNestedAttributeGridSize",
+ "section": "grid",
+ "scope": {
+  "productLevel": "class",
+  "productMember": "CL-3104",
+  "locationLevel": "channel",
+  "locationMember": "CH-2",
+  "historyStart": "2025_W25",
+  "historyEnd": "2025_W25"
+ },
+ "filters": {
+  "merchcat": [
+   "FP",
+   "MD"
+  ]
+ },
+ "_note": "class 3104 size rows from QA's department view; % to total left out (QA: share of department, DVS class scope: share of class); dropped: ['avg_inv_c_pct_ttl', 'avg_inv_u_pct_ttl', 'ly_avg_inv_c_pct_ttl', 'ly_avg_inv_u_pct_ttl', 'ly_net_sls_c_pct_ttl', 'ly_net_sls_r_pct_ttl', 'ly_net_sls_u_pct_ttl', 'ly_rec_c_pct_ttl', 'ly_rec_u_pct_ttl', 'ly_weekcount', 'net_sls_c_pct_ttl', 'net_sls_r_pct_ttl', 'net_sls_u_pct_ttl', 'rec_c_pct_ttl', 'rec_u_pct_ttl', 'weekcount']; part 5/5 (whole screen times out on the 300 s gate)",
+ "expected": {
+  "_source": "QA UI 2026-11-16 (HistoryAggregateViewsNestedAttributeGridSize, tests/capture/ag_capture.js)",
+  "checksums": {
+   "n_rows": 8,
+   "key": "id",
+   "cols": {
+    "ly_rec_aur": [
+     447.20001,
+     24931.401,
+     8
+    ],
+    "var_ly_rec_aur": [
+     -0.4988,
+     -27.0044,
+     8
+    ],
+    "rec_auc": [
+     84.700003,
+     4731.1001,
+     7
+    ],
+    "ly_rec_auc": [
+     87.8493,
+     4896.0389,
+     8
+    ],
+    "var_ly_rec_auc": [
+     -0.2797,
+     -14.614,
+     8
+    ],
+    "rec_imu": [
+     5.5859998,
+     312.01799,
+     7
+    ],
+    "ly_rec_imu": [
+     6.4284,
+     358.4108,
+     8
+    ],
+    "ret_u": [
+     1304,
+     68416,
+     8
+    ],
+    "ly_ret_u": [
+     873,
+     45580,
+     8
+    ],
+    "var_ly_ret_u": [
+     4.7106,
+     269.0607,
+     8
+    ],
+    "ret_pct_shp_u": [
+     0.86040001,
+     47.275,
+     8
+    ],
+    "ly_ret_pct_shp_u": [
+     0.4013,
+     22.4314,
+     8
+    ],
+    "var_ly_ret_pct_shp_u": [
+     45.91,
+     2484.36,
+     8
+    ]
+   },
+   "rel_tol": 1e-06
+  }
+ },
+ "metrics": [
+  "ly_rec_aur",
+  "var_ly_rec_aur",
+  "rec_auc",
+  "ly_rec_auc",
+  "var_ly_rec_auc",
+  "rec_imu",
+  "ly_rec_imu",
+  "ret_u",
+  "ly_ret_u",
+  "var_ly_ret_u",
+  "ret_pct_shp_u",
+  "ly_ret_pct_shp_u",
+  "var_ly_ret_pct_shp_u"
+ ]
+}

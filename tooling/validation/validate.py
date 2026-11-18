@@ -284,7 +284,66 @@ def compare(res, expected, req):
         out["rows"] = {"compared_values": n, "mismatches": len(bad), "sample": bad[:25],
                        "missing_in_db": miss[:50], "n_missing_in_db": len(miss),
                        "extra_in_db": extra[:50], "n_extra_in_db": len(extra)}
+    if expected.get("checksums"):
+        good, out["checksums"] = compare_checksums(res, expected["checksums"])
+        ok &= good
     return ok, out
+
+
+def key_weight(k):
+    """per-row weight for the weighted checksum (same as tests/capture/ag_capture.js)."""
+    x = 0
+    for ch in str(k):
+        x = (x * 31 + ord(ch)) % 9973
+    return x % 97 + 1
+
+
+def row_cols(res):
+    """screen data_index -> result row column (metric id, '__<period>' when not TY)."""
+    prov = (res.get("provenance") or {}).get("metrics") or {}
+    out = {}
+    for m in res["resolved"]["metrics"]:
+        p = prov.get(m["label"], "").split()
+        mm_ = re.match(r"(\w+)(?:@(\w+))?", p[0]) if p else None
+        out[m["data_index"]] = (mm_.group(1) + (f"__{mm_.group(2)}" if mm_.group(2) else "")) if mm_ else m["data_index"]
+    return out
+
+
+def checksums(rows, keycol, cols):
+    """col -> [sum, key-weighted sum, non-zero count]; NaN/None count as 0 (the UI shows 0)."""
+    out = {}
+    for c, rc in cols.items():
+        s1 = s2 = nz = 0
+        for r in rows:
+            v = r.get(rc)
+            v = 0 if not isinstance(v, (int, float)) or v != v else v
+            s1 += v
+            s2 += v * key_weight(r.get(keycol))
+            nz += v != 0
+        out[c] = [s1, s2, nz]
+    return out
+
+
+def compare_checksums(res, exp):
+    """exp: {"n_rows", "cols": {data_index: [sum, wsum, nonzero]}, "rel_tol"} from ag_capture.js."""
+    rows = res.get("rows") or []
+    g = (res["resolved"]["grain"] or [None])[0]
+    gk = g if not g or g.startswith("g_") else f"g_{g}"
+    rc = row_cols(res)
+    cols = {c: rc.get(c, c) for c in exp["cols"]}
+    got = checksums(rows, gk, cols)
+    tol = exp.get("rel_tol", 1e-6)
+    bad, missing = [], [c for c, x in cols.items() if not any(x in r for r in rows)]
+    for c, e in exp["cols"].items():
+        if c in missing:
+            continue
+        g = got[c]
+        k = 2 if exp.get("weighted", True) else 1         # DVS: unweighted when QA rows use another key
+        if any(abs(a - b) > tol * max(1.0, abs(b)) for a, b in zip(g[:k], e[:k])) or g[2] != e[2]:
+            bad.append({"col": c, "expected": e, "db": [float("%.8g" % g[0]), float("%.8g" % g[1]), g[2]]})
+    n_ok = exp.get("n_rows") in (None, len(rows))
+    return (not bad and not missing and n_ok), {"n_rows": len(rows), "expected_rows": exp.get("n_rows"),
+                                                 "cols": len(cols), "mismatches": bad, "missing_in_db": missing}
 
 
 # ---------------------------------------------------------------- main

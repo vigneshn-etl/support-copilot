@@ -1,0 +1,34 @@
+{
+ "client": "TRD",
+ "env": "qa",
+ "route": "#/bottom-up/hindsighting/style-color-review/grid-view",
+ "defnId": "HistoryFit",
+ "aggBy": "level:stylecolor",
+ "section": "rollup",
+ "scope": {
+  "productLevel": "department",
+  "productMember": "DP-48",
+  "locationLevel": "channel",
+  "locationMember": "CH-2",
+  "historyStart": "2025_W25",
+  "historyEnd": "2025_W25"
+ },
+ "filters": {
+  "merchcat": [
+   "FP",
+   "MD"
+  ]
+ },
+ "expected": {
+  "_source": "QA UI 2026-11-16, Style Color Review Grid View rollup bar",
+  "totals": {
+   "Count": 1014,
+   "R$ Sales": "$2.00M",
+   "Unit Sales": "83,798",
+   "FGM %": "58.78%",
+   "Funded APS": "0.93",
+   "Unit EOP": "799,360",
+   "Unit Avg EOP WOH": "9.5"
+  }
+ }
+}
