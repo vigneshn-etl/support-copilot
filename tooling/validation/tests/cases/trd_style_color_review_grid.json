@@ -1,0 +1,314 @@
+{
+ "client": "TRD",
+ "env": "qa",
+ "route": "#/bottom-up/hindsighting/style-color-review/grid-view",
+ "defnId": "HistoryFit",
+ "aggBy": "level:stylecolor",
+ "viewdefn": "HistoryStyleColorGridViewGrid",
+ "section": "grid",
+ "scope": {
+  "productLevel": "department",
+  "productMember": "DP-48",
+  "locationLevel": "channel",
+  "locationMember": "CH-2",
+  "historyStart": "2025_W25",
+  "historyEnd": "2025_W25"
+ },
+ "filters": {
+  "merchcat": [
+   "FP",
+   "MD"
+  ]
+ },
+ "_note": "dropped: ['composite_band', 'fp_weekcount', 'net_sls_margin_pct_band', 'net_sls_margin_r_band', 'net_sls_r_band', 'weekcount']",
+ "expected": {
+  "_source": "QA UI 2026-11-16 (HistoryStyleColorGridViewGrid, tests/capture/ag_capture.js)",
+  "checksums": {
+   "n_rows": 1014,
+   "key": "stylecolor",
+   "cols": {
+    "ttl_storecount": [
+     103011,
+     5084121,
+     1013
+    ],
+    "net_sls_u": [
+     83798,
+     3914149,
+     775
+    ],
+    "aps_u": [
+     1093.9507,
+     56954.336,
+     775
+    ],
+    "funded_aps_u": [
+     18867.628,
+     915888.09,
+     756
+    ],
+    "wo_sls_r": [
+     795789.29,
+     36440088,
+     715
+    ],
+    "wo_sls_u": [
+     27631,
+     1276432,
+     663
+    ],
+    "wo_sls_aur": [
+     10749.849,
+     543611.3,
+     493
+    ],
+    "wo_sls_c": [
+     272020.48,
+     12387246,
+     681
+    ],
+    "wo_aps_u": [
+     57.7401,
+     2677.8735,
+     663
+    ],
+    "wo_funded_aps_u": [
+     87.113,
+     4045.9471,
+     403
+    ],
+    "funded_cc_rec_u_depth": [
+     28200,
+     1983645,
+     5
+    ],
+    "funded_ttl_storecount": [
+     89385,
+     4414923,
+     1003
+    ],
+    "net_sls_r": [
+     1998865,
+     92136155,
+     784
+    ],
+    "net_sls_aur": [
+     13634.586,
+     681625.82,
+     766
+    ],
+    "net_sls_disc_pct": [
+     447.1375,
+     22473.718,
+     775
+    ],
+    "net_sls_margin_r": [
+     1174835.7,
+     53728499,
+     784
+    ],
+    "gm_per_cc_per_store_per_week": [
+     12446.214,
+     645595.81,
+     784
+    ],
+    "net_sls_margin_pct": [
+     220.6111,
+     11189.092,
+     765
+    ],
+    "dmd_margin_r": [
+     1952548.7,
+     89592925,
+     781
+    ],
+    "last_value_eoh_u": [
+     799360,
+     39977932,
+     1014
+    ],
+    "eoh_u_per_cc_per_store": [
+     17540.446,
+     1074063.9,
+     1014
+    ],
+    "avg_eoh_u_per_cc_per_store": [
+     221183640,
+     11610869000,
+     1013
+    ],
+    "eoh_stk_sls_u": [
+     10214.911,
+     525488.53,
+     766
+    ],
+    "avail_inv_u": [
+     883158,
+     43892081,
+     1013
+    ],
+    "stk_sls_u": [
+     10214.911,
+     525488.53,
+     766
+    ],
+    "fp_sell_thru_pct": [
+     35.2357,
+     1698.5964,
+     303
+    ],
+    "sell_thru_pct": [
+     107.0386,
+     5363.4547,
+     769
+    ],
+    "avail_inv_c": [
+     8810236.6,
+     436469610,
+     1014
+    ],
+    "last_value_eoh_c": [
+     7986207.3,
+     398061960,
+     1014
+    ],
+    "eoh_stk_sls_c": [
+     10219.783,
+     526172.42,
+     766
+    ],
+    "avail_inv_aut": [
+     40082.87,
+     1984332.2,
+     1008
+    ],
+    "dmd_r": [
+     1258806,
+     58512015,
+     708
+    ],
+    "dmd_u": [
+     57613,
+     2712465,
+     708
+    ],
+    "sfs_u": [
+     4219,
+     210062,
+     403
+    ],
+    "bopis_u": [
+     1333,
+     62108,
+     176
+    ],
+    "rec_u": [
+     28200,
+     1983645,
+     5
+    ],
+    "rec_c": [
+     291493.21,
+     20506256,
+     5
+    ],
+    "rec_aur": [
+     265.5,
+     17497.3,
+     5
+    ],
+    "rec_auc": [
+     50.73,
+     3317.4,
+     5
+    ],
+    "rec_imu": [
+     4.046,
+     265.115,
+     5
+    ],
+    "on_order_u": [
+     30912,
+     2078656,
+     5
+    ],
+    "ret_u": [
+     9541,
+     461317,
+     578
+    ],
+    "ret_pct_shp_u": [
+     97.0943,
+     4885.2327,
+     570
+    ],
+    "first_value_boh_u": [
+     855544,
+     41935212,
+     1011
+    ],
+    "avg_wk_sell_thru_pct": [
+     121.8297,
+     6048.8588,
+     768
+    ],
+    "net_sls_auc": [
+     7844.654,
+     393652.79,
+     766
+    ],
+    "gmroi": [
+     97.5955,
+     4735.3706,
+     776
+    ],
+    "net_sls_c": [
+     824029.27,
+     38407656,
+     777
+    ],
+    "aps_c": [
+     11022.752,
+     578818.86,
+     777
+    ],
+    "dmd_c": [
+     562628.71,
+     26558292,
+     705
+    ],
+    "bopis_c": [
+     13048.229,
+     600730.63,
+     176
+    ],
+    "sfs_c": [
+     41703.475,
+     2098804.1,
+     403
+    ],
+    "sfs_r": [
+     84557.882,
+     4179659.8,
+     403
+    ],
+    "bopis_r": [
+     30754.761,
+     1408090.7,
+     179
+    ],
+    "avg_str_rec_u": [
+     3347.1937,
+     271330.99,
+     5
+    ],
+    "aps_r": [
+     23468.964,
+     1224414.5,
+     784
+    ]
+   },
+   "rel_tol": 1e-06
+  }
+ }
+}

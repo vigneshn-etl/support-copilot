@@ -63,6 +63,10 @@ from the main tables, so you can prove the UI right or wrong.
 
 *Full UI (Data Validation Studio):* `cd tooling/validation/ui && ./run.sh` → http://localhost:8770
 
+*UI repro / verify (ui-pilot):* say "reproduce SUP-1234 in the UI". I write a short scenario (screens, scope, metric/column, expected values), and Playwright runs it on QA: `--mode repro` before the fix, `--mode verify` after. It captures screenshots, console errors and failed API/pivot calls. You sign in once with `node tooling/ui_pilot/pilot.js login --client <C>`. It's read-only unless you approve writes. See `tooling/ui_pilot/README.md`.
+
+*Unit test document:* say "unit test doc for SUP-1234" and give a folder of screenshots (or a ui-pilot run). The result is a minimal .docx with scope, screens, metric/column, expected vs actual, PASS/FAIL and screenshots. By hand: `tooling/utd_builder/utd.sh init SUP-1234 --client BELK --shots <dir>`, fill the `<…>` fields, then `tooling/utd_builder/utd.sh tickets/SUP-1234/utd/SUP-1234_UTD.json`. See `tooling/utd_builder/README.md`.
+
 ### 🗄️ 5. Query live QA databases (read-only)
 `check in TRD QA how many styles have str_dc_flag='Y'` runs a SELECT over SSH
 against QA Vertica/PG/CH. Writes are blocked by a guard.

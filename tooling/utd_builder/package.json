@@ -1,0 +1,7 @@
+{
+  "name": "utd-builder",
+  "private": true,
+  "description": "Unit test document (.docx) from a JSON spec",
+  "bin": { "utd-build": "build_utd.js" },
+  "dependencies": { "docx": "9.5.1" }
+}

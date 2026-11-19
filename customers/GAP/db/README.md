@@ -1,8 +1,7 @@
 # GAP Postgres — schema knowledge (from postgres_schema.sql)
 
-> **Client context is missing.** `customers/GAP/` is new: there is no `profile.md` or
-> `repos.json` yet, so the ETL/config repos and business context are unknown. This file
-> covers the Postgres DDL only.
+> Client context: [profile.md](../profile.md) (GAP Inc. brands) and [repos.json](../repos.json)
+> (ETL + config repos). This file covers the Postgres DDL only.
 
 Snapshot: **QA**, db `gap`, server 14.22, dumped 2026-10-01 15:06 IST (pg_dump 18.6, plain,
 schema-only; header L1). **Prod/Staging not captured.** Contents: 211 tables, 53 triggers

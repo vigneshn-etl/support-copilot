@@ -1,0 +1,35 @@
+measure_id,label,source_id,expr,agg,filter,time_window,location_set,rollup,status,version,approved_by,approved_at,notes
+shp_r,Shipped sales $,history,shp_r,sum,,selected,scope,sum,draft,1,,,
+shp_u,Shipped sales units,history,shp_u,sum,,selected,scope,sum,draft,1,,,
+shp_c,Shipped sales cost,history,shp_c,sum,,selected,scope,sum,draft,1,,,
+shp_r_csp,Shipped sales at current selling price,history,shp_r_csp,sum,,selected,scope,sum,draft,1,,,
+ret_r,Returns $,history,ret_r,sum,,selected,scope,sum,draft,1,,,
+ret_u,Returns units,history,ret_u,sum,,selected,scope,sum,draft,1,,,
+ret_c,Returns cost,history,ret_c,sum,,selected,scope,sum,draft,1,,,
+dmd_r,Demand $,history,dmd_r,sum,,selected,scope,sum,draft,1,,,
+dmd_u,Demand units,history,dmd_u,sum,,selected,scope,sum,draft,1,,,
+dmd_c,Demand cost,history,dmd_c,sum,,selected,scope,sum,draft,1,,,
+sfs_r,Ship-from-store $,history,sfs_r,sum,,selected,scope,sum,draft,1,,,
+sfs_u,Ship-from-store units,history,sfs_u,sum,,selected,scope,sum,draft,1,,,
+sfs_c,Ship-from-store cost,history,sfs_c,sum,,selected,scope,sum,draft,1,,,
+bopis_r,BOPIS $,history,bopis_r,sum,,selected,scope,sum,draft,1,,,
+bopis_u,BOPIS units,history,bopis_u,sum,,selected,scope,sum,draft,1,,,
+bopis_c,BOPIS cost,history,bopis_c,sum,,selected,scope,sum,draft,1,,,
+strcntwk,Store-weeks selling,history,strcntwk,sum,,selected,scope,sum,draft,1,,,
+strcntwk_funded,Funded store-weeks,history,strcntwk_funded,sum,strcntwk_funded > 0.000001,selected,scope,sum,draft,1,,,
+funded_shp_u,Shipped units in funded store-weeks,history,shp_u,sum,strcntwk_funded > 0.000001,selected,scope,sum,draft,1,,,
+funded_ret_u,Returned units in funded store-weeks,history,ret_u,sum,strcntwk_funded > 0.000001,selected,scope,sum,draft,1,,,
+eoh_u_last,EOH units at last selected week,history,eoh_u,snapshot_last,,selected,scope,sum,draft,1,,,"inventory is a snapshot: last week of the window, never summed over weeks"
+eoh_c_last,EOH cost at last selected week,history,eoh_c,snapshot_last,,selected,scope,sum,draft,1,,,
+eoh_r_last,EOH retail at last selected week,history,eoh_r,snapshot_last,,selected,scope,sum,draft,1,,,
+eoh_u_sum,EOH units summed over the weeks,history,eoh_u,sum,,selected,scope,sum,draft,1,,,used by WOH-style averages
+boh_u_first,BOH units at first selected week,history,boh_u,snapshot_first,,selected,scope,sum,draft,1,,,
+rec_r,Receipts $,history,rec_r,sum,strcntwk > 0,receipt,scope,sum,draft,1,,,receipts are read over the receipt window and only for selling store-weeks
+rec_u,Receipts units,history,rec_u,sum,strcntwk > 0,receipt,scope,sum,draft,1,,,
+rec_c,Receipts cost,history,rec_c,sum,strcntwk > 0,receipt,scope,sum,draft,1,,,
+cc_count,Choice count (stylecolors selling),history,product,count_distinct,strcntwk > 0.000001,selected,scope,sum,draft,1,,,
+week_count,Weeks selling,history,time,count_distinct,strcntwk > 0.000001,selected,scope,max,draft,1,,,SUP-4378: roll up with max across items - sum inflates by item count
+funded_store_count,Funded store count,history,location,count_distinct,strcntwk_funded > 0.000001,selected,scope,max,draft,1,,,
+on_order_u,On order units,onorder,on_order_u,sum,,none,scope,sum,draft,1,,,
+fp_shp_u,Full-price shipped units,history,shp_u,sum,prodlife = 'FP',selected,scope,sum,draft,1,,,FP-only numerator (SUP-4628 pattern)
+fp_ret_u,Full-price returned units,history,ret_u,sum,prodlife = 'FP',selected,scope,sum,draft,1,,,

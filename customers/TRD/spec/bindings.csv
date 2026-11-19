@@ -1,0 +1,181 @@
+pivot,viewdefn,data_index,label,metric_id,rollup_formula,status,version,approved_by,approved_at,notes
+HistoryFit,HistoryRollUp,cccount,Count,cccount,sum(1),draft,1,,,
+HistoryFit,HistoryRollUp,net_sls_r,R$ Sales,net_sls_r,sum(net_sls_r),draft,1,,,
+HistoryFit,HistoryRollUp,net_sls_u,Unit Sales,net_sls_u,sum(shp_u) - sum(ret_u),draft,1,,,
+HistoryFit,HistoryRollUp,net_sls_margin_pct,FGM %,net_sls_margin_pct,(sum(net_sls_r) - sum(net_sls_c)) / sum(net_sls_r),draft,1,,,
+HistoryFit,HistoryRollUp,funded_aps_u,Funded APS,funded_aps_u,(sum(funded_shp_u) - sum(funded_ret_u))/ sum(strcntwk_funded),draft,1,,,
+HistoryFit,HistoryRollUp,last_value_eoh_u,Unit EOP,last_value_eoh_u,sum(last_value_eoh_u),draft,1,,,
+HistoryFit,HistoryRollUp,stk_sls_u,Unit Avg EOP WOH,stk_sls_u,(sum(sum_eoh_u)) / (sum(shp_u) - sum(ret_u)),draft,1,,,
+HistoryFit,HistoryCardViewDetails,net_sls_r,R$ Sls,net_sls_r,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,net_sls_margin_r,FGM $,net_sls_margin_r,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,net_sls_margin_pct,FGM %,net_sls_margin_pct,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,net_sls_aur,Sls AUR,net_sls_aur,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,net_sls_disc_pct,Disc %,net_sls_disc_pct,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,sell_thru_pct,U ST %,sell_thru_pct,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,net_sls_u,U Sls,net_sls_u,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,aps_u,APS U,aps_u,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,funded_aps_u,FndAPSU,funded_aps_u,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,funded_ttl_storecount,FndStrCnt,funded_ttl_storecount,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,last_value_eoh_u,U EOP,last_value_eoh_u,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,last_value_eoh_c,C$ EOP,last_value_eoh_c,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,stk_sls_u,U EOP WOH,stk_sls_u,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,net_sls_c,COGS,net_sls_c,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,aps_r,APS R$,aps_r,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,aps_c,APS C,aps_c,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,net_sls_auc,Sls AUC,net_sls_auc,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,gmroi,GMROI,,,unbound,1,,,no spec metric yet
+HistoryFit,HistoryCardViewDetails,avg_wk_sell_thru_pct,AvgWk ST%,,,unbound,1,,,no spec metric yet
+HistoryFit,HistoryCardViewDetails,avail_inv_u,Avl U EOP,avail_inv_u,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,avail_inv_c,Avl C$ EOP,avail_inv_c,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,avail_inv_aut,AvlInvAIR,,,unbound,1,,,no spec metric yet
+HistoryFit,HistoryCardViewDetails,on_order_u,Unit OO,on_order_u,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,rec_u,U Rec,rec_u,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,rec_c,C$ Rec,rec_c,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,rec_aur,Rec AUR,rec_aur,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,rec_auc,Rec AIC,rec_auc,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,rec_imu,Rec IMU %,rec_imu,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,avg_eoh_u_per_cc_per_store,APSEOPU,,,unbound,1,,,no spec metric yet
+HistoryFit,HistoryCardViewDetails,avg_str_rec_u,APSRecU,,,unbound,1,,,no spec metric yet
+HistoryFit,HistoryCardViewDetails,dmd_r,Dmd R$,dmd_r,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,dmd_u,U Dmd,dmd_u,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,dmd_c,C Dmd,dmd_c,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,dmd_margin_r,Dmd FGM$,,,unbound,1,,,no spec metric yet
+HistoryFit,HistoryCardViewDetails,sfs_r,SFS R$,sfs_r,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,sfs_u,U SFS,sfs_u,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,sfs_c,C SFS,sfs_c,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,bopis_r,BOPIS R$,bopis_r,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,bopis_u,U BOPIS,bopis_u,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,bopis_c,C BOPIS,bopis_c,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,ret_u,Ret U,ret_u,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,ret_pct_shp_r,Rtn% $,ret_pct_shp_r,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,cccount,CC Cnt,cccount,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,first_value_boh_u,U BOP,first_value_boh_u,,draft,1,,,
+HistoryFit,HistoryCardViewDetails,cc_unit_retail,CurRtl Rtl Str,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryCardViewDetails,cc_unit_retail_cad,CurRtl CAD Str,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryCardViewDetails,cc_web_current_retail,CurRtl Web,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryStyleColorGridViewGrid,ttl_storecount,Store Count,,max(ttl_storecount),unbound,1,,,no spec metric yet
+HistoryFit,HistoryStyleColorGridViewGrid,net_sls_u,Unit Sales,net_sls_u,sum(net_sls_u),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,aps_u,APS Unit Sales,aps_u,sum(net_sls_u) / sum(strcntwk),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,funded_aps_u,Funded APS U,funded_aps_u,(sum(funded_shp_u) - sum(funded_ret_u)) / sum(strcntwk_funded),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,funded_ttl_storecount,Funded Store Count,funded_ttl_storecount,max(funded_ttl_storecount),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,net_sls_r,R$ Sales,net_sls_r,sum(net_sls_r),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,net_sls_aur,Sales AUR,net_sls_aur,sum(net_sls_r) / sum(net_sls_u),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,net_sls_disc_pct,Discount %,net_sls_disc_pct,(sum(shp_r_csp) - sum(shp_r)) / sum(shp_r_csp),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,net_sls_margin_r,FGM$,net_sls_margin_r,sum(net_sls_margin_r),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,gm_per_cc_per_store_per_week,APS FGM $,,sum(net_sls_margin_r) / sum(strcntwk),unbound,1,,,no spec metric yet
+HistoryFit,HistoryStyleColorGridViewGrid,net_sls_margin_pct,FGM%,net_sls_margin_pct,sum(net_sls_margin_r) / sum(net_sls_r),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,dmd_margin_r,Demand FGM$,,sum(dmd_margin_r),unbound,1,,,no spec metric yet
+HistoryFit,HistoryStyleColorGridViewGrid,last_value_eoh_u,Unit EOP,last_value_eoh_u,sum(last_value_eoh_u),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,eoh_u_per_cc_per_store,CC APS Unit EOP Depth,,sum(last_value_eoh_u) / sum(last_value_storecount),unbound,1,,,no spec metric yet
+HistoryFit,HistoryStyleColorGridViewGrid,avg_eoh_u_per_cc_per_store,CC APS Unit EOP Avg Depth,,sum(sum_eoh_u) / sum(strcntwk),unbound,1,,,no spec metric yet
+HistoryFit,HistoryStyleColorGridViewGrid,eoh_stk_sls_u,U EOP WOH,,sum(last_value_eoh_u) / sum(avg_wk_net_sls_u),unbound,1,,,no spec metric yet
+HistoryFit,HistoryStyleColorGridViewGrid,avail_inv_u,Avail Unit EOP,avail_inv_u,sum(avail_inv_u),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,stk_sls_u,Unit Avg EOP WOH,stk_sls_u,sum(sum_eoh_u) / sum(net_sls_u),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,sell_thru_pct,Sell Thru %,sell_thru_pct,sum(net_sls_u) / sum(avail_inv_u),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,avail_inv_c,Avail C$ EOP,avail_inv_c,sum(avail_inv_c),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,last_value_eoh_c,C$ EOP,last_value_eoh_c,sum(last_value_eoh_c),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,eoh_stk_sls_c,C$ EOP WOH,,sum(last_value_eoh_c) / sum(avg_wk_net_sls_c),unbound,1,,,no spec metric yet
+HistoryFit,HistoryStyleColorGridViewGrid,avail_inv_aut,Avail Inv AIR,,(sum(last_value_eoh_r) + sum(net_sls_r))/ (sum(last_value_eoh_u) + sum(net_sls_u)),unbound,1,,,no spec metric yet
+HistoryFit,HistoryStyleColorGridViewGrid,net_sls_r_band,R$ Rating,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryStyleColorGridViewGrid,net_sls_margin_r_band,FGM$ Rating,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryStyleColorGridViewGrid,net_sls_margin_pct_band,FGM% Rating,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryStyleColorGridViewGrid,composite_band,Star Rating,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryStyleColorGridViewGrid,dmd_r,Demand R$ Sales,dmd_r,sum(dmd_r),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,dmd_u,Demand Unit Sales,dmd_u,sum(dmd_u),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,sfs_u,SFS Unit Sales,sfs_u,sum(sfs_u),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,bopis_u,BOPIS Unit Sales,bopis_u,sum(bopis_u),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,rec_u,Unit Receipts,rec_u,sum(rec_u),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,rec_c,C$ Receipts,rec_c,sum(rec_c),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,rec_aur,Receipts AIR,rec_aur,sum(rec_r) / sum(rec_u),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,rec_auc,Receipts AIC,rec_auc,sum(rec_c) / sum(rec_u),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,rec_imu,Rec IMU %,rec_imu,1 - (sum(rec_c) / sum(rec_r)),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,fp_weekcount,Reg # Weeks,,max(fp_weekcount),unbound,1,,,no spec metric yet
+HistoryFit,HistoryStyleColorGridViewGrid,weekcount,Sum of Weeks,,max(weekcount),unbound,1,,,no spec metric yet
+HistoryFit,HistoryStyleColorGridViewGrid,on_order_u,Unit On Order,on_order_u,sum(on_order_u),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,ret_u,Unit Returns,ret_u,sum(ret_u),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,ret_pct_shp_u,U Return %,,sum(ret_u) / sum(shp_u),unbound,1,,,no spec metric yet
+HistoryFit,HistoryStyleColorGridViewGrid,first_value_boh_u,Unit BOP,first_value_boh_u,sum(first_value_boh_u),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,avg_wk_sell_thru_pct,Avg Wk Sell Thru %,,sum(avg_wk_net_sls_u) / sum(avg_wk_inv_u),unbound,1,,,no spec metric yet
+HistoryFit,HistoryStyleColorGridViewGrid,net_sls_auc,Sales AUC,net_sls_auc,sum(net_sls_c) / sum(net_sls_u),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,gmroi,GMROI,,sum(net_margin_r) / sum(avg_wk_inv_c),unbound,1,,,no spec metric yet
+HistoryFit,HistoryStyleColorGridViewGrid,net_sls_c,COGS,net_sls_c,sum(net_sls_c),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,aps_c,APS COGS,aps_c,sum(net_sls_c) / sum(strcntwk),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,dmd_c,Demand COGS,dmd_c,sum(dmd_c),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,bopis_c,BOPIS COGS,bopis_c,sum(bopis_c),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,sfs_c,SFS COGS,sfs_c,sum(sfs_c),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,sfs_r,SFS R$ Sales,sfs_r,sum(sfs_r),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,bopis_r,BOPIS R$ Sales,bopis_r,sum(bopis_r),draft,1,,,
+HistoryFit,HistoryStyleColorGridViewGrid,avg_str_rec_u,CC APS Unit Receipt Depth,,sum(avg_str_rec_u),unbound,1,,,no spec metric yet
+HistoryFit,HistoryStyleColorGridViewGrid,aps_r,APS R$ Sales,aps_r,sum(net_sls_r) / sum(strcntwk),draft,1,,,
+HistoryFit,HistoryCompanionListSort,net_sls_r,R$ Sales,net_sls_r,,draft,1,,,
+HistoryFit,HistoryCompanionListSort,net_sls_u,Unit Sales,net_sls_u,,draft,1,,,
+HistoryFit,HistoryCompanionListSort,aps_u,APS Unit Sales,aps_u,,draft,1,,,
+HistoryFit,HistoryCompanionListSort,funded_aps_u,Funded APS U,funded_aps_u,,draft,1,,,
+HistoryFit,HistoryCompanionListSort,net_sls_margin_pct,FGM %,net_sls_margin_pct,,draft,1,,,
+HistoryFit,HistoryCompanionListSort,net_sls_margin_r,FGM $,net_sls_margin_r,,draft,1,,,
+HistoryFit,HistoryCompanionListSort,sell_thru_pct,Unit ST %,sell_thru_pct,,draft,1,,,
+HistoryFit,HistoryCompanionListSort,last_value_eoh_u,Unit EOP,last_value_eoh_u,,draft,1,,,
+HistoryFit,HistoryCompanionListSort,eoh_stk_sls_u,Unit EOP WOH,,,unbound,1,,,no spec metric yet
+HistoryFit,HistoryCompanionListSort,stk_sls_u,Unit Avg EOP WOH,stk_sls_u,,draft,1,,,
+HistoryFit,HistoryCompanionListSort,avail_inv_u,Avail Unit EOP,avail_inv_u,,draft,1,,,
+HistoryFit,HistoryCompanionListSort,rec_u,Unit Receipts,rec_u,,draft,1,,,
+HistoryFit,HistoryCompanionListSort,rec_c,C$ Receipts,rec_c,,draft,1,,,
+HistoryFit,HistoryCompanionListSort,ret_pct_shp_u,Unit Return %,,,unbound,1,,,no spec metric yet
+HistoryFit,HistoryCompanionListSort,gm_per_cc_per_store_per_week,FGM$ APS,,,unbound,1,,,no spec metric yet
+HistoryFit,HistoryCompanionListSort,composite_band,Star Rating,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryStyleColorReviewGroupBy,ccperf,Sales Quintiles,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryParetoSummary,cc_count,# CCs,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryParetoSummary,lycc_count,LY,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryParetoSummary,var_cccount,Var,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryParetoSummary,slsr,R$ Sales,,,unbound,1,,,no spec metric yet
+HistoryFit,HistoryParetoSummary,lyslsr,LY,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryParetoSummary,var_slsr,Var,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryParetoSummary,margin,FGM $,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryParetoSummary,lymargin,LY,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryParetoSummary,var_margin,Var,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryParetoSummary,slsr_pct,R$ Sales %,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryParetoSummary,lyslsr_pct,LY,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryParetoSummary,margin_pct,FGM %,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryParetoSummary,lymargin_pct,LY,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryParetoSummary,slsu_pct,Unit Sales %,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryParetoSummary,lyslsu_pct,LY,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryParetoSummary,cc_count,TY,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryParetoSummary,slsu_pct,Sales U Contribution,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryParetoSummary,slsu,TY,,,unbound,1,,,no spec metric yet
+HistoryFit,HistoryParetoSummary,lyslsu,LY,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryParetoSummary,var_slsu,Var,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryParetoSummary,gafs_pct,Avail Inv U Contribution,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryParetoSummary,gafs,TY,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryParetoSummary,lygafs,LY,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryParetoSummary,var_gafs,Var,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryParetoItemStrip,net_sls_r,R$ Sales,net_sls_r,,draft,1,,,
+HistoryFit,HistoryParetoItemStrip,net_sls_u,Unit Sales,net_sls_u,,draft,1,,,
+HistoryFit,HistoryParetoItemStrip,net_sls_aur,Sales AUR,net_sls_aur,,draft,1,,,
+HistoryFit,HistoryParetoItemStrip,net_sls_margin_pct,FGM %,net_sls_margin_pct,,draft,1,,,
+HistoryFit,HistoryParetoItemStrip,net_sls_margin_r,FGM $,net_sls_margin_r,,draft,1,,,
+HistoryFit,HistoryParetoItemStrip,last_value_eoh_u,Unit EOP,last_value_eoh_u,,draft,1,,,
+HistoryFit,HistoryParetoItemStrip,funded_aps_u,Funded APS U,funded_aps_u,,draft,1,,,
+HistoryFit,HistoryParetoItemStrip,funded_ttl_storecount,Funded Store Count,funded_ttl_storecount,,draft,1,,,
+HistoryFit,HistoryParetoItemStrip,sell_thru_pct,S/T %,sell_thru_pct,,draft,1,,,
+HistoryFit,HistoryParetoItemStrip,stk_sls_u,Unit Avg EOP WOH,stk_sls_u,,draft,1,,,
+HistoryFit,HistoryParetoGraphConfiguration,first,First Bar,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryParetoGraphConfiguration,net_sls_r,R$ Sales,net_sls_r,,draft,1,,,
+HistoryFit,HistoryParetoGraphConfiguration,net_sls_u,Unit Sales,net_sls_u,,draft,1,,,
+HistoryFit,HistoryParetoGraphConfiguration,net_sls_margin_r,FGM $,net_sls_margin_r,,draft,1,,,
+HistoryFit,HistoryParetoGraphConfiguration,avail_inv_r,Avail Inv R$,,,unbound,1,,,no spec metric yet
+HistoryFit,HistoryParetoGraphConfiguration,avail_inv_u,Avail Inv U,avail_inv_u,,draft,1,,,
+HistoryFit,HistoryParetoGraphConfiguration,second,Second Bar,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryParetoGraphConfiguration,third,First Line,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryParetoGraphConfiguration,sell_thru_pct,Unit ST %,sell_thru_pct,,draft,1,,,
+HistoryFit,HistoryParetoGraphConfiguration,net_sls_margin_pct,FGM %,net_sls_margin_pct,,draft,1,,,
+HistoryFit,HistoryParetoGraphConfiguration,fourth,Second Line,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryParetoGraphConfiguration,aps_u,APS Unit Sales,aps_u,,draft,1,,,
+HistoryFit,HistoryParetoGraphConfiguration,line,Line,,,n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryParetoDetailsRollUp,cc_count,Count,,sum(1),n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryParetoDetailsRollUp,slsr,R$ Sales,,sum(slsr),unbound,1,,,no spec metric yet
+HistoryFit,HistoryParetoDetailsRollUp,slsu,Unit Sales,,sum(slsu),unbound,1,,,no spec metric yet
+HistoryFit,HistoryParetoDetailsRollUp,ttl_margin_pct,FGM %,,sum(Margin) / sum(Slsr),n/a,1,,,"display attribute, not a metric"
+HistoryFit,HistoryParetoDetailsRollUp,sls_r_per_cccount,Sls $/CC,,sum(slsr) / sum(1),unbound,1,,,no spec metric yet
+HistoryFit,HistoryPerformanceStoreGroupAnalysis,net_sls_u,Unit Sales,net_sls_u,,draft,1,,,
+HistoryFit,HistoryPerformanceStoreGroupAnalysis,avail_inv_u,Avail Unit EOP,avail_inv_u,,draft,1,,,
+HistoryFit,HistoryPerformanceStoreGroupAnalysis,aps_u,APS Unit Sales,aps_u,,draft,1,,,

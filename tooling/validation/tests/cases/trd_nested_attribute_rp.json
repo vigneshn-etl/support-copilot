@@ -1,0 +1,554 @@
+{
+ "client": "TRD",
+ "env": "qa",
+ "route": "#/bottom-up/hindsighting/aggregate-views/nested-attribute-rp",
+ "defnId": "HistoryAggregateViewsNestedAttributeStyleColor_SnapshotRP",
+ "aggBy": "level:class",
+ "viewdefn": "HistoryAggregateViewsNestedAttributeGridSnapshotRP",
+ "section": "grid",
+ "scope": {
+  "productLevel": "department",
+  "productMember": "DP-48",
+  "locationLevel": "channel",
+  "locationMember": "CH-2",
+  "historyStart": "2025_W25",
+  "historyEnd": "2025_W25"
+ },
+ "filters": {
+  "merchcat": [
+   "FP",
+   "MD"
+  ]
+ },
+ "_note": "class rows only; department total row not compared; dropped: ['ps_weekcount', 'weekcount']",
+ "expected": {
+  "_source": "QA UI 2026-11-16 (HistoryAggregateViewsNestedAttributeGridSnapshotRP, tests/capture/ag_capture.js)",
+  "checksums": {
+   "n_rows": 4,
+   "key": "id",
+   "cols": {
+    "net_sls_r": [
+     2002324.3,
+     71805245,
+     4
+    ],
+    "ps_net_sls_r": [
+     104962.66,
+     3741464.8,
+     3
+    ],
+    "var_ps_net_sls_r": [
+     74.7315,
+     2709.2457,
+     3
+    ],
+    "net_sls_u": [
+     84042,
+     3015572,
+     4
+    ],
+    "ps_net_sls_u": [
+     2737.041,
+     97231.14,
+     3
+    ],
+    "var_ps_net_sls_u": [
+     124.0213,
+     4510.4252,
+     3
+    ],
+    "net_sls_aur": [
+     94.085402,
+     3336.2381,
+     4
+    ],
+    "ps_net_sls_aur": [
+     113.3486,
+     4094.9311,
+     3
+    ],
+    "var_ps_net_sls_aur": [
+     -1.094,
+     -39.5926,
+     3
+    ],
+    "net_sls_margin_r": [
+     1175798.8,
+     42145001,
+     4
+    ],
+    "ps_net_sls_margin_r": [
+     80776.141,
+     2881405.3,
+     3
+    ],
+    "var_ps_net_sls_margin_r": [
+     56.9674,
+     2063.0296,
+     3
+    ],
+    "net_sls_margin_pct": [
+     2.3519,
+     83.520599,
+     4
+    ],
+    "ps_net_sls_margin_pct": [
+     2.3228999,
+     83.672898,
+     3
+    ],
+    "var_ps_net_sls_margin_pct": [
+     -51.68,
+     -1870.95,
+     3
+    ],
+    "net_sls_disc_pct": [
+     2.0033,
+     71.0781,
+     4
+    ],
+    "ps_net_sls_disc_pct": [
+     0.55920002,
+     19.872001,
+     2
+    ],
+    "var_ps_net_sls_disc_pct": [
+     41.81,
+     1482.21,
+     2
+    ],
+    "funded_aps_u": [
+     3.7717001,
+     133.5501,
+     4
+    ],
+    "ps_funded_aps_u": [
+     175.43569,
+     6315.0749,
+     3
+    ],
+    "var_ps_funded_aps_u": [
+     -0.115,
+     -3.7067,
+     3
+    ],
+    "aps_u": [
+     3.2589999,
+     115.3742,
+     4
+    ],
+    "ps_aps_u": [
+     175.41469,
+     6314.3399,
+     3
+    ],
+    "var_ps_aps_u": [
+     -0.517,
+     -18.2449,
+     3
+    ],
+    "funded_ttl_storecount": [
+     2346,
+     83297,
+     4
+    ],
+    "ps_funded_ttl_storecount": [
+     1178,
+     42331,
+     3
+    ],
+    "ttl_storecount": [
+     2365,
+     83975,
+     4
+    ],
+    "ps_ttl_storecount": [
+     1190,
+     42751,
+     3
+    ],
+    "cccount": [
+     2051,
+     73892,
+     4
+    ],
+    "ps_cccount": [
+     8,
+     287,
+     3
+    ],
+    "var_ps_cccount": [
+     743.6667,
+     26972.668,
+     3
+    ],
+    "funded_cccount": [
+     1731,
+     62308,
+     4
+    ],
+    "ps_funded_cccount": [
+     7,
+     252,
+     3
+    ],
+    "gmroi": [
+     0.59869999,
+     21.223,
+     4
+    ],
+    "ps_gmroi": [
+     0.67160003,
+     24.090701,
+     3
+    ],
+    "net_sls_margin_r_per_cc": [
+     2369.3109,
+     83668.875,
+     4
+    ],
+    "ps_net_sls_margin_r_per_cc": [
+     25086.963,
+     898601.87,
+     3
+    ],
+    "var_ps_net_sls_margin_r_per_cc": [
+     -2.7645,
+     -99.5194,
+     3
+    ],
+    "fp_sell_thru_pct": [
+     0.31339999,
+     11.1038,
+     4
+    ],
+    "ps_fp_sell_thru_pct": [
+     0.1945,
+     6.9617998,
+     3
+    ],
+    "sell_thru_pct": [
+     0.38699999,
+     13.7157,
+     4
+    ],
+    "ps_sell_thru_pct": [
+     0.1945,
+     6.9617998,
+     3
+    ],
+    "avg_wk_sell_thru_pct": [
+     0.41470001,
+     14.6919,
+     4
+    ],
+    "ps_avg_wk_sell_thru_pct": [
+     0.20150001,
+     7.2113002,
+     3
+    ],
+    "stk_sls_u": [
+     37.793,
+     1344.1548,
+     4
+    ],
+    "ps_stk_sls_u": [
+     47.9996,
+     1740.5989,
+     3
+    ],
+    "net_sls_c": [
+     826525.47,
+     29660242,
+     4
+    ],
+    "ps_net_sls_c": [
+     24186.517,
+     860059.41,
+     3
+    ],
+    "var_ps_net_sls_c": [
+     139.1926,
+     5058.8661,
+     3
+    ],
+    "net_sls_auc": [
+     38.8879,
+     1378.2556,
+     4
+    ],
+    "ps_net_sls_auc": [
+     25.099799,
+     904.70237,
+     3
+    ],
+    "var_ps_net_sls_auc": [
+     0.3176,
+     11.4303,
+     3
+    ],
+    "avail_inv_u": [
+     883232,
+     31779146,
+     4
+    ],
+    "ps_avail_inv_u": [
+     42324.2,
+     1515340.4,
+     3
+    ],
+    "var_ps_avail_inv_u": [
+     77.2952,
+     2800.5307,
+     3
+    ],
+    "avail_inv_aut": [
+     183.1898,
+     6490.6822,
+     4
+    ],
+    "ps_avail_inv_aut": [
+     136.5225,
+     4917.0931,
+     3
+    ],
+    "var_ps_avail_inv_aut": [
+     -0.106,
+     -3.8623,
+     3
+    ],
+    "rec_u": [
+     28200,
+     994943,
+     3
+    ],
+    "ps_rec_u": [
+     5,
+     175,
+     1
+    ],
+    "var_ps_rec_u": [
+     3257.4,
+     114009,
+     1
+    ],
+    "rec_u_pct_ttl": [
+     0.9999,
+     35.2781,
+     3
+    ],
+    "ps_rec_u_pct_ttl": [
+     1,
+     35,
+     1
+    ],
+    "rec_c": [
+     291493.21,
+     10260471,
+     3
+    ],
+    "ps_rec_c": [
+     56.523499,
+     1978.3224,
+     1
+    ],
+    "var_ps_rec_c": [
+     2942.1487,
+     102975.2,
+     1
+    ],
+    "rec_c_pct_ttl": [
+     1,
+     35.1998,
+     3
+    ],
+    "ps_rec_c_pct_ttl": [
+     1,
+     35,
+     1
+    ],
+    "rec_aur": [
+     164.0391,
+     5781.2687,
+     3
+    ],
+    "ps_rec_aur": [
+     59.900002,
+     2096.5001,
+     1
+    ],
+    "var_ps_rec_aur": [
+     -0.0945,
+     -3.3075,
+     1
+    ],
+    "rec_auc": [
+     31.547101,
+     1110.5207,
+     3
+    ],
+    "ps_rec_auc": [
+     11.3047,
+     395.6645,
+     1
+    ],
+    "var_ps_rec_auc": [
+     -0.0967,
+     -3.3845,
+     1
+    ],
+    "rec_imu": [
+     2.4245999,
+     85.692798,
+     3
+    ],
+    "ps_rec_imu": [
+     0.81129998,
+     28.395499,
+     1
+    ],
+    "rec_u_per_cc": [
+     61.631498,
+     2143.9876,
+     3
+    ],
+    "ps_rec_u_per_cc": [
+     1.25,
+     43.75,
+     1
+    ],
+    "var_ps_rec_u_per_cc": [
+     22.2743,
+     779.6005,
+     1
+    ],
+    "funded_cc_rec_u_depth": [
+     70.5312,
+     2454.7507,
+     3
+    ],
+    "ps_funded_cc_rec_u_depth": [
+     1.6667,
+     58.3345,
+     1
+    ],
+    "var_ps_funded_cc_rec_u_depth": [
+     18.8679,
+     660.3765,
+     1
+    ],
+    "eoh_u_per_cc_per_store": [
+     1337.9333,
+     48139.297,
+     4
+    ],
+    "ps_eoh_u_per_cc_per_store": [
+     66.813098,
+     2398.1264,
+     3
+    ],
+    "var_ps_eoh_u_per_cc_per_store": [
+     0.2368,
+     8.5928,
+     3
+    ],
+    "net_sls_r_per_cc": [
+     4048.0238,
+     142880.88,
+     4
+    ],
+    "ps_net_sls_r_per_cc": [
+     32504.437,
+     1163483.5,
+     3
+    ],
+    "var_ps_net_sls_r_per_cc": [
+     -2.6989,
+     -97.1451,
+     3
+    ],
+    "net_sls_r_pct_ttl": [
+     1,
+     35.8609,
+     4
+    ],
+    "ps_net_sls_r_pct_ttl": [
+     1,
+     35.6457,
+     3
+    ],
+    "net_sls_u_pct_ttl": [
+     1.0001,
+     35.8852,
+     4
+    ],
+    "ps_net_sls_u_pct_ttl": [
+     0.9999,
+     35.5206,
+     3
+    ],
+    "avg_inv_u_pct_ttl": [
+     1,
+     36.0033,
+     4
+    ],
+    "ps_avg_inv_u_pct_ttl": [
+     1,
+     35.8032,
+     3
+    ],
+    "net_sls_c_pct_ttl": [
+     1,
+     35.8854,
+     4
+    ],
+    "ps_net_sls_c_pct_ttl": [
+     1,
+     35.5595,
+     3
+    ],
+    "avg_inv_c_pct_ttl": [
+     1,
+     36.0088,
+     4
+    ],
+    "ps_avg_inv_c_pct_ttl": [
+     1,
+     35.8493,
+     3
+    ],
+    "ret_u": [
+     9605,
+     346074,
+     4
+    ],
+    "ps_ret_u": [
+     311.7235,
+     11086.944,
+     3
+    ],
+    "var_ps_ret_u": [
+     356.9923,
+     12900.644,
+     3
+    ],
+    "ret_pct_shp_u": [
+     0.4067,
+     14.4606,
+     4
+    ],
+    "ps_ret_pct_shp_u": [
+     0.2436,
+     8.7874,
+     3
+    ],
+    "var_ps_ret_pct_shp_u": [
+     5.07,
+     185.16,
+     3
+    ]
+   },
+   "rel_tol": 1e-06
+  }
+ }
+}

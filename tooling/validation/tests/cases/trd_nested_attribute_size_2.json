@@ -1,0 +1,114 @@
+{
+ "client": "TRD",
+ "env": "qa",
+ "route": "#/bottom-up/hindsighting/aggregate-views-size/nested-attribute-size",
+ "defnId": "HistoryAggregateViewsNestedAttribute",
+ "aggBy": "level:size",
+ "viewdefn": "HistoryAggregateViewsNestedAttributeGridSize",
+ "section": "grid",
+ "scope": {
+  "productLevel": "class",
+  "productMember": "CL-3104",
+  "locationLevel": "channel",
+  "locationMember": "CH-2",
+  "historyStart": "2025_W25",
+  "historyEnd": "2025_W25"
+ },
+ "filters": {
+  "merchcat": [
+   "FP",
+   "MD"
+  ]
+ },
+ "_note": "class 3104 size rows from QA's department view; % to total left out (QA: share of department, DVS class scope: share of class); dropped: ['avg_inv_c_pct_ttl', 'avg_inv_u_pct_ttl', 'ly_avg_inv_c_pct_ttl', 'ly_avg_inv_u_pct_ttl', 'ly_net_sls_c_pct_ttl', 'ly_net_sls_r_pct_ttl', 'ly_net_sls_u_pct_ttl', 'ly_rec_c_pct_ttl', 'ly_rec_u_pct_ttl', 'ly_weekcount', 'net_sls_c_pct_ttl', 'net_sls_r_pct_ttl', 'net_sls_u_pct_ttl', 'rec_c_pct_ttl', 'rec_u_pct_ttl', 'weekcount']; part 2/5 (whole screen times out on the 300 s gate)",
+ "expected": {
+  "_source": "QA UI 2026-11-16 (HistoryAggregateViewsNestedAttributeGridSize, tests/capture/ag_capture.js)",
+  "checksums": {
+   "n_rows": 8,
+   "key": "id",
+   "cols": {
+    "ly_net_sls_margin_pct": [
+     4.4358,
+     246.7657,
+     8
+    ],
+    "var_ly_net_sls_margin_pct": [
+     -10.49,
+     -542.46,
+     8
+    ],
+    "net_sls_disc_pct": [
+     4.2356001,
+     236.1382,
+     8
+    ],
+    "ly_net_sls_disc_pct": [
+     4.0517,
+     225.8997,
+     8
+    ],
+    "var_ly_net_sls_disc_pct": [
+     18.39,
+     1023.85,
+     8
+    ],
+    "funded_ttl_storecount": [
+     3990,
+     222808,
+     8
+    ],
+    "ly_funded_ttl_storecount": [
+     4622,
+     258203,
+     8
+    ],
+    "ttl_storecount": [
+     4107,
+     229282,
+     8
+    ],
+    "ly_ttl_storecount": [
+     4730,
+     264106,
+     8
+    ],
+    "cccount": [
+     848,
+     47044,
+     8
+    ],
+    "ly_cccount": [
+     833,
+     46277,
+     8
+    ],
+    "var_ly_cccount": [
+     0.1011,
+     5.0361,
+     8
+    ],
+    "gmroi": [
+     0.90529999,
+     50.5851,
+     8
+    ]
+   },
+   "rel_tol": 1e-06
+  }
+ },
+ "metrics": [
+  "ly_net_sls_margin_pct",
+  "var_ly_net_sls_margin_pct",
+  "net_sls_disc_pct",
+  "ly_net_sls_disc_pct",
+  "var_ly_net_sls_disc_pct",
+  "funded_ttl_storecount",
+  "ly_funded_ttl_storecount",
+  "ttl_storecount",
+  "ly_ttl_storecount",
+  "cccount",
+  "ly_cccount",
+  "var_ly_cccount",
+  "gmroi"
+ ]
+}

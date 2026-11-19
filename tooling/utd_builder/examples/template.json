@@ -1,0 +1,30 @@
+{
+  "ticket": "SUP-XXXX",
+  "title": "<JIRA summary>",
+  "client": "<CLIENT>",
+  "tested_by": "<name>",
+  "date": "<YYYY-MM-DD>",
+  "environment": "<qa.client.oci.s5stratos.com>",
+  "scope": {
+    "product": "<e.g. DP-145 ANNE KLEIN>",
+    "location": "<e.g. Belk>",
+    "time": "<e.g. FY27-W48-Dec-W5 to FY28-W01-Feb-W1>",
+    "filters": "<e.g. Price Status = FP (optional)>"
+  },
+  "cases": [
+    {
+      "id": "TC-1",
+      "module": "<Module>",
+      "screen": "<Screen>",
+      "view": "<View / Tab>",
+      "metric": "<Metric or column validated>",
+      "row": "<Row / member checked, e.g. Style 477351138.001>",
+      "expected": "<value>",
+      "actual": "<value>",
+      "result": "PASS",
+      "shots": [
+        { "label": "After fix", "path": "shots/tc1_after.png" }
+      ]
+    }
+  ]
+}

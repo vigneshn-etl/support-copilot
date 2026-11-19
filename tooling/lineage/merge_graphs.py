@@ -46,6 +46,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--etl-graph", required=True)
     ap.add_argument("--config-graph", default=str(HERE / "config_graph.json"))
+    ap.add_argument("--out", default=str(HERE / "combined_graph.json"))
     args = ap.parse_args()
 
     etl, cfg = load(args.etl_graph), load(args.config_graph)
@@ -73,7 +74,7 @@ def main():
     joined = sum(1 for n in nodes.values() if n.get("origin") == "both")
     graph = {
         "meta": {"generated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
-                 "repo": "etl-trd-batch + trd-configs",
+                 "repo": f"{etl.get('meta', {}).get('repo', 'etl')} + {cfg.get('meta', {}).get('repo', 'config')}",
                  "node_count": len(nodes), "edge_count": len(edges),
                  "join_nodes": joined,
                  "stats": {"etl_nodes": len(etl["nodes"]),
@@ -82,7 +83,7 @@ def main():
         "nodes": sorted(nodes.values(), key=lambda n: n["id"]),
         "edges": sorted(edges.values(), key=lambda e: (e["src"], e["dst"])),
     }
-    out = HERE / "combined_graph.json"
+    out = Path(args.out)
     out.write_text(json.dumps(graph, indent=1))
     print(f"combined: nodes={len(nodes)} edges={len(edges)} "
           f"joined_ch_tables={joined}")
@@ -91,8 +92,8 @@ def main():
     if tpl.exists():
         html = tpl.read_text().replace("/*__GRAPH_JSON__*/",
                                        json.dumps(graph).replace("</", "<\\/"))
-        (HERE / "lineage_e2e.html").write_text(html)
-        print(f"wrote {HERE/'lineage_e2e.html'}")
+        (out.parent / "lineage_e2e.html").write_text(html)
+        print(f"wrote {out.parent/'lineage_e2e.html'}")
 
 
 if __name__ == "__main__":

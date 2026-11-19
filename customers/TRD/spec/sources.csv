@@ -1,0 +1,4 @@
+source_id,table,item_key,location_key,time_key,level_filters,description,status,version,approved_by,approved_at
+history,trd_p_history_agg,product,location,time,"prodlife,cluster","Weekly sales, demand, inventory and receipts per stylecolor x store x week",,1,,
+onorder,trd_p_onorder_agg,product,location,,prodlife,Open on-order per stylecolor x store (no time axis),,1,,
+flowflag,trd_sku_temp_flow_flag,stylecolor,,time,,Weekly flow flag / receipts per stylecolor (used for population rules),,1,,

@@ -1,0 +1,17 @@
+{
+  "_readme": "Per-client repos ONLY (ETL + config). GAO = Gap Outlet, a GAP Inc. brand (see customers/GAP/profile.md). Confirmed by user 2026-11-16.",
+  "etl": {
+    "repo": "git@github.com:s5-stratos/etl-gao-batch.git",
+    "branch_prod": "etl_assortment_planning_prod",
+    "default_branch": "etl_assortment_planning_prod",
+    "local": "/Users/vigneshn/Desktop/AI World/Lineage works/etl-gao-batch",
+    "note": "Prod branch = etl_assortment_planning_prod for now \u2014 TEMPORARY; will move to etl_assortment_planning like GAP/ONV (user, 2026-11-18). Re-check before branching. Edit clones: /Users/vigneshn/Desktop/JIRAs/<SUP-ID>/etl-gao-batch/."
+  },
+  "config": {
+    "repo": "git@github.com:s5-stratos/gao-configs.git",
+    "branch": "assortment_planning",
+    "local": "/Users/vigneshn/Desktop/AI World/Lineage works/gao-configs",
+    "note": "Prod branch = assortment_planning (user, 2026-11-16). GitHub default is main; do not branch from main. Edit clones: /Users/vigneshn/Desktop/JIRAs/<SUP-ID>/gao-configs/."
+  },
+  "qa_url": "https://qa.gapoutlet.oci.s5stratos.com/"
+}

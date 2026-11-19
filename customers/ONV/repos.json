@@ -1,0 +1,17 @@
+{
+  "_readme": "Per-client repos ONLY (ETL + config). ONV = Old Navy, a GAP Inc. brand (see customers/GAP/profile.md). Confirmed by user 2026-11-16.",
+  "etl": {
+    "repo": "git@github.com:s5-stratos/etl-onv-batch.git",
+    "branch_prod": "etl_assortment_planning",
+    "default_branch": "etl_assortment_planning",
+    "local": "/Users/vigneshn/Desktop/AI World/Lineage works/etl-onv-batch",
+    "note": "Prod branch = etl_assortment_planning (user, 2026-11-18; standard prod branch for all clients). Note: origin/etl_assortment_planning_prod also exists and had newer merges as of 2026-11-18 \u2014 not the prod branch. QA/upgrade branch not confirmed yet. Edit clones: /Users/vigneshn/Desktop/JIRAs/<SUP-ID>/etl-onv-batch/."
+  },
+  "config": {
+    "repo": "git@github.com:s5-stratos/onv-configs.git",
+    "branch": "assortment_planning",
+    "local": "/Users/vigneshn/Desktop/AI World/Lineage works/onv-configs",
+    "note": "Prod branch = assortment_planning (user, 2026-11-16). Edit clones: /Users/vigneshn/Desktop/JIRAs/<SUP-ID>/onv-configs/."
+  },
+  "qa_url": "https://qa.oldnavy.oci.s5stratos.com/"
+}

@@ -1,0 +1,17 @@
+{
+ "_readme": "See customers/GAP/config_sources.json for the format. QA prefix verified by `oci os object list` on 2026-11-16.",
+ "client": "GAO",
+ "root": "config",
+ "config_repo": {
+  "repo": "git@github.com:s5-stratos/gao-configs.git",
+  "branch": "assortment_planning",
+  "local": "repo"
+ },
+ "envs": {
+  "qa": {
+   "bucket": "internal-qa-config",
+   "region": "us-chicago-1",
+   "prefix": "gao/asst/"
+  }
+ }
+}

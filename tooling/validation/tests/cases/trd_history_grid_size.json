@@ -1,0 +1,200 @@
+{
+ "client": "TRD",
+ "env": "qa",
+ "route": "#/bottom-up/hindsighting/aggregate-views-size/nested-view-size",
+ "defnId": "BU_HistoryGrid",
+ "aggBy": "level:sku",
+ "viewdefn": "HistoryHistoryGridNestedViewGridSize",
+ "section": "grid",
+ "scope": {
+  "productLevel": "department",
+  "productMember": "DP-48",
+  "locationLevel": "channel",
+  "locationMember": "CH-2",
+  "historyStart": "2025_W25",
+  "historyEnd": "2025_W25"
+ },
+ "filters": {
+  "merchcat": [
+   "FP",
+   "MD"
+  ]
+ },
+ "_note": "QA rows are stylecolor x size (3,790), DVS rows are SKUs (3,798, 8 extra zero-sales SKUs untraced): unweighted sums + non-zero counts only; avail_inv_aut/auc QA Infinity; dropped: ['avail_inv_auc', 'avail_inv_aut', 'fp_weekcount', 'weekcount']; on_order_u/_4wk left out: QA size grid always shows 0 (DVS = SKU View 30,912)",
+ "expected": {
+  "_source": "QA UI 2026-11-16 (HistoryHistoryGridNestedViewGridSize, tests/capture/ag_capture.js)",
+  "checksums": {
+   "n_rows": null,
+   "key": "id",
+   "cols": {
+    "net_sls_r": [
+     1976291.4,
+     91003387,
+     3372
+    ],
+    "net_sls_u": [
+     82456,
+     3846264,
+     3309
+    ],
+    "net_sls_margin_pct": [
+     1429.7356,
+     70692.165,
+     3260
+    ],
+    "net_sls_margin_r": [
+     1165767.5,
+     53268174,
+     3376
+    ],
+    "stk_sls_u": [
+     52040.797,
+     2660478.5,
+     3240
+    ],
+    "first_value_boh_u": [
+     851436,
+     41737918,
+     3765
+    ],
+    "last_value_eoh_u": [
+     796684,
+     39853619,
+     3789
+    ],
+    "sell_thru_pct": [
+     437.0585,
+     21160.136,
+     3307
+    ],
+    "avg_wk_sell_thru_pct": [
+     513.6665,
+     25037.843,
+     3307
+    ],
+    "net_sls_c": [
+     810523.92,
+     37735213,
+     3343
+    ],
+    "aps_u": [
+     17449.82,
+     870232.3,
+     3309
+    ],
+    "aps_r": [
+     406991.2,
+     20063436,
+     3371
+    ],
+    "funded_aps_u": [
+     157645.76,
+     7613280.4,
+     3266
+    ],
+    "ttl_storecount": [
+     299353,
+     14588793,
+     3773
+    ],
+    "funded_ttl_storecount": [
+     283207,
+     13795296,
+     3769
+    ],
+    "net_sls_aur": [
+     64810.342,
+     3183969.7,
+     3241
+    ],
+    "net_sls_auc": [
+     32773.652,
+     1617978.2,
+     3241
+    ],
+    "net_sls_disc_pct": [
+     1878.3088,
+     93040.838,
+     3343
+    ],
+    "ret_u": [
+     9184,
+     441773,
+     2139
+    ],
+    "ret_pct_shp_u": [
+     508.455,
+     25504.526,
+     2104
+    ],
+    "ret_pct_shp_r": [
+     579.1128,
+     29213.391,
+     2103
+    ],
+    "gmroi": [
+     524.7355,
+     24899.981,
+     3372
+    ],
+    "rec_u": [
+     28200,
+     1983645,
+     38
+    ],
+    "rec_c": [
+     291493.21,
+     20506256,
+     38
+    ],
+    "rec_imu": [
+     30.7684,
+     2051.422,
+     38
+    ],
+    "eoh_u_per_cc_per_store": [
+     63669.119,
+     3436087,
+     3789
+    ],
+    "avg_eoh_u_per_cc_per_store": [
+     259965.57,
+     14880090,
+     3772
+    ],
+    "avg_str_rec_u": [
+     5861.7703,
+     475726.22,
+     38
+    ],
+    "last_value_eoh_c": [
+     7955463.1,
+     396638840,
+     3790
+    ],
+    "sfs_r": [
+     79384.653,
+     3907287,
+     836
+    ],
+    "sfs_u": [
+     3917,
+     194133,
+     838
+    ],
+    "bopis_r": [
+     30739.26,
+     1407501.7,
+     565
+    ],
+    "bopis_u": [
+     1332,
+     62070,
+     553
+    ]
+   },
+   "rel_tol": 1e-06,
+   "weighted": false
+  }
+ }
+}

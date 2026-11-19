@@ -1,0 +1,7 @@
+{
+  "name": "ui-pilot",
+  "private": true,
+  "description": "Scenario-driven Playwright runner: reproduce/verify tickets in QA UI, capture evidence bundles",
+  "bin": { "ui-pilot": "pilot.js" },
+  "dependencies": { "playwright": "1.56.1", "yaml": "2.8.1" }
+}

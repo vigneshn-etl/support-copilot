@@ -1,0 +1,61 @@
+section,screen,pivot,viewdefn,columns,catalog,qa_checked,scope,method,result,open,regression_case
+(sort/config panel),History Grid Size,BU_HistoryGrid,HistoryCompanionListSort,16,same:16,n/a,,,no metric values,,
+(sort/config panel),History Grid Size,BU_HistoryGrid,HistoryHistoryGridNestedViewConfigureSize,3,attribute:3,n/a,,,no metric values,,
+History Grid Size,History Grid Size,BU_HistoryGrid,HistoryHistoryGridNestedViewGridSize,69,attribute:2 same:67,yes,"class 3104 W25; DP-48 W25 (3,790 SKUs)",UI read + checksum,19 size rows exact; class row 31/39; bands exact bar 2 ties,8 class-row cells are QA issues; DVS has 8 extra zero-sales SKUs (untraced),trd_history_grid_size (unweighted)
+History Grid Size,History Grid Size,BU_HistoryGrid,HistoryRollUp,7,same:7,yes,class 3104 W25,UI read,Count/R$/Units match,,
+(sort/config panel),History Grid,BU_HistoryGridStyleColor,HistoryCompanionListSort,16,same:16,n/a,,,no metric values,,
+(sort/config panel),History Grid,BU_HistoryGridStyleColor,HistoryHistoryGridNestedViewConfigure,3,attribute:3,n/a,,,no metric values,,
+(sort/config panel),Style to Color View,BU_HistoryGridStyleColor,HistoryHistoryGridNestedViewConfigure_StyleToColorView,3,attribute:3,n/a,,,no metric values,,
+History Grid,History Grid,BU_HistoryGridStyleColor,HistoryHistoryGridNestedViewGrid,76,attribute:2 same:74,yes,Swimwear W25 (460 items),grid checksum,39 cols x 460 items exact; rollup 7/7; CLS checksums exact,avail_inv_aut/auc NaN vs QA 0 on 1 item (guard quirk),trd_history_grid
+Style to Color View,Style to Color View,BU_HistoryGridStyleColor,HistoryHistoryGridNestedViewGrid_StyleToColorView,28,attribute:1 same:27,yes,Swimwear W25,grid checksum,27/27 cols exact,,
+History Grid,History Grid,BU_HistoryGridStyleColor,HistoryRollUp,7,same:7,yes,Swimwear W25,UI read,7/7 exact,,
+(sort/config panel),History Grid RP,BU_HistoryGridStyleColor_SnapshotRP,HistoryCompanionListSort,16,same:16,n/a,,,no metric values,,
+(sort/config panel),History Grid RP,BU_HistoryGridStyleColor_SnapshotRP,HistoryHistoryGridNestedViewConfigure,3,attribute:3,n/a,,,no metric values,,
+History Grid RP,History Grid RP,BU_HistoryGridStyleColor_SnapshotRP,HistoryHistoryGridNestedViewGridSnapshotRP,139,attribute:2 same:137,yes,Swimwear 2026 W20 (313 items),grid checksum,76 cols x 313 items exact; CLS checksums exact,,trd_history_grid_rp
+History Grid RP,History Grid RP,BU_HistoryGridStyleColor_SnapshotRP,HistoryRollUp,7,same:7,yes,Swimwear 2026 W20,UI read,7/7 exact,,
+(sort/config panel),Nested Attribute Size,HistoryAggregateViewsNestedAttribute,HistoryAggregateViewsNestedAttributeConfigureSize,3,attribute:3,n/a,,,no metric values,,
+Nested Attribute Size,Nested Attribute Size,HistoryAggregateViewsNestedAttribute,HistoryAggregateViewsNestedAttributeGridSize,234,attribute:2 same:232,yes,class 3104 W25,UI read,456/456 exact (24 sizes x 19 cols),,trd_nested_attribute_size_1..5
+Macro Trends,Nested Attribute Size,HistoryAggregateViewsNestedAttribute,HistoryAggregateViewsNestedAttributeMacro,30,same:30,no,,,,screen not on QA menu (parked),
+Nested Attribute,Nested Attribute,HistoryAggregateViewsNestedAttributeStyleColor,HistoryAggregateViewsNestedAttributeGrid,338,attribute:2 same:336,yes,"Swimwear W25, 7 rows",UI read,742/742 exact,only the 106 visible of 338 columns checked,trd_nested_attribute
+Assortment Analysis OP (out of scope),Nested Attribute OP,HistoryAggregateViewsNestedAttributeStyleColor_SnapshotRP,AssortmentAnalysisNestedAttributeGridSnapshotOP,151,attribute:1 new:150,no,,,,OP array-packed plan values need engine work; not in catalog,
+Assortment Analysis (out of scope),Nested Attribute RP,HistoryAggregateViewsNestedAttributeStyleColor_SnapshotRP,AssortmentAnalysisNestedAttributeGridSnapshotRP,174,attribute:3 new:171,no,,,,same pivot as NA RP; Assortment module not in Hindsighting scope,
+Nested Attribute RP,Nested Attribute RP,HistoryAggregateViewsNestedAttributeStyleColor_SnapshotRP,HistoryAggregateViewsNestedAttributeGridSnapshotRP,211,attribute:1 same:210,yes,department,UI read,728/728 exact,,trd_nested_attribute_rp
+Category Summary,Category Summary,HistoryAggregateViewsNestedAttribute_for_CatRecap,HistoryCatRecapCatSummaryChoiceProductivity,14,same:14,yes,048 Wovens / Torrid W25,UI read,14/14 exact,,
+Category Summary,Category Summary,HistoryAggregateViewsNestedAttribute_for_CatRecap,HistoryCatRecapCatSummaryGrid,311,attribute:2 same:309,yes,"048 Wovens / Torrid W25, 4 classes",UI read,440/440 exact; FP ST exact,,trd_category_summary
+Category Summary,Category Summary,HistoryAggregateViewsNestedAttribute_for_CatRecap,HistoryCatRecapCatSummaryKeyFinancials,8,same:8,yes,048 Wovens / Torrid W25,UI read,8/8 exact,,
+Category Summary RP,hist-category-summary-rp,HistoryAggregateViewsNestedAttribute_for_CatRecap_SnapshotRP,HistoryCatRecapCatSummaryChoiceProductivitySnapshotRP,14,same:14,yes,048 Wovens / Torrid W25,UI read,exact (14 RP tile measures),,
+Category Summary RP,hist-category-summary-rp,HistoryAggregateViewsNestedAttribute_for_CatRecap_SnapshotRP,HistoryCatRecapCatSummaryGridSnapshotRP,195,attribute:1 changed:2 same:192,yes,048 Wovens / Torrid W25 FP/MD,UI read,720/720 exact,rec_u/rec_c kept different on purpose,trd_category_summary_rp
+Category Summary RP,hist-category-summary-rp,HistoryAggregateViewsNestedAttribute_for_CatRecap_SnapshotRP,HistoryCatRecapCatSummaryKeyFinancialsSnapshotRP,8,same:8,yes,048 Wovens / Torrid W25,UI read,exact (14 RP tile measures),,
+Style Color Review,Summary View,HistoryFit,HistoryCardViewDetails,55,same:55,yes,048 Wovens / Torrid W37-40; W21-24; FP; Carryover,UI read,7/7 rollup + 24/24 card cells exact; flow-type buckets 21/21,,
+(sort/config panel),Grid View,HistoryFit,HistoryCompanionListSort,16,same:16,n/a,,,no metric values,,
+Pareto Details,Pareto Summary,HistoryFit,HistoryParetoGraphConfiguration,13,same:13,partial,DP-48 W25,UI read,graph order matches,total item count not readable from page,
+Pareto Details,Pareto Summary,HistoryFit,HistoryParetoItemStrip,10,same:10,yes,DP-48 W25,UI read,10/10 top item values exact,,
+Pareto Details,Pareto Summary,HistoryFit,HistoryPerformanceStoreGroupAnalysis,3,same:3,no,,,,store-group pop-up (store-level source) not checked,
+Style Color Review,Collection View,HistoryFit,HistoryRollUp,7,changed:1 same:6,yes,"048 Wovens / Torrid W37-40, W21-24",UI read,"7/7 exact (canvas, collection, grid)","stk_sls_u rollup guard differs (kept, QA quirk)","trd_summary_view_wovens, trd_summary_view_lovesick, trd_style_color_review_rollup"
+Style Color Review,Grid View,HistoryFit,HistoryStyleColorGridViewGrid,62,same:62,yes,"DP-48 W25 (1,014 items); 2 items W37-40",UI read + grid checksum,52/52 cells; gmroi/bands all items exact,band differences are tie order only,trd_style_color_review_grid
+(sort/config panel),Grid View,HistoryFit,HistoryStyleColorReviewGroupBy,1,same:1,n/a,,,no metric values,,
+(sort/config panel),Grid View,HistoryFitStyle,HistoryCompanionListSort,16,same:16,n/a,,,no metric values,,
+Style Review,Collection View,HistoryFitStyle,HistoryRollUp,7,same:7,yes,DP-48 W25,UI read,7/7 exact (Count 544),,trd_style_review_rollup
+Style Review,Summary View,HistoryFitStyle,HistoryStyleCardViewDetails,52,same:52,yes,DP-48 W25,UI read,exact,,
+Style Review,Grid View,HistoryFitStyle,HistoryStyleGridViewGrid,61,same:61,yes,DP-48 W25 (544 styles),UI read + checksum,340 cells exact; gmroi/ST/store counts/bands all styles,band differences are tie order only,trd_style_review_grid
+(sort/config panel),Grid View,HistoryFitStyle,HistoryStyleReviewGroupBy,1,attribute:1,n/a,,,no metric values,,
+Style Review,Top TY vs LY,HistoryFitStyleTYLY,HistoryRollUp,7,same:7,yes,DP-48 W25,UI read,exact,,
+Style Review,Top TY vs LY,HistoryFitStyleTYLY,HistoryStyleCardViewDetails,52,same:52,yes,DP-48 W25 top 100,UI read,TY+LY panels 14/14 exact,5 cols bound to catalog (QA per-colour count bug); differ from QA by design,
+(sort/config panel),TY/LY Grid View,HistoryFitStyleTYLYTranspose,HistoryStyleColorTYLYGridListSort,15,same:15,n/a,,,no metric values,,
+Style Review,TY/LY Grid View,HistoryFitStyleTYLYTranspose,HistoryStyleTYLYGrid,104,attribute:2 same:102,yes,DP-48 W25 (762 styles),UI read + checksum,demand 762/762; rollup 7/7,ty/ly gmroi bound to catalog (QA bug); differ from QA by design,trd_style_tyly_grid (12 QA-bug cols left out)
+Style Review,TY/LY Grid View,HistoryFitStyleTYLYTranspose,HistoryStyleTYLYGridRollup,7,same:7,yes,DP-48 W25,UI read,7/7 exact (Count 762),,trd_style_tyly_rollup
+Style Color Review,Top TY vs LY,HistoryFitTYLY,HistoryCardViewDetails,55,attribute:3 same:52,yes,048 Wovens / Torrid W21-24 top 100,UI read,TY+LY panels 7/7 each exact,,
+Style Color Review,Top TY vs LY,HistoryFitTYLY,HistoryRollUp,7,same:7,yes,048 Wovens / Torrid W21-24,UI read,exact,,
+Style Color Review,TY/LY Grid View,HistoryFitTYLYTranspose,HistoryStyleColorTYLYGrid,105,attribute:3 same:102,yes,048 Wovens / Torrid W21-24; DP-48 W25,UI read + checksum,"rollup exact; ty/ly gmroi 1,649 rows exact",Count -3 is QA ty_strcntwk bug (kept true),trd_style_color_tyly_grid
+(sort/config panel),TY/LY Grid View,HistoryFitTYLYTranspose,HistoryStyleColorTYLYGridListSort,15,same:15,n/a,,,no metric values,,
+Style Color Review,TY/LY Grid View,HistoryFitTYLYTranspose,HistoryStyleColorTYLYGridRollup,7,same:7,yes,048 Wovens / Torrid W21-24,UI read,7/7 exact,"Count 1,807 vs QA 1,804 (QA bug)",trd_style_color_tyly_rollup
+(sort/config panel),nested-sku,HistoryGridSKU_TopMem,HistoryHistoryGridNestedViewConfigureSKU,3,attribute:3,n/a,,,no metric values,,
+SKU View,nested-sku,HistoryGridSKU_TopMem,HistoryHistoryGridNestedViewGridSKU,44,attribute:1 same:43,yes,"W25 (3,798 SKUs)",grid checksum,"43 cols x 3,798 SKUs exact",1 SKU NaN vs QA 0 (guard quirk),trd_sku_view
+(sort/config panel),nested-sku,HistoryGridSKU_TopMem,HistoryHistoryGridNestedViewListSortSKU,18,same:18,n/a,,,no metric values,,
+SKU View,nested-sku,HistoryGridSKU_TopMem,HistoryRollUp,7,same:7,yes,W25,UI read,7/7 exact,,
+Pareto Details,Pareto Summary,HistoryInfoGraph,HistoryParetoDetailsRollUp,5,same:5,yes,DP-48 W25,UI read,"5 tiles exact (2,236 | $2.00M | 93,647 | 58.72% | $895)",,
+Pareto Summary,Pareto Summary,HistoryInfoGraph,HistoryParetoSummary,22,same:22,yes,DP-48 W25,UI read,rank groups match,,
+Product Mix,Product Mix,HistoryProductivity,HistoryCatRecapProductMixView,15,same:15,yes,"048 Wovens / Torrid, TY+LY",UI read,33/33 exact,,
+Productivity,Productivity,HistoryProductivity,HistoryCatRecapProductivityView,32,same:32,yes,"048 Wovens / Torrid, 4 classes TY+LY",UI read,80/80 exact,% to total on canvas charts not readable,
+Top-down Nested Attribute,Nested Attribute,TD_HistoryAggregateViewsNestedAttributeStyleColor,TD_HistoryAggregateViewsNestedAttributeGrid,335,attribute:2 same:333,yes,048 Wovens / Torrid 2026 W24,UI read,"match (CC 2,198)",,
+Top-down Nested Attribute RP,Nested Attribute RP,TD_HistoryAggregateViewsNestedAttributeStyleColor_SnapshotRP,TD_HistoryAggregateViewsNestedAttributeGridSnapshotRP,211,attribute:1 same:210,yes,048 Wovens / Torrid 2026 W24,UI read,"match (CC 2,214)",,

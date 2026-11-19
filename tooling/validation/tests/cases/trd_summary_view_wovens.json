@@ -1,0 +1,12 @@
+{
+  "client": "TRD", "env": "qa",
+  "route": "#/bottom-up/hindsighting/style-color-review/summary-view",
+  "defnId": "HistoryFit", "aggBy": "level:stylecolor", "section": "rollup",
+  "scope": {"productLevel": "department", "productMember": "DP-48",
+            "locationLevel": "channel", "locationMember": "CH-2",
+            "historyStart": "2025_W37", "historyEnd": "2025_W40"},
+  "filters": {"merchcat": ["FP", "MD"]},
+  "expected": {"_source": "QA UI 2026-10-13, Summary View rollup bar",
+    "totals": {"Count": 766, "R$ Sales": "$4.95M", "Unit Sales": "196,056", "FGM %": "56.34%",
+               "Funded APS": "0.71", "Unit EOP": "654,163", "Unit Avg EOP WOH": "12.8"}}
+}

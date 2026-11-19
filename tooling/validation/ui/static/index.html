@@ -5,492 +5,493 @@
 <title>Data Validation Studio</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
-  /* Shared design language with the ETL Lineage Explorer */
-  :root{--bg:#0f1420;--panel:#171e2e;--line:#2a3550;--txt:#dfe6f2;--muted:#8a96b0;
-        --chip:#0d1322;--accent:#3a63c0;
-        --ok:#4fb477;--warn:#e0a13a;--bad:#e0673a;
-        --additive:#3aa0e0;--snapshot:#8a7bd8;--first:#4fb477;}
+  :root{--top:#1d2730;--teal:#2c8c84;--teal-d:#226f69;--teal-l:#5fc4bb;--bg:#eef1f3;--card:#fff;
+        --line:#d9dee2;--txt:#1f2a33;--muted:#6b7884;--ok:#1e8e4e;--bad:#c2410c;--warn:#b7791f;--sel:#e3f4f2}
   *{box-sizing:border-box}
-  body{margin:0;font:13px/1.45 system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--txt);height:100vh;display:flex;flex-direction:column}
-  header{padding:10px 14px;background:var(--panel);border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-  header b{font-size:14px;margin-right:6px}
-  header .sub{color:var(--muted);font-size:12px;margin-left:-4px}
-  select,input,button{background:var(--chip);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font:inherit}
-  select:focus,input:focus{outline:1px solid var(--accent)}
-  button{cursor:pointer}
-  button.primary{background:#274690;border-color:var(--accent)}
-  .seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
-  .seg button{border:0;border-radius:0;padding:6px 10px}
-  .seg button.on{background:#274690;border-color:var(--accent)}
-  label.f{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--muted)}
-  #status{color:var(--muted);font-size:12px;margin-left:auto}
-  #main{flex:1;display:flex;min-height:0}
-  #left{flex:1;min-width:0;display:flex;flex-direction:column}
-  #verdict{padding:0 14px}
-  .vbar{margin:10px 0 0;padding:9px 12px;border-radius:8px;border:1px solid var(--line);font-size:12.5px;display:none}
-  .vbar.show{display:block}
-  .vbar.ok{background:#12301f;border-color:#245c3a;color:#a6e6c0}
-  .vbar.warn{background:#332611;border-color:#5a4212;color:#ffd98a}
-  .vbar.bad{background:#33150f;border-color:#5c2418;color:#ffb4a0}
-  #sqlwrap{flex:1;margin:10px 14px 14px;border:1px solid var(--line);border-radius:8px;background:#0b101c;overflow:auto;position:relative}
-  #sqltools{position:sticky;top:0;display:flex;gap:8px;justify-content:flex-end;padding:8px;background:linear-gradient(#0b101cdd,#0b101c00)}
-  #sql{margin:0;padding:6px 14px 16px;font:12.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;white-space:pre;color:#cdd8ef}
-  #sql .c{color:#5f6b86}          /* comment */
-  #sql .ok{color:#79d19b}         /* ✓ consistency */
-  #sql .warn{color:#e7b45a}       /* ⚠ consistency */
-  #sql .kw{color:#7fa6ff}         /* keyword */
-  #sql .todo{color:#e58f7a}       /* TODO/CONFIRM */
-  #side{width:340px;border-left:1px solid var(--line);background:var(--panel);padding:12px;overflow:auto}
-  #side h3{margin:14px 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
-  #side h3:first-child{margin-top:0}
-  .kv{margin:3px 0}
-  code{background:var(--chip);padding:1px 5px;border-radius:4px;color:#b9c6e6;font-size:12px}
-  .badge{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11px;font-weight:600;color:#0d1322}
-  .badge.majority{background:var(--ok)} .badge.outlier{background:var(--warn)} .badge.noop{background:var(--bad)}
-  .badge.additive{background:var(--additive)} .badge.snapshot{background:var(--snapshot)} .badge.first{background:var(--first)}
-  .mrow{display:flex;justify-content:space-between;gap:8px;margin:3px 0;align-items:center}
-  .mrow code{font-size:11.5px}
-  .hint{color:var(--muted);font-size:12px;margin-top:8px}
-  .crit{background:var(--chip);border:1px solid var(--line);border-radius:6px;padding:6px 8px;margin:4px 0;font:12px ui-monospace,monospace;color:#b9c6e6;word-break:break-all}
-  .pill{display:inline-block;padding:1px 7px;border-radius:6px;border:1px solid var(--line);color:var(--muted);font-size:11px;margin:2px 4px 2px 0}
-  #timebox{margin-bottom:6px}
-  #tmode{margin-bottom:8px;flex-wrap:wrap}
-  #tmode button{padding:5px 8px;font-size:11px}
-  .tpanel{display:flex;flex-direction:column;gap:6px}
-  #tnote{margin-top:6px;color:var(--muted);font-size:11.5px}
-  #repobar{padding:7px 14px;background:#332611;border-bottom:1px solid #5a4212;color:#ffd98a;font-size:12.5px}
-  #repobar code{background:#0d1322;color:#ffe9b0}
-  #exec{border-top:1px solid var(--line);background:var(--panel);padding:10px 14px;max-height:40%;overflow:auto}
-  #exec .exhead{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  #exec b{font-size:12px}
-  #exec input{background:var(--chip)}
-  #exec button[disabled]{opacity:.5;cursor:not-allowed}
-  table.cmp{border-collapse:collapse;margin-top:8px;font-size:12.5px;min-width:60%}
-  table.cmp td,table.cmp th{border:1px solid var(--line);padding:4px 9px;text-align:left}
-  table.cmp th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
-  .m-ok{color:var(--ok);font-weight:600}.m-bad{color:var(--bad);font-weight:600}
-  .resbar{margin:8px 0;font-weight:600}
+  body{margin:0;font:13px/1.45 "Open Sans",system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--txt)}
+  button,input,select{font:inherit}
+  header{background:var(--top);color:#fff;display:flex;align-items:center;gap:14px;padding:8px 16px}
+  header b{font-size:15px;letter-spacing:.2px} header .sub{color:#9fb0bd;font-size:12px}
+  .pill{font-size:11px;padding:2px 9px;border-radius:10px;background:#3b4a56;color:#d7e1e8}
+  .pill.ok{background:#1e8e4e;color:#fff} .pill.bad{background:#c2410c;color:#fff}
+  header .sp{flex:1}
+  header a{color:#9fb0bd;font-size:12px}
+  /* scope bar — same shape as the Assortment UI "Select Scope" */
+  #scope{background:var(--teal);color:#fff;padding:8px 16px 12px}
+  #scope .title{font-size:12px;opacity:.9;margin-bottom:4px}
+  #scope .row{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap}
+  .sf{display:flex;flex-direction:column;gap:3px;min-width:200px;flex:1}
+  .sf label{font-size:12px;font-weight:600}
+  .sf .cap{font-size:11px;opacity:.85;text-align:center}
+  .field{background:var(--teal-l);border:0;border-radius:2px;color:#0f2b28;height:30px;padding:0 10px;
+         display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;width:100%}
+  .field.empty{color:#2f5d58}
+  .field .caret{opacity:.7}
+  #go{width:36px;height:30px;border-radius:3px;border:2px solid #fff;background:#fff;color:var(--teal);font-weight:700;cursor:pointer;flex:none}
+  #go:disabled{opacity:.5;cursor:default}
+  #scopetxt{font-size:12px;margin-top:6px;opacity:.95}
+  /* popovers */
+  .pop{position:absolute;z-index:50;background:#fff;color:var(--txt);border:1px solid var(--line);border-radius:4px;
+       box-shadow:0 10px 30px #0003;display:none}
+  .pop.show{display:block}
+  .combo{width:320px;max-height:360px;flex-direction:column}
+  .combo.show{display:flex}
+  .combo input{margin:8px;padding:6px 8px;border:1px solid var(--line);border-radius:3px}
+  .combo .list{overflow:auto}
+  .combo .it{padding:6px 12px;cursor:pointer} .combo .it:hover{background:var(--sel)}
+  .combo .it.on{background:var(--sel);font-weight:600}
+  .cal{width:340px;padding:10px 12px}
+  .cal .nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+  .cal .nav button{border:1px solid var(--line);background:#fff;border-radius:3px;padding:2px 10px;cursor:pointer}
+  .cal .mode{display:flex;gap:14px;font-size:12px;margin-bottom:6px}
+  .cal .months{display:flex;flex-direction:column;gap:4px}
+  .cal .m{display:flex;align-items:center;gap:6px}
+  .cal .m span{width:44px;color:var(--muted);font-size:12px}
+  .wk{border:1px solid var(--line);background:#fff;border-radius:3px;padding:2px 0;width:38px;cursor:pointer;font-size:12px}
+  .wk.in{background:#cdeeea;border-color:#9ad8d1} .wk.end{background:var(--teal);color:#fff;border-color:var(--teal)}
+  .cal .foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+  .cal .foot .btns{white-space:nowrap}
+  .cal .foot .btns button{margin-left:6px}
+  #cal_hint{font-size:11px}
+  .btn{border:1px solid var(--line);background:#fff;border-radius:3px;padding:5px 12px;cursor:pointer}
+  .btn.p{background:var(--teal);border-color:var(--teal);color:#fff}
+  .btn:disabled{opacity:.5;cursor:default}
+  .btn.sm{padding:3px 8px;font-size:12px}
+  .spin{display:inline-block;width:10px;height:10px;border:2px solid var(--line);border-top-color:var(--teal);border-radius:50%;animation:sp 1s linear infinite;vertical-align:-1px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  /* body */
+  main{display:grid;grid-template-columns:380px minmax(0,1fr);gap:14px;padding:14px 16px;align-items:start}
+  main>div{min-width:0}
+  @media (max-width:900px){main{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:12px 14px;margin-bottom:12px}
+  .card h3{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .card h3 .r{float:right;text-transform:none;letter-spacing:0;font-weight:400}
+  select.s,input.s{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:3px;background:#fff;margin-bottom:6px}
+  .lbl{font-size:11px;color:var(--muted);margin-top:2px}
+  .call{border:1px solid var(--line);border-radius:3px;padding:7px 9px;margin-bottom:6px;cursor:pointer}
+  .call.on{border-color:var(--teal);background:var(--sel)}
+  .call small{color:var(--muted)}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+  .chip{border:1px solid var(--line);border-radius:12px;padding:3px 11px;cursor:pointer;background:#fff;font-size:12px}
+  .chip.on{background:var(--teal);border-color:var(--teal);color:#fff}
+  .metric{display:grid;grid-template-columns:18px 1fr 110px;gap:6px;align-items:center;padding:4px 0;border-bottom:1px solid #f0f2f4}
+  .metric .nm small{color:var(--muted);display:block;font-family:ui-monospace,Menlo,monospace;font-size:11px}
+  .metric input[type=text]{width:100%;padding:3px 6px;border:1px solid var(--line);border-radius:3px;font-size:12px}
+  .tag{font-size:10px;padding:0 5px;border-radius:6px;background:#fdecc8;color:#7a4b00;margin-left:4px}
+  #run{width:100%;padding:9px;font-weight:700;font-size:14px}
+  .attr{display:grid;grid-template-columns:1fr 1fr 24px;gap:6px;margin-bottom:4px}
+  .attr button{border:0;background:none;color:var(--bad);cursor:pointer}
+  /* results */
+  .banner{padding:10px 14px;border-radius:4px;font-weight:600;margin-bottom:12px}
+  .banner.MATCH,.banner.OK{background:#e5f6ec;color:var(--ok);border:1px solid #b7e2c7}
+  .banner.MISMATCH,.banner.ERROR{background:#fdeee7;color:var(--bad);border:1px solid #f4c7b2}
+  .banner.COMPOSED{background:#eef3f8;color:#2a4a6b;border:1px solid #cddbe8}
+  .banner.run{background:#eef3f8;color:#2a4a6b;border:1px solid #cddbe8}
+  table.t{border-collapse:collapse;width:100%;font-size:12.5px}
+  table.t th,table.t td{border-bottom:1px solid #edf0f2;padding:6px 8px;text-align:right}
+  table.t th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em;background:#fafbfc;position:sticky;top:0}
+  table.t td:first-child,table.t th:first-child{text-align:left}
+  .ok{color:var(--ok);font-weight:700} .bad{color:var(--bad);font-weight:700}
+  .tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:8px}
+  .tabs button{border:0;background:none;padding:7px 12px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent}
+  .tabs button.on{color:var(--teal-d);border-bottom-color:var(--teal);font-weight:600}
+  pre.code{background:#0f1720;color:#cfe0ee;padding:12px;border-radius:4px;overflow:auto;max-height:480px;font:12px/1.5 ui-monospace,Menlo,monospace;margin:0}
+  .scroll{max-height:480px;overflow:auto}
+  .muted{color:var(--muted)} .warn{color:var(--warn)}
+  .sess{display:flex;flex-wrap:wrap;gap:6px}
+  .sess span{background:#f3f5f7;border:1px solid var(--line);border-radius:3px;padding:2px 7px;font-size:11.5px}
+  .empty-state{color:var(--muted);text-align:center;padding:40px 10px}
+  /* top tabs */
+  nav.top{display:flex;gap:2px;margin-left:18px}
+  nav.top button{background:none;border:0;color:#9fb0bd;padding:6px 12px;cursor:pointer;border-bottom:2px solid transparent;font-weight:600}
+  nav.top button.on{color:#fff;border-bottom-color:var(--teal-l)}
+  .view{display:none} .view.on{display:block}
+  /* spec editor */
+  .spec{display:grid;grid-template-columns:190px minmax(0,1fr) 420px;gap:14px;padding:14px 16px;align-items:start}
+  @media (max-width:1200px){.spec{grid-template-columns:170px minmax(0,1fr)} #drawer{grid-column:1/-1}}
+  .rail button{display:flex;justify-content:space-between;width:100%;border:0;background:none;padding:8px 10px;border-radius:3px;cursor:pointer;text-align:left;color:var(--txt)}
+  .rail button.on{background:var(--sel);font-weight:600;color:var(--teal-d)}
+  .rail .n{color:var(--muted);font-weight:400;font-size:12px}
+  .rail hr{border:0;border-top:1px solid var(--line);margin:8px 0}
+  .st{font-size:10.5px;padding:1px 7px;border-radius:8px;font-weight:600;white-space:nowrap}
+  .st.approved,.st.bound{background:#e5f6ec;color:var(--ok)} .st.draft{background:#fdecc8;color:#7a4b00}
+  .st.retired,.st.unbound{background:#fdeee7;color:var(--bad)} .st.n\/a{background:#eef1f3;color:var(--muted)}
+  table.e{border-collapse:collapse;width:100%;font-size:12.5px}
+  table.e th,table.e td{border-bottom:1px solid #edf0f2;padding:6px 8px;text-align:left;vertical-align:top}
+  table.e th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em;background:#fafbfc;position:sticky;top:0}
+  table.e tr.row{cursor:pointer} table.e tr.row:hover{background:#f6faf9} table.e tr.sel{background:var(--sel)}
+  table.e code,.code-i{font:11.5px ui-monospace,Menlo,monospace;color:#33475b}
+  .toolbar{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+  .toolbar input{flex:1;min-width:160px;padding:6px 8px;border:1px solid var(--line);border-radius:3px}
+  #drawer .fld{margin-bottom:9px}
+  #drawer label{display:block;font-size:11px;color:var(--muted);margin-bottom:2px;font-weight:600}
+  #drawer input,#drawer select,#drawer textarea{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:3px;background:#fff;font:inherit}
+  #drawer input.mono,#drawer textarea.mono{font:12px ui-monospace,Menlo,monospace}
+  #drawer .help{font-size:11px;color:var(--muted);margin-top:2px}
+  #drawer .reads{background:#f3f7f6;border:1px solid #d6e9e6;border-radius:3px;padding:7px 9px;font:12px ui-monospace,Menlo,monospace;color:#244}
+  #drawer .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+  .lintmsg{font-size:12px;margin:2px 0} .lintmsg.error{color:var(--bad)} .lintmsg.warn{color:var(--warn)}
+  .drift{color:var(--bad);font-size:11.5px}
 </style>
 </head>
 <body>
 <header>
-  <b>Data Validation Studio</b><span class="sub" id="clienttag"></span>
-  <label class="f">config source<select id="cfgsource" title="Repo = git base; QA = base + live OCI overlay"></select></label>
-  <button id="syncqa" title="Sync live QA config from OCI (git base + oci overlay)">⟳ Sync QA</button>
-  <span id="cfgstate" class="sub"></span>
-  <label class="f">app URL<input id="appurl" placeholder="paste an S5 screen URL → auto-selects" style="min-width:250px" title="Paste the browser URL (the #/… route) of an S5 screen to jump straight to it"/></label>
-  <label class="f">module<select id="module"></select></label>
-  <label class="f">screen<select id="screen"></select></label>
-  <label class="f">view<select id="view" style="min-width:220px"></select></label>
-  <label class="f">grain (aggBy)<select id="grain"></select></label>
-  <label class="f">criteria
-    <div class="seg" id="critseg"><button data-c="hist" class="on">HIST</button><button data-c="flow">FLOW</button></div>
-  </label>
-  <label class="f">metric labels
-    <div class="seg" id="lblseg"><button data-l="view" class="on">UI view</button><button data-l="raw">Raw cols</button></div>
-  </label>
-  <span class="sub">scope &amp; filters →</span>
-  <button class="primary" id="go">Compose ▸</button>
-  <span id="roauth" class="sub" title="Database account used for all queries"></span>
-  <span id="status"></span>
+  <b>Data Validation Studio</b><span class="sub" id="client"></span>
+  <span class="pill" id="db" title="Read-only QA database (via the gate on qa-processor)">DB …</span>
+  <nav class="top" id="toptabs"><button data-v="validate" class="on">Validate</button><button data-v="spec">Spec</button><button data-v="cov">Coverage</button><button data-v="sync">Sync with QA</button></nav>
+  <span class="sp"></span>
+  <span class="sub">you: <b id="me" style="font-size:12px"></b></span>
+  <a href="/static/legacy.html">legacy studio</a>
 </header>
-<div id="repobar" style="display:none"></div>
-<div id="main">
-  <div id="left">
-    <div id="verdict"><div class="vbar" id="vbar"></div></div>
-    <div id="sqlwrap">
-      <div id="sqltools"><button id="copy">Copy SQL</button></div>
-      <pre id="sql"><span class="c">-- Pick a screen → view, then Compose to generate a ClickHouse-correct,
--- consistency-annotated validation query you can run and cross-check vs the UI.</span></pre>
-    </div>
-    <div id="exec">
-      <div class="exhead">
-        <b>Execute &amp; compare</b>
-        <span id="chstate" class="hint"></span>
-        <input id="weeks" placeholder="weeks override (else uses Time picker)" style="width:230px" title="Optional: overrides the Time picker's resolved weeks"/>
-        <input id="expected" placeholder='expected UI JSON e.g. {&quot;choice_count&quot;:125}' style="flex:1;min-width:180px"/>
-        <button class="primary" id="run" disabled>Run &amp; compare ▸</button>
-      </div>
-      <div id="exresult"></div>
-    </div>
+
+<section id="scope">
+  <div class="title">Select Scope</div>
+  <div class="row">
+    <div class="sf"><label>Product</label><div class="field empty" id="f_product"><span>Select product</span><span class="caret">▾</span></div></div>
+    <div class="sf"><label>Location</label><div class="field empty" id="f_location"><span>Select location</span><span class="caret">▾</span></div></div>
+    <div class="sf"><label>Assortment Period</label><div class="field empty" id="f_asst"><span>📅  Select weeks</span><span class="caret">▾</span></div></div>
+    <div class="sf"><label>Hindsighting Period</label><div class="field empty" id="f_hist"><span>📅  Select weeks</span><span class="caret">▾</span></div></div>
+    <button id="go" title="Apply scope" disabled>➜</button>
   </div>
-  <div id="side">
-    <h3>Time <span id="tstate" class="hint" style="text-transform:none;letter-spacing:0"></span></h3>
-    <div id="timebox">
-      <div class="seg" id="tmode">
-        <button data-m="range" class="on">Range</button>
-        <button data-m="floorset">Floorset</button>
-        <button data-m="quarter">Quarter</button>
-        <button data-m="season">Season</button>
-        <button data-m="weeks">Weeks</button>
-      </div>
-      <div class="tpanel" data-m="range">
-        <label class="f">from week<select id="t_start"></select></label>
-        <label class="f">to week<select id="t_end"></select></label>
-      </div>
-      <div class="tpanel" data-m="floorset" style="display:none">
-        <label class="f">floorset<select id="t_floorset" multiple size="4"></select></label>
-        <label class="f">window<select id="t_window">
-          <option value="sales">sales (slsstart→slsend)</option>
-          <option value="receipt">receipt (rcptstart→rcptend)</option>
-          <option value="life">life (rcptstart→exit_week)</option></select></label>
-        <div class="hint">floorset is dept-specific — pick a Department below to disambiguate.</div>
-      </div>
-      <div class="tpanel" data-m="quarter" style="display:none">
-        <label class="f">quarter<select id="t_quarter" multiple size="4"></select></label>
-      </div>
-      <div class="tpanel" data-m="season" style="display:none">
-        <label class="f">season<select id="t_season" multiple size="4"></select></label>
-      </div>
-      <div class="tpanel" data-m="weeks" style="display:none">
-        <label class="f">weeks (comma)<input id="t_weeks" placeholder="2025_W26,2025_W27"/></label>
-      </div>
-      <div class="hint" id="tnote">resolves to the week set the query filters on</div>
+  <div id="scopetxt"></div>
+</section>
+
+<div class="pop combo" id="pop_combo"><input placeholder="Search…" id="combo_q"/><div class="list" id="combo_list"></div></div>
+<div class="pop cal" id="pop_cal">
+  <div class="nav"><button id="cal_prev">◀</button><b id="cal_year"></b><button id="cal_next">▶</button></div>
+  <div class="mode"><label><input type="radio" name="calmode" value="start" checked/> Start <span id="cal_s" class="muted"></span></label>
+    <label><input type="radio" name="calmode" value="end"/> End <span id="cal_e" class="muted"></span></label></div>
+  <div class="months" id="cal_months"></div>
+  <div class="foot"><span class="muted" id="cal_hint">Start, then end week</span>
+    <span class="btns"><button class="btn" id="cal_clear">Clear</button><button class="btn p" id="cal_ok">Apply</button></span></div>
+</div>
+
+<div class="view on" id="v_validate"><main>
+  <div>
+    <div class="card">
+      <h3>Screen <span class="r"><a href="#" id="pasteurl">paste a URL</a></span></h3>
+      <input class="s" id="url" placeholder="https://…/#/bottom-up/hindsighting/…" style="display:none"/>
+      <select class="s" id="top"></select>
+      <select class="s" id="left"></select>
+      <select class="s" id="view"></select>
+      <div class="lbl">Data on this screen</div>
+      <div id="calls" style="margin-top:4px"></div>
+      <div class="lbl" style="margin-top:6px">Rows by</div>
+      <div style="display:flex;gap:6px"><select class="s" id="grain"></select><select class="s" id="grain2" title="nested grids: second level"></select></div>
     </div>
-    <h3>Specific item <span class="hint" style="text-transform:none;letter-spacing:0">(validate one id — skips scope expansion)</span></h3>
-    <div id="itembox" style="display:flex;gap:6px;align-items:flex-end;margin-bottom:6px">
-      <label class="f" style="flex:1">id(s)<input id="f_item" placeholder="e.g. 12345.001 (comma for a few)"/></label>
-      <label class="f">column<select id="f_itemcol">
-        <option value="product">stylecolor</option>
-        <option value="location">store</option>
-        <option value="cluster">cluster</option>
-        <option value="prodlife">prodlife</option>
-      </select></label>
+
+    <div class="card">
+      <h3>Filters</h3>
+      <div class="lbl">Price Status</div><div class="chips" id="ps"></div>
+      <div class="lbl">Flow</div><div class="chips" id="flow"></div>
+      <div class="lbl">More filters <a href="#" id="addattr">+ add</a></div>
+      <div id="attrs"></div>
     </div>
-    <h3>Scope &amp; filters <span id="fstate" class="hint" style="text-transform:none;letter-spacing:0"></span></h3>
-    <div id="filters">
-      <label class="f">Department <span class="hint" style="text-transform:none">(product scope)</span><select id="f_dept" multiple size="3"></select></label>
-      <label class="f">Channel <span class="hint" style="text-transform:none">(location scope)</span><select id="f_loc" multiple size="3"></select></label>
-      <label class="f">Cluster (grade)<select id="f_grade" multiple size="3"></select></label>
-      <label class="f">Product lifecycle <span class="hint" style="text-transform:none">(prodlife)</span><select id="f_prodlife" multiple size="3"></select></label>
-      <label class="f">Flow status<select id="f_flow"><option value="">(all)</option></select></label>
-      <div class="hint" id="fhint"></div>
+
+    <div class="card">
+      <h3>Metrics <span class="r"><a href="#" id="m_all">all</a> · <a href="#" id="m_none">none</a></span></h3>
+      <input class="s" id="mq" placeholder="Search metrics…"/>
+      <div class="metric" style="border:0;padding-top:0"><span></span><span class="lbl">metric</span><span class="lbl">UI value (optional)</span></div>
+      <div id="metrics" class="scroll" style="max-height:340px"></div>
     </div>
-    <h3>Pivot contract</h3>
-    <div id="contract"><div class="hint">Select a view to see its pivot, base table, grain, per-metric aggregation, and consistency verdict.</div></div>
+    <div class="lbl">Engine</div>
+    <select class="s" id="engine" title="Spec = our own approved rules and formulas (independent of the pivot). Replay = re-run the pivot's own SQL (diagnostic).">
+      <option value="spec">Spec — our rules &amp; formulas (independent)</option><option value="replay">Replay — the pivot's own logic (diagnostic)</option></select>
+    <div style="display:flex;gap:6px"><button class="btn p" id="run" disabled style="flex:1">Validate ▸</button>
+      <button class="btn" id="sqlonly" disabled title="Compose the SQL without running it (works offline)">SQL only</button></div>
+    <div class="lbl" id="runhint" style="text-align:center;margin-top:6px">Apply a scope and pick a screen</div>
+  </div>
+
+  <div id="out">
+    <div class="card empty-state">Pick a scope (like the S5 app), a screen and its metrics, then <b>Validate</b>.<br/>
+      The DB numbers come from the same pivot logic the screen runs, on QA ClickHouse.</div>
+  </div>
+</main></div>
+
+<div class="view" id="v_spec">
+  <div class="spec">
+    <div class="card rail" id="rail"></div>
+    <div class="card" style="min-width:0">
+      <div class="toolbar"><b id="sp_title" style="font-size:14px"></b><input id="sp_q" placeholder="Search id, label, formula…"/>
+        <select id="sp_st" class="btn"><option value="">all statuses</option><option>approved</option><option>draft</option><option>retired</option></select>
+        <button class="btn p" id="sp_new">+ New</button></div>
+      <div class="scroll" style="max-height:calc(100vh - 290px)" id="sp_table"></div>
+      <div id="sp_lint" style="margin-top:8px"></div>
+    </div>
+    <div class="card" id="drawer"><div class="muted">Select a row to view or edit it, or press <b>+ New</b>.</div></div>
   </div>
 </div>
+<div class="view" id="v_sync">
+  <main style="grid-template-columns:minmax(0,1fr)">
+    <div>
+      <div class="card"><h3>Keep the catalog aligned with QA <span class="r muted" id="sy_cfg"></span></h3>
+        <div class="muted" style="margin-bottom:10px">Run both before testing. Nothing here changes an existing catalog row: QA changes are listed for you to accept.</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn" id="sy_db">Sync with QA DB</button>
+          <button class="btn" id="sy_met">Pull metrics from QA</button>
+          <label class="muted" style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="sy_refresh"> refresh QA config from OCI first (~6 min)</label>
+        </div>
+        <div id="sy_job" class="muted" style="margin-top:10px"></div>
+      </div>
+      <div class="card" id="sy_dbout" style="display:none"></div>
+      <div class="card" id="sy_metout" style="display:none"></div>
+      <div class="card"><h3>Previous runs</h3><div id="sy_runs" class="muted"></div></div>
+    </div>
+  </main>
+</div>
+<div class="view" id="v_cov">
+  <main style="grid-template-columns:minmax(0,1fr)">
+    <div>
+      <div class="card"><h3>Screen coverage <span class="r" id="cov_where"></span></h3>
+        <div class="muted" style="margin-bottom:8px">Each column of the selected screen section: the spec metric that validates it, the spec formula, and what the pivot does today (as-built). <b>Drift</b> = the pivot reads different base columns or the screen's rollup formula changed. Pick the screen on the Validate tab.</div>
+        <div class="scroll" style="max-height:calc(100vh - 300px)" id="cov_table"></div></div>
+    </div>
+  </main>
+</div>
 <script>
-const $=(id)=>document.getElementById(id);
-const api=(p)=>fetch(p).then(r=>{if(!r.ok)return r.json().then(e=>Promise.reject(e.detail||r.statusText));return r.json();});
-let S={module:null,screen:null,view:null,pivot:null,grain:'stylecolor',criteria:'hist',
-       tmode:'range',weeks:[],metrics:null,allMetrics:[],labels:'view'};
+const $=id=>document.getElementById(id);
+const api=(p,opt)=>fetch(p,opt).then(async r=>{const j=await r.json().catch(()=>({}));if(!r.ok)throw (j.detail||r.statusText);return j;});
+const esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const store={get(k){try{return JSON.parse(localStorage.getItem('dvs.'+k))}catch(e){return null}},set(k,v){try{localStorage.setItem('dvs.'+k,JSON.stringify(v))}catch(e){}}};
 
-async function init(){
-  let cfg;
-  try{ cfg=await api('/api/config'); }
-  catch(e){ $('status').textContent='⚠ '+e; return; }
-  $('clienttag').textContent=cfg.client;
-  $('grain').innerHTML=cfg.grains.map(g=>`<option ${g==='stylecolor'?'selected':''}>${g}</option>`).join('');
-  if(!cfg.catalog_present) $('status').innerHTML='⚠ catalog.db missing — run build_catalog.py locally';
-  // execute panel availability
-  if(cfg.ch_available){ $('run').disabled=false; $('chstate').textContent='ClickHouse connected'; }
-  else { $('chstate').textContent='set CH_DSN on the server to enable execution'; }
-  $('run').onclick=runExec;
-  await reloadModules();
-  $('module').onchange=async e=>{S.module=e.target.value;await loadScreens();};
-  $('screen').onchange=async e=>{S.screen=e.target.value;await loadViews();};
-  $('view').onchange=e=>{pickView(e.target.value);};
-  $('grain').onchange=e=>{S.grain=e.target.value;if(S.pivot)doCompose();};
-  $('critseg').querySelectorAll('button').forEach(b=>b.onclick=()=>{
-    S.criteria=b.dataset.c;$('critseg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
-    if(S.pivot)doCompose();});
-  $('lblseg').querySelectorAll('button').forEach(b=>b.onclick=()=>{
-    S.labels=b.dataset.l;$('lblseg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
-    if(S.pivot)doCompose();});
-  $('go').onclick=()=>{if(S.pivot)doCompose();};
-  $('copy').onclick=()=>{navigator.clipboard.writeText($('sql').textContent);
-    $('copy').textContent='Copied ✓';setTimeout(()=>$('copy').textContent='Copy SQL',1200);};
-  loadFilters();
-  loadWhoami();
-  loadSources();
-  loadRepoFreshness();
-  $('cfgsource').onchange=e=>setSource(e.target.value);
-  $('syncqa').onclick=syncQA;
-  const resolveNow=()=>resolveAppUrl();
-  $('appurl').addEventListener('keydown',e=>{if(e.key==='Enter')resolveNow();});
-  $('appurl').addEventListener('paste',()=>setTimeout(resolveNow,50));
+const S={product:null,location:null,asst:null,hist:null,applied:false,top:null,left:null,view:null,
+         calls:[],call:null,metrics:[],sel:{},ui:{},ps:new Set(),flow:new Set([0,1,2]),attrs:[]};
+let META=null, WEEKS=[], DEPTS=[], CHANS=[];
+
+// ---------- popovers
+function place(pop,anchor){const r=anchor.getBoundingClientRect();pop.style.left=Math.max(8,Math.min(r.left+scrollX,innerWidth-pop.offsetWidth-8))+'px';pop.style.top=(r.bottom+scrollY+4)+'px';}
+function closePops(){document.querySelectorAll('.pop').forEach(p=>p.classList.remove('show'));}
+document.addEventListener('mousedown',e=>{if(!e.target.closest('.pop')&&!e.target.closest('.field'))closePops();});
+
+function combo(anchor,items,cur,onPick){
+  const pop=$('pop_combo');closePops();pop.classList.add('show');place(pop,anchor);
+  const draw=q=>{$('combo_list').innerHTML=items.filter(i=>!q||(i.name+' '+i.id).toLowerCase().includes(q.toLowerCase()))
+     .map(i=>`<div class="it ${cur&&cur.id===i.id?'on':''}" data-id="${esc(i.id)}">${esc(i.name)}</div>`).join('')||'<div class="it muted">no match</div>';
+    $('combo_list').querySelectorAll('.it[data-id]').forEach(el=>el.onclick=()=>{onPick(items.find(i=>i.id===el.dataset.id));closePops();});};
+  $('combo_q').value='';$('combo_q').oninput=e=>draw(e.target.value);draw('');setTimeout(()=>$('combo_q').focus(),0);
 }
-// Paste an app URL → resolve to module/screen/view via the confdefn pathSlots,
-// then auto-select those dropdowns (which composes the query).
-async function resolveAppUrl(){
-  const url=$('appurl').value.trim(); if(!url) return;
-  $('status').textContent='resolving URL…';
-  let r; try{ r=await api('/api/resolve-url?url='+encodeURIComponent(url)); }
-  catch(e){ $('status').textContent='⚠ '+e; return; }
-  const cm=r.catalog_match;
-  if(!cm){
-    $('status').textContent=`⚠ URL → model ${r.model||'?'} / pivot ${r.pivot||'?'}`
-      +(r.warnings&&r.warnings.length?` — ${r.warnings.join('; ')}`:' — no catalog match');
-    return;
-  }
-  const has=(id,val)=>[...$(id).options].some(o=>o.value===val);
-  if(has('module',cm.module)){ S.module=cm.module; $('module').value=cm.module; }
-  await loadScreens();
-  if(has('screen',cm.screen)){ S.screen=cm.screen; $('screen').value=cm.screen; }
-  await loadViews();
-  let idx=VIEWS.findIndex(v=>v.view===cm.view);
-  if(idx<0) idx=VIEWS.findIndex(v=>v.pivot===cm.pivot);
-  if(idx>=0){ $('view').value=String(idx); pickView(String(idx)); }
-  const extra=(r.candidates&&r.candidates.length>1)?`  (+${r.candidates.length-1} more view(s) on this model)`:'';
-  $('status').textContent=`from URL → ${cm.module} / ${cm.screen} / ${cm.view||cm.pivot}`+extra;
+
+// ---------- week range picker (fiscal months from the week names, e.g. "2025 Aug W1")
+const wkYear=w=>+w.id.slice(0,4), wkMonth=w=>(w.name.split(' ')[1]||'');
+function cal(anchor,range,onApply){
+  const pop=$('pop_cal');closePops();pop.classList.add('show');place(pop,anchor);
+  let s=range?range.start:null,e=range?range.end:null;
+  const years=[...new Set(WEEKS.map(wkYear))];
+  const thisYear=new Date().getFullYear();
+  let y=s?wkYear(WEEKS.find(w=>w.id===s)||{id:String(thisYear)}):(years.includes(thisYear)?thisYear:years.at(-1));
+  const mode=()=>document.querySelector('input[name=calmode]:checked').value;
+  const setMode=m=>document.querySelector(`input[name=calmode][value=${m}]`).checked=true;
+  setMode('start');
+  const draw=()=>{
+    $('cal_year').textContent='FY '+y;$('cal_s').textContent=s||'';$('cal_e').textContent=e||'';
+    const months=[];WEEKS.filter(w=>wkYear(w)===y).forEach(w=>{const m=wkMonth(w);let g=months.find(x=>x.m===m);if(!g){g={m,ws:[]};months.push(g);}g.ws.push(w);});
+    $('cal_months').innerHTML=months.map(g=>`<div class="m"><span>${esc(g.m)}</span>${g.ws.map(w=>{
+      const inr=s&&e&&w.id>=s&&w.id<=e, end=w.id===s||w.id===e;
+      return `<button class="wk ${end?'end':inr?'in':''}" data-id="${w.id}" title="${esc(w.name)} · ${w.id}">W${+w.id.split('_W')[1]}</button>`}).join('')}</div>`).join('');
+    $('cal_months').querySelectorAll('.wk').forEach(b=>b.onclick=()=>{const id=b.dataset.id;
+      if(mode()==='start'){s=id;if(e&&e<s)e=null;setMode('end');}else{if(!s||id<s){s=id;}else e=id;}draw();});
+  };
+  $('cal_prev').onclick=()=>{if(years.includes(y-1)){y--;draw();}};
+  $('cal_next').onclick=()=>{if(years.includes(y+1)){y++;draw();}};
+  $('cal_clear').onclick=()=>{s=e=null;setMode('start');draw();};
+  $('cal_ok').onclick=()=>{if(s){onApply({start:s,end:e||s});closePops();}};
+  draw();
 }
-// Show WHICH DB account the composer queries through, and whether it is
-// read-only — so it is explicit every query runs via the read-only account.
-// Nudge UI-only users to sync the tool repo before working, same as the ticket workflow.
-async function loadRepoFreshness(){
-  let r; try{ r=await api('/api/repo-freshness?fetch=true'); }catch(e){ return; }
-  const bar=$('repobar');
-  const msgs=[];
-  if(r.behind) msgs.push(`⚠ support-copilot is <b>${r.behind}</b> commit(s) behind <code>${r.upstream||'origin'}</code> — sync before working: <code>git pull --rebase</code>`+(r.changed_areas&&r.changed_areas.length?`  (updates in: ${r.changed_areas.join(', ')})`:''));
-  if(r.dirty_files) msgs.push(`${r.dirty_files} uncommitted local change(s) — commit/stash before pulling.`);
-  if(msgs.length){ bar.innerHTML=msgs.join(' &nbsp;·&nbsp; '); bar.style.display='block'; }
-  else { bar.style.display='none'; }
+
+function setField(id,text){const f=$(id);f.classList.toggle('empty',!text);f.firstElementChild.textContent=text||f.dataset.ph;}
+function rangeTxt(r){return r?`${r.start} to ${r.end}`:'';}
+function lyRange(r){ // same fiscal weeks one year back (what the app pre-fills)
+  const back=id=>`${+id.slice(0,4)-1}${id.slice(4)}`, ok=id=>WEEKS.some(w=>w.id===id);
+  const a=back(r.start),b=back(r.end);return ok(a)&&ok(b)?{start:a,end:b}:null;}
+function scopeChanged(){
+  S.applied=false;$('go').disabled=!(S.product&&S.location&&(S.hist||S.asst));
+  $('scopetxt').textContent='';refreshRun();
 }
-async function loadWhoami(){
-  const el=$('roauth');
-  try{
-    const w=await api('/api/whoami');
-    const accts=w.accounts||{};
-    const parts=Object.entries(accts).map(([eng,a])=>{
-      if(a.error) return `${eng}: ⚠ ${a.error}`;
-      const ro=a.read_only===true?'read-only ✓':(a.read_only===false?'⚠ WRITABLE':'read-only?');
-      return `${eng}: ${a.user||'?'} · ${ro}`;
-    });
-    el.textContent='🔒 '+parts.join('   ');
-    const anyWritable=Object.values(accts).some(a=>a.read_only===false);
-    el.style.color=anyWritable?'var(--bad)':'var(--ok)';
-    el.title='DB accounts used for all queries (details, scope expansion, execution)';
-  }catch(e){ el.textContent='🔒 db account: unverified'; el.style.color='var(--muted)'; }
-}
-async function reloadModules(){
-  const mods=await api('/api/modules');
-  $('module').innerHTML=mods.map(m=>`<option value="${m.module}">${m.module} (${m.views})</option>`).join('');
-  S.module=(mods.find(m=>m.module==='Hindsighting')||mods[0]||{}).module;
-  if(S.module){ $('module').value=S.module; await loadScreens(); }
-}
-function agestr(s){ if(s==null)return 'never'; if(s<90)return 'just now';
-  if(s<3600)return Math.round(s/60)+'m ago'; if(s<86400)return Math.round(s/3600)+'h ago';
-  return Math.round(s/86400)+'d ago'; }
-async function loadSources(){
-  let st; try{ st=await api('/api/config-sources'); }catch(e){ $('cfgstate').textContent=''; return; }
-  const opt=st.sources.map(s=>{
-    const label = s.source==='repo' ? 'Repo (git base)'
-      : `QA live${s.present?'':' — not synced'}`;
-    return s.source==='repo'||s.source==='qa' ? `<option value="${s.source}" ${s.source===st.active?'selected':''}>${label}</option>` : '';
-  }).join('');
-  $('cfgsource').innerHTML=opt;
-  const qa=st.sources.find(s=>s.source==='qa')||{};
-  $('cfgstate').textContent = st.active==='qa'
-    ? `QA synced ${agestr(qa.age_seconds)}${qa.fingerprint?' · '+qa.fingerprint.slice(0,6):''}`
-    : (qa.present?`QA available (synced ${agestr(qa.age_seconds)})`:'QA not synced yet');
-}
-async function setSource(source){
-  $('status').textContent=`switching to ${source}…`;
-  try{ await fetch('/api/config-source?source='+encodeURIComponent(source),{method:'POST'})
-        .then(r=>{if(!r.ok)return r.json().then(e=>Promise.reject(e.detail||r.statusText));}); }
-  catch(e){ $('status').textContent='⚠ '+e; loadSources(); return; }
-  await reloadModules(); loadSources();
-  $('status').textContent=`config source → ${source}`;
-}
-async function syncQA(){
-  if(!confirm('Sync live QA config from OCI?\nRuns git + oci on this machine (needs creds + VPN). May take a minute.')) return;
-  $('syncqa').disabled=true; $('cfgstate').textContent='syncing QA (git + oci)…';
-  let r; try{ r=await fetch('/api/sync-config?env=qa',{method:'POST'}).then(x=>x.json()); }
-  catch(e){ $('cfgstate').textContent='⚠ sync failed'; $('syncqa').disabled=false; return; }
-  $('syncqa').disabled=false;
-  if(r&&r.ok){ $('cfgstate').textContent=`QA synced: ${r.effective?r.effective.files+' files':''}${r.catalog_built?' · catalog built':''}`; }
-  else { $('cfgstate').textContent='⚠ sync failed — '+((r&&r.hint)||'see server log'); }
-  loadSources();
-}
+
+// ---------- screens
 async function loadScreens(){
-  const s=await api(`/api/screens?module=${encodeURIComponent(S.module)}`);
-  $('screen').innerHTML=s.map(x=>`<option>${x}</option>`).join('');
-  S.screen=s[0];await loadViews();
+  const tree=await api('/api/v2/screens');S.tree=tree;
+  $('top').innerHTML=Object.keys(tree).map(t=>`<option>${esc(t)}</option>`).join('');
+  $('top').onchange=()=>{S.top=$('top').value;fillLeft();};
+  $('left').onchange=()=>{S.left=$('left').value;fillView();};
+  $('view').onchange=()=>{S.view=$('view').value;loadCalls();};
+  const last=store.get('screen');
+  if(last&&tree[last.top]){$('top').value=last.top;}
+  S.top=$('top').value;fillLeft(last);
 }
-let VIEWS=[];
-async function loadViews(){
-  VIEWS=await api(`/api/views?module=${encodeURIComponent(S.module)}&screen=${encodeURIComponent(S.screen)}`);
-  const vmark=(v)=>v.verdict==='noop'?' ⚠':v.verdict==='outlier'?' ⚠':'';
-  $('view').innerHTML=VIEWS.map((v,i)=>`<option value="${i}">${v.view}${vmark(v)}${v.pivot?'':'  (no pivot)'}</option>`).join('');
-  if(VIEWS.length) pickView('0');
+function fillLeft(last){const ls=Object.keys(S.tree[S.top]||{});$('left').innerHTML=ls.map(l=>`<option>${esc(l)}</option>`).join('');
+  if(last&&ls.includes(last.left))$('left').value=last.left; S.left=$('left').value;fillView(last);}
+function fillView(last){const vs=(S.tree[S.top]||{})[S.left]||[];$('view').innerHTML=vs.map(v=>`<option>${esc(v)}</option>`).join('');
+  if(last&&vs.includes(last.view))$('view').value=last.view; S.view=$('view').value;loadCalls();}
+async function loadCalls(){
+  store.set('screen',{top:S.top,left:S.left,view:S.view});
+  S.calls=await api(`/api/v2/screen?top=${encodeURIComponent(S.top)}&left=${encodeURIComponent(S.left)}&view=${encodeURIComponent(S.view)}`);
+  $('calls').innerHTML=S.calls.map((c,i)=>`<div class="call" data-i="${i}"><b>${esc(c.viewdefns[0].replace(/([a-z])([A-Z])/g,'$1 $2'))}</b><br/><small>pivot ${esc(c.pivot)} · ${c.metrics.length} metrics</small></div>`).join('')||'<div class="muted">no data calls on this screen</div>';
+  $('calls').querySelectorAll('.call').forEach(el=>el.onclick=()=>pickCall(+el.dataset.i));
+  if(S.calls.length)pickCall(0);else{S.call=null;drawMetrics();}
 }
-function pickView(i){
-  const v=VIEWS[+i]; if(!v)return;
-  S.view=v.view; S.pivot=v.pivot;
-  if(!v.pivot){$('contract').innerHTML=`<div class="hint">This view has no bound pivot (presentation-only). Nothing to validate directly.</div>`;
-    $('sql').textContent='';return;}
-  loadContract(); doCompose();
+function pickCall(i){
+  S.call=S.calls[i];$('calls').querySelectorAll('.call').forEach(el=>el.classList.toggle('on',+el.dataset.i===i));
+  S.sel={};S.call.metrics.forEach((m,k)=>S.sel[k]=m.status==='resolved');S.ui={};
+  // nested pivots (Nested Attribute / Cat Recap) aggregate by department first
+  const nested=/Nested|CatRecap|_for_/i.test(S.call.pivot);
+  $('grain').value=nested?'department':'stylecolor';$('grain2').value='';
+  S.cov={};
+  api(`/api/v2/spec/coverage?pivot=${encodeURIComponent(S.call.pivot)}&viewdefn=${encodeURIComponent(S.call.viewdefns[0])}`)
+    .then(rows=>{rows.forEach(r=>S.cov[r.data_index]=r);drawMetrics();window.covChanged&&covChanged();}).catch(()=>{});
+  drawMetrics();
 }
-async function loadContract(){
-  let p; try{ p=await api(`/api/pivot?pivot=${encodeURIComponent(S.pivot)}`);}catch(e){$('contract').innerHTML='⚠ '+e;return;}
-  const co=p.consistency||{};
-  const vclass=co.verdict||'';
-  const aggs=p.metric_aggs||{};
-  const metricKeys=Object.keys(aggs).sort();
-  S.allMetrics=metricKeys; S.metrics=new Set(metricKeys);   // default: all selected
-  const mrows=metricKeys.map(m=>`<label class="mrow" style="cursor:pointer"><span><input type="checkbox" class="mchk" value="${m}" checked style="vertical-align:-2px;margin-right:6px"><code>${m}</code></span><span class="badge ${aggs[m].family}">${aggs[m].family}</span></label>`).join('')||'<div class="hint">—</div>';
-  const grain=(p.grain||[]).map(g=>`<span class="pill">${g}</span>`).join('')||'—';
-  $('contract').innerHTML=`
-    <div class="kv"><b>${p.pivot}</b> ${co.verdict?`<span class="badge ${vclass}">${co.verdict}</span>`:''}</div>
-    <div class="kv">base view: <code>${p.base||'(derived / nested)'}</code></div>
-    <h3>Grain (bottomLevels)</h3><div>${grain}</div>
-    <h3>Metrics <span class="hint" style="text-transform:none;letter-spacing:0">— compose only these · <a href="#" id="m_all">all</a> / <a href="#" id="m_none">none</a></span></h3>${mrows}
-    <h3>Selection criteria</h3>
-    <div class="crit">HIST: ${p.hist||'—'}${p.hist_noop?'  ⚠ NO-OP':''}</div>
-    <div class="crit">FLOW: ${p.flow||'—'}${p.flow_noop?'  ⚠ NO-OP':''}</div>
-    ${co.verdict==='outlier'?`<div class="hint">Majority on ${co.base}: <code>${co.majority_hist}</code></div>`:''}
-    ${p.siblings&&p.siblings.length?`<h3>Reconcile against (same base)</h3><div>${p.siblings.map(s=>`<span class="pill">${s}</span>`).join('')}</div>`:''}
-  `;
-  // metric picker — recompose with only the checked metrics
-  document.querySelectorAll('.mchk').forEach(cb=>cb.addEventListener('change',()=>{
-    cb.checked?S.metrics.add(cb.value):S.metrics.delete(cb.value);
-    if(S.pivot)doCompose();
-  }));
-  const setAll=(on)=>{document.querySelectorAll('.mchk').forEach(cb=>cb.checked=on);
-    S.metrics=on?new Set(S.allMetrics):new Set(); if(S.pivot)doCompose();};
-  if($('m_all')) $('m_all').onclick=e=>{e.preventDefault();setAll(true);};
-  if($('m_none')) $('m_none').onclick=e=>{e.preventDefault();setAll(false);};
-  // verdict bar
-  const vb=$('vbar');
-  if(co.verdict==='majority'){vb.className='vbar show ok';vb.innerHTML=`✓ Consistent — criteria matches the majority (${co.n_siblings} pivots) on <code>${co.base}</code>.`;}
-  else if(co.verdict==='outlier'){vb.className='vbar show warn';vb.innerHTML=`⚠ Outlier — this pivot's criteria differs from its ${co.n_siblings} base-mates on <code>${co.base}</code>. Counts may not reconcile across views (SUP-4486 class).`;}
-  else if(co.verdict==='noop'){vb.className='vbar show bad';vb.innerHTML=`⚠ No-op criteria — filtering is effectively disabled for this view. Rows are unfiltered.`;}
-  else{vb.className='vbar';}
+
+// ---------- metrics
+function specTag(m){const c=(S.cov||{})[m.data_index];if(!c)return '';
+  if(c.status==='n/a')return ' <span class="st n/a" title="display attribute, not a metric">attr</span>';
+  if(!c.metric_id)return ' <span class="st unbound" title="no spec metric yet — add it in Spec or Coverage">no spec</span>';
+  return ` <span class="st ${esc(c.metric_status)}" title="spec ${esc(c.metric_id)} v${esc(c.metric_version)}: ${esc(c.spec_formula)}">spec v${esc(c.metric_version)}</span>`+(c.drift?` <span class="st retired" title="${esc(c.drift)}">drift</span>`:'');}
+function drawMetrics(){
+  const q=($('mq').value||'').toLowerCase();
+  const ms=S.call?S.call.metrics:[];
+  $('metrics').innerHTML=ms.map((m,k)=>({m,k})).filter(({m})=>!q||m.label.toLowerCase().includes(q)||m.data_index.toLowerCase().includes(q))
+   .map(({m,k})=>`<div class="metric"><input type="checkbox" data-k="${k}" ${S.sel[k]?'checked':''} ${m.status==='resolved'||m.status==='partial'?'':'disabled'}/>
+     <span class="nm">${esc(m.label)}${specTag(m)}${m.variants&&m.variants!=='1 of 1'&&!m.variants.includes('majority')?`<span class="tag" title="this display name has other formulas on other screens">${esc(m.variants)}</span>`:''}
+       <small>${esc(m.data_index)}${m.view_formula?' · '+esc(m.view_formula):''}${m.status!=='resolved'?' · '+esc(m.status):''}</small></span>
+     <input type="text" data-u="${k}" value="${esc(S.ui[k]||'')}" placeholder="e.g. $4.95M"/></div>`).join('')||'<div class="muted">pick a screen</div>';
+  $('metrics').querySelectorAll('input[type=checkbox]').forEach(c=>c.onchange=()=>{S.sel[c.dataset.k]=c.checked;refreshRun();});
+  $('metrics').querySelectorAll('input[data-u]').forEach(c=>c.oninput=()=>{S.ui[c.dataset.u]=c.value;});
+  refreshRun();
 }
-function sel2csv(id){return Array.from($(id).selectedOptions||[]).map(o=>o.value).join(',');}
-// --- Time picker: build the timeKind/timeValues params for the active mode ---
-function timeParams(p){
-  const m=S.tmode;
-  if(m==='range'){
-    const s=$('t_start').value, e=$('t_end').value;
-    if(s&&e){ p.set('timeKind','range'); p.set('timeValues',`${s},${e}`); }
-  }else if(m==='floorset'){
-    const fs=sel2csv('t_floorset');
-    if(fs){ p.set('timeKind','floorset'); p.set('timeValues',fs);
-      p.set('timeWindow',$('t_window').value);
-      const d=sel2csv('f_dept').split(',')[0]; if(d) p.set('timeDept',d); }
-  }else if(m==='quarter'){
-    const q=sel2csv('t_quarter'); if(q){ p.set('timeKind','quarter'); p.set('timeValues',q); }
-  }else if(m==='season'){
-    const s=sel2csv('t_season'); if(s){ p.set('timeKind','season'); p.set('timeValues',s); }
-  }else if(m==='weeks'){
-    const w=$('t_weeks').value.trim(); if(w){ p.set('timeKind','weeks'); p.set('timeValues',w); }
-  }
+function refreshRun(){
+  const n=Object.values(S.sel).filter(Boolean).length;
+  const ready=S.applied&&S.call&&n>0;
+  $('run').disabled=!ready;$('sqlonly').disabled=!ready;
+  $('runhint').textContent=!S.applied?'Apply a scope (➜) first':!S.call?'Pick a screen':n?`${n} metric(s) on ${S.call.pivot}`:'Select at least one metric';
 }
-function scopeQS(){
-  const p=new URLSearchParams();
-  timeParams(p);
-  const d=sel2csv('f_dept'); if(d) p.set('department',d);
-  const l=sel2csv('f_loc'); if(l) p.set('channel',l);
-  const g=sel2csv('f_grade'); if(g) p.set('cluster',g);
-  const pl=sel2csv('f_prodlife'); if(pl) p.set('prodlife',pl);
-  const fl=$('f_flow').value; if(fl) p.set('flowStatus',fl);
-  const item=$('f_item').value.trim(); if(item){ p.set('items',item); p.set('itemCol',$('f_itemcol').value); }
-  // metrics: send only when a strict subset is chosen (else compose defaults to all)
-  if(S.metrics&&S.allMetrics&&S.metrics.size>0&&S.metrics.size<S.allMetrics.length)
-    p.set('metrics',[...S.metrics].join(','));
-  return p.toString();
+
+// ---------- filters
+function chips(el,items,set,onChange){
+  el.innerHTML=items.map(i=>`<span class="chip ${set.has(i.id)?'on':''}" data-id="${esc(i.id)}">${esc(i.name)}</span>`).join('');
+  el.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{const id=isNaN(+c.dataset.id)?c.dataset.id:+c.dataset.id;
+    set.has(id)?set.delete(id):set.add(id);c.classList.toggle('on');onChange&&onChange();});
 }
-async function loadFilters(){
-  // scope/attribute filters + time member lists — all live from the read-only DB
-  const map={f_flow:'flow_status', f_dept:'department', f_loc:'channel', f_grade:'grade',
-             f_prodlife:'prodlife', t_floorset:'floorset', t_quarter:'quarter', t_season:'season'};
-  let failed=[];
-  for(const [el,kind] of Object.entries(map)){
-    try{
-      const rows=await api(`/api/members/${kind}`);
-      const opts=rows.map(r=>`<option value="${r.id}">${r.name||r.id}</option>`).join('');
-      if(el==='f_flow') $('f_flow').innerHTML='<option value="">(all)</option>'+opts;
-      else $(el).innerHTML=opts;
-    }catch(e){ failed.push(kind); }
-  }
-  // weeks feed the Range start/end selects (and are the fallback source of truth)
-  try{
-    const wk=await api('/api/members/week');
-    // no auto-pick: the week list runs into future planning weeks, so a default
-    // would silently select an empty future window. Force a deliberate pick.
-    const blank='<option value="">— pick week —</option>';
-    const opts=wk.map(r=>`<option value="${r.id}">${r.id}</option>`).join('');
-    $('t_start').innerHTML=blank+opts; $('t_end').innerHTML=blank+opts;
-  }catch(e){ failed.push('week'); }
-  $('fhint').innerHTML = failed.length
-    ? `⚠ couldn't load: ${[...new Set(failed)].join(', ')} — on VPN & DB reachable?`
-    : 'members loaded live from the read-only DB';
-  // recompose on any change
-  ['f_dept','f_loc','f_grade','f_prodlife','f_flow','f_itemcol',
-   't_start','t_end','t_floorset','t_window','t_quarter','t_season'].forEach(id=>{
-    if($(id)) $(id).addEventListener('change',()=>{if(S.pivot)doCompose();});
-  });
-  ['t_weeks','f_item'].forEach(id=>{ if($(id)) $(id).addEventListener('input',()=>{if(S.pivot)doCompose();}); });
-  // time-mode segment
-  $('tmode').querySelectorAll('button').forEach(b=>b.onclick=()=>{
-    S.tmode=b.dataset.m;
-    $('tmode').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
-    document.querySelectorAll('.tpanel').forEach(p=>p.style.display=(p.dataset.m===S.tmode)?'flex':'none');
-    if(S.pivot)doCompose();
-  });
+function drawAttrs(){
+  const opts=[...META.attribute_filters.product.map(a=>({a,d:'product'})),...META.attribute_filters.location.map(a=>({a,d:'location'}))];
+  $('attrs').innerHTML=S.attrs.map((r,i)=>`<div class="attr"><select class="s" data-i="${i}">${opts.map(o=>`<option ${o.a===r.id?'selected':''} value="${o.a}">${o.a}</option>`).join('')}</select>
+    <input class="s" data-v="${i}" value="${esc(r.vals)}" placeholder="values, comma separated"/><button data-x="${i}">✕</button></div>`).join('');
+  $('attrs').querySelectorAll('select').forEach(s=>s.onchange=()=>S.attrs[s.dataset.i].id=s.value);
+  $('attrs').querySelectorAll('input').forEach(s=>s.oninput=()=>S.attrs[s.dataset.v].vals=s.value);
+  $('attrs').querySelectorAll('button').forEach(b=>b.onclick=()=>{S.attrs.splice(+b.dataset.x,1);drawAttrs();});
 }
-async function doCompose(){
-  $('status').textContent='composing…';
-  const qs=scopeQS();
-  let r; try{ r=await api(`/api/compose?pivot=${encodeURIComponent(S.pivot)}&grain=${S.grain}&criteria=${S.criteria}`
-      +`&view=${encodeURIComponent(S.view||'')}&labels=${S.labels}${qs?'&'+qs:''}`);}
-  catch(e){$('status').textContent='⚠ '+e;return;}
-  renderSQL(r.sql);
-  S.weeks=r.weeks||[];
-  if(S.weeks.length){
-    $('tnote').style.color='';
-    $('tnote').textContent = (r.time_note||`${S.weeks.length} weeks`)
-      + `  [${S.weeks[0]} … ${S.weeks[S.weeks.length-1]}]`;
-    $('tstate').textContent = `· ${S.weeks.length} wk`;
-    $('status').textContent=`composed · ${S.pivot} @ ${S.grain} · ${S.criteria}`;
-  } else {
-    $('tnote').style.color='var(--warn)';
-    $('tnote').textContent = '⚠ pick a Time selection (range / weeks) — query uses :HISTORY_WEEKS and will not run until set';
-    $('tstate').textContent = '· ⚠ no time';
-    $('status').textContent=`composed (no time set) · ${S.pivot}`;
-  }
+
+// ---------- run
+function buildRequest(){
+  const ms=S.call.metrics.filter((m,k)=>S.sel[k]);
+  const cnt={};ms.forEach(m=>cnt[m.label]=(cnt[m.label]||0)+1);
+  const key=m=>cnt[m.label]>1?`${m.label} (${m.data_index})`:m.label;   // same rule as the server
+  const exp={};S.call.metrics.forEach((m,k)=>{if(S.sel[k]&&(S.ui[k]||'').trim())exp[key(m)]=S.ui[k].trim();});
+  const filters={};if(S.ps.size&&S.ps.size<META.price_status.length)filters.merchcat=[...S.ps];
+  S.attrs.forEach(a=>{const v=(a.vals||'').split(',').map(x=>x.trim()).filter(Boolean);if(v.length)filters[a.id]=v;});
+  const agg=['level:'+$('grain').value].concat($('grain2').value?['level:'+$('grain2').value]:[]).join(',');
+  const req={client:META.client,env:'qa',defnId:S.call.pivot,viewdefn:S.call.viewdefns,aggBy:agg,
+    scope:{productLevel:'department',productMember:S.product.id,locationLevel:'channel',locationMember:S.location.id},
+    filters,flowStatus:[...S.flow].sort(),metrics:[...new Set(ms.map(m=>m.data_index))],
+    screen:{topNav:S.top,leftNav:S.left,view:S.view==='(main)'?'':S.view}};
+  if(S.hist){req.scope.historyStart=S.hist.start;req.scope.historyEnd=S.hist.end;}
+  if(S.asst){req.scope.start=S.asst.start;req.scope.end=S.asst.end;}
+  if(Object.keys(exp).length)req.expected={totals:exp};
+  req.engine=$('engine').value;
+  return req;
 }
-async function runExec(){
-  if(!S.pivot){return;}
-  const weeks=((S.weeks&&S.weeks.length)?S.weeks.join(','):$('weeks').value.trim());
-  const expected=$('expected').value.trim()||'{}';
-  if(!weeks){$('exresult').innerHTML='<div class="hint" style="color:#e7b45a">Pick a Time selection (or type weeks in the box) to run.</div>';return;}
-  $('run').disabled=true; $('exresult').innerHTML='<div class="hint">running on ClickHouse…</div>';
-  const qs=scopeQS();   // department + channel + cluster + prodlife + flowStatus (+ time)
-  let r;
-  try{ r=await api(`/api/execute?pivot=${encodeURIComponent(S.pivot)}&grain=${S.grain}&criteria=${S.criteria}`
-      +`&${qs}&weeks=${encodeURIComponent(weeks)}&expected=${encodeURIComponent(expected)}`);}
-  catch(e){ $('exresult').innerHTML='<div class="hint" style="color:#ffb4a0">⚠ '+e+'</div>'; $('run').disabled=false; return; }
-  $('run').disabled=false;
-  const sumRows=Object.entries(r.summary).map(([k,v])=>`<tr><td>${k}</td><td>${v}</td></tr>`).join('');
-  let cmp='';
-  if(r.details&&r.details.length){
-    const rows=r.details.map(d=>{const ok=d.verdict==='MATCH';
-      return `<tr><td>${d.metric}</td><td>${d.ui}</td><td>${d.db}</td><td class="${ok?'m-ok':'m-bad'}">${d.verdict}</td></tr>`;}).join('');
-    cmp=`<table class="cmp"><tr><th>metric</th><th>UI</th><th>DB</th><th>verdict</th></tr>${rows}</table>`;
-  }
-  const bar = r.match===null ? '' :
-    `<div class="resbar ${r.match?'m-ok':'m-bad'}">${r.match?'✓ ALL MATCH — value confirmed':'✗ MISMATCH — investigate criteria / filter / aggregation'}</div>`;
-  $('exresult').innerHTML=
-    `<div class="hint">CH ${r.version} · ${r.weeks} weeks</div>`+bar+
-    `<table class="cmp"><tr><th>DB summary (independent)</th><th>value</th></tr>${sumRows}</table>`+cmp;
+async function run(sqlOnly){
+  const req=buildRequest();store.set('lastreq',req);
+  const t0=Date.now();
+  $('out').innerHTML=sqlOnly?`<div class="banner run" id="prog">Composing SQL… <span id="el">0</span>s</div>`:
+    `<div class="banner run" id="prog">Running on QA… <span id="el">0</span>s<br/><small class="muted">materialising the screen's session tables (scope, weeks, qualified products), then the metrics</small></div>`;
+  const tick=setInterval(()=>{const e=$('el');if(e)e.textContent=Math.round((Date.now()-t0)/1000);},500);
+  $('run').disabled=true;
+  let r;try{r=await api('/api/v2/validate'+(sqlOnly?'?sql_only=true':''),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(req)});}
+  catch(e){r={status:'ERROR',error:String(e)};}
+  clearInterval(tick);refreshRun();showResult(r,req);
 }
-function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-const KW=/\b(SELECT|FROM|WHERE|GROUP BY|HAVING|ORDER BY|AND|OR|AS|DISTINCT|LIMIT)\b/g;
-function renderSQL(sql){
-  const html=sql.split('\n').map(line=>{
-    const t=line.trim();
-    if(t.startsWith('-- ✓')) return `<span class="ok">${esc(line)}</span>`;
-    if(t.startsWith('-- ⚠')) return `<span class="warn">${esc(line)}</span>`;
-    if(t.includes('TODO')||t.includes('CONFIRM')) return `<span class="todo">${esc(line)}</span>`;
-    if(t.startsWith('--')) return `<span class="c">${esc(line)}</span>`;
-    return esc(line).replace(KW,'<span class="kw">$1</span>');
-  }).join('\n');
-  $('sql').innerHTML=html;
+const fmtN=v=>v==null?'—':typeof v!=='number'?esc(v):Math.abs(v)<10&&!Number.isInteger(v)?v.toFixed(4):v.toLocaleString(undefined,{maximumFractionDigits:2});
+function showResult(r,req){
+  const label={MATCH:'✓ Matches the UI',MISMATCH:'✗ Does not match the UI',OK:'✓ Computed (enter UI values to compare)',COMPOSED:'SQL composed (not run)',ERROR:'Error'}[r.status]||r.status;
+  const cmp={};((r.compare||{}).totals||[]).forEach(c=>cmp[c.metric]=c);
+  const tot=r.totals||{};
+  const rowsT=Object.keys(tot).map(k=>{const c=cmp[k];return `<tr><td>${esc(k)}</td><td>${fmtN(tot[k])}</td><td>${c?esc(c.expected):''}</td><td>${c&&c.diff!=null?fmtN(c.diff):''}</td><td>${c?(c.match?'<span class="ok">✓</span>':'<span class="bad">✗</span>'):''}</td></tr>`;}).join('');
+  const sess=Object.entries(r.session_tables||{}).map(([k,v])=>`<span title="${esc(k)}">${esc(k.replace(/^trd_/,'').replace(/_S$/,''))}: <b>${v.rows}</b></span>`).join('');
+  const cols=r.rows&&r.rows.length?Object.keys(r.rows[0]):[];
+  $('out').innerHTML=`<div class="banner ${r.status}">${label}${r.elapsed_ms?` <span class="muted" style="font-weight:400">· ${(r.elapsed_ms/1000).toFixed(1)}s</span>`:''}${r.error?`<div style="font-weight:400;margin-top:6px">${esc(r.error)}</div>${/NetException|timed out|exit 4|exit 209/.test(r.error)?'<div style="font-weight:400;margin-top:4px">QA ClickHouse is unreachable from the read-only gate right now. Use <b>SQL only</b> to get the query, or try again later.</div>':''}`:''}</div>
+    ${rowsT?`<div class="card"><h3>Screen totals <span class="r">${esc((r.resolved||{}).pivot||'')} · ${esc(req.aggBy)}</span></h3>
+      <table class="t"><tr><th>Metric</th><th>DB</th><th>UI</th><th>Δ</th><th></th></tr>${rowsT}</table></div>`:''}
+    ${r.provenance?`<div class="card"><h3>Validated with <span class="r">engine: ${esc(r.engine)}</span></h3>
+      <div class="lbl">Population rules</div><div class="sess">${(r.provenance.population||[]).map(x=>`<span>${esc(x)}</span>`).join('')}</div>
+      <div class="lbl" style="margin-top:6px">Metrics</div><div class="sess">${Object.entries(r.provenance.metrics||{}).map(([k,v])=>`<span>${esc(k)} → ${esc(v)}</span>`).join('')}</div>
+      ${Object.keys(r.provenance.skipped||{}).length?`<div class="muted" style="margin-top:6px">${Object.entries(r.provenance.skipped).map(([k,v])=>esc(k)+': '+esc(v)).join(' · ')}</div>`:''}
+      ${r.status==='MISMATCH'&&r.engine==='spec'?`<div style="margin-top:10px"><button class="btn p" id="diag">Diagnose: also run the pivot's own logic (replay)</button>
+        <span class="muted"> tells whether the pivot differs from the spec, or the platform/data differs from the pivot</span></div><div id="diagout"></div>`:''}</div>`:''}
+    ${sess?`<div class="card"><h3>Session tables (row counts)</h3><div class="sess">${sess}</div></div>`:''}
+    <div class="card"><div class="tabs"><button data-t="rows" class="on">Rows ${r.row_count!=null?`(${r.row_count}${r.rows_truncated?', first '+r.rows.length:''})`:''}</button><button data-t="sql">SQL</button><button data-t="req">Request JSON</button><button data-t="warn">Notes ${(r.warnings||[]).length?`(${r.warnings.length})`:''}</button></div>
+      <div data-p="rows" class="scroll">${cols.length?`<table class="t"><tr>${cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr>${r.rows.map(x=>`<tr>${cols.map(c=>`<td>${fmtN(x[c])}</td>`).join('')}</tr>`).join('')}</table>`:'<div class="muted">no rows</div>'}</div>
+      <div data-p="sql" style="display:none"><button class="btn" id="cpsql" style="margin-bottom:6px">Copy SQL</button><pre class="code">${esc((r.sql||{}).totals||(r.sql||{}).rows||'')}</pre></div>
+      <div data-p="req" style="display:none"><div class="muted" style="margin-bottom:6px">The same request runs headless: <code>python3 tooling/validation/validate.py --request req.json</code></div><button class="btn" id="cpreq" style="margin-bottom:6px">Copy JSON</button><pre class="code">${esc(JSON.stringify(req,null,2))}</pre></div>
+      <div data-p="warn" style="display:none">${(r.warnings||[]).map(w=>`<div class="warn">• ${esc(w)}</div>`).join('')||'<div class="muted">none</div>'}
+        ${r.resolved&&r.resolved.criteria?`<div class="lbl" style="margin-top:8px">Pivot qualification criteria</div>${Object.entries(r.resolved.criteria).map(([k,v])=>`<div><code>${esc(k)}</code> ${esc(v)}</div>`).join('')}`:''}</div>
+    </div>`;
+  $('out').querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{$('out').querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
+    $('out').querySelectorAll('[data-p]').forEach(p=>p.style.display=p.dataset.p===b.dataset.t?'':'none');});
+  const cp=(id,txt)=>{const b=$(id);if(b)b.onclick=()=>{navigator.clipboard.writeText(txt);b.textContent='Copied ✓';};};
+  cp('cpsql',(r.sql||{}).totals||(r.sql||{}).rows||'');cp('cpreq',JSON.stringify(req,null,2));
+  const dg=$('diag'); if(dg)dg.onclick=()=>diagnose(r,req);
+  if(r.status==='COMPOSED'){const sq=$('out').querySelector('.tabs button[data-t=sql]');sq&&sq.click();}
 }
-init();
+
+async function diagnose(spec,req){
+  const out=$('diagout');out.innerHTML='<div class="banner run" style="margin-top:8px">Running the pivot replay… (about a minute)</div>';
+  let rp;try{rp=await api('/api/v2/validate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...req,engine:'replay'})});}
+  catch(e){out.innerHTML=`<div class="banner ERROR">${esc(e)}</div>`;return;}
+  const sc={},rc={};((spec.compare||{}).totals||[]).forEach(c=>sc[c.metric]=c);((rp.compare||{}).totals||[]).forEach(c=>rc[c.metric]=c);
+  const rows=Object.keys(sc).map(k=>{const a=sc[k],b=rc[k]||{};
+    const verdict=a.match?'spec matches UI':b.match?'<span class="bad">pivot differs from spec</span> (UI follows the pivot)':'<span class="bad">platform / data</span> (UI differs from the pivot too)';
+    return `<tr><td>${esc(k)}</td><td>${esc(a.expected)}</td><td>${fmtN(a.db)}</td><td>${fmtN(b.db)}</td><td style="text-align:left">${verdict}</td></tr>`;}).join('');
+  out.innerHTML=`<table class="t" style="margin-top:8px"><tr><th>Metric</th><th>UI</th><th>Spec</th><th>Pivot replay</th><th style="text-align:left">Verdict</th></tr>${rows}</table>`;
+}
+
+// ---------- init
+async function init(){
+  META=await api('/api/v2/meta');$('client').textContent=META.client+' · QA';
+  ['f_product','f_location','f_asst','f_hist'].forEach(id=>$(id).dataset.ph=$(id).firstElementChild.textContent);
+  [WEEKS,DEPTS,CHANS]=await Promise.all(['week','department','channel'].map(k=>api('/api/v2/members/'+k).catch(()=>[])));
+  $('f_product').onclick=()=>combo($('f_product'),DEPTS,S.product,v=>{S.product=v;setField('f_product',v.name);scopeChanged();});
+  $('f_location').onclick=()=>combo($('f_location'),CHANS,S.location,v=>{S.location=v;setField('f_location',v.name);scopeChanged();});
+  $('f_asst').onclick=()=>cal($('f_asst'),S.asst,r=>{S.asst=r;setField('f_asst','📅  '+rangeTxt(r));
+      const ly=lyRange(r);if(ly){S.hist=ly;setField('f_hist','📅  '+rangeTxt(ly));}scopeChanged();});
+  $('f_hist').onclick=()=>cal($('f_hist'),S.hist,r=>{S.hist=r;setField('f_hist','📅  '+rangeTxt(r));scopeChanged();});
+  $('go').onclick=()=>{S.applied=true;$('go').disabled=true;
+    store.set('scope',{product:S.product,location:S.location,asst:S.asst,hist:S.hist});
+    $('scopetxt').textContent=`Product - ${S.product.name} | Location - ${S.location.name} | ${S.hist?rangeTxt(S.hist):rangeTxt(S.asst)}`;refreshRun();};
+  const ls=store.get('scope');
+  if(ls&&ls.product){Object.assign(S,ls);setField('f_product',ls.product.name);setField('f_location',ls.location&&ls.location.name);
+    if(ls.asst)setField('f_asst','📅  '+rangeTxt(ls.asst));if(ls.hist)setField('f_hist','📅  '+rangeTxt(ls.hist));
+    S.applied=true;$('scopetxt').textContent=`Product - ${ls.product.name} | Location - ${ls.location.name} | ${rangeTxt(ls.hist||ls.asst)}`;}
+  const lv=[...META.product_levels,...META.location_levels];
+  $('grain').innerHTML=lv.map(l=>`<option>${l}</option>`).join('');$('grain').value='stylecolor';
+  $('grain2').innerHTML='<option value="">— (one level)</option>'+lv.map(l=>`<option>${l}</option>`).join('');
+  META.price_status.forEach(p=>S.ps.add(p));
+  chips($('ps'),META.price_status.map(p=>({id:p,name:p})),S.ps);
+  chips($('flow'),META.flow_status,S.flow);
+  $('addattr').onclick=e=>{e.preventDefault();S.attrs.push({id:META.attribute_filters.product[0],vals:''});drawAttrs();};
+  $('mq').oninput=drawMetrics;
+  $('m_all').onclick=e=>{e.preventDefault();S.call&&S.call.metrics.forEach((m,k)=>S.sel[k]=m.status!=='unresolved'&&m.status!=='no_pivot');drawMetrics();};
+  $('m_none').onclick=e=>{e.preventDefault();S.sel={};drawMetrics();};
+  $('pasteurl').onclick=e=>{e.preventDefault();$('url').style.display=$('url').style.display?'':'none';$('url').focus();};
+  $('url').onchange=async()=>{try{const r=await api('/api/v2/route?url='+encodeURIComponent($('url').value));
+      $('top').value=r.top;S.top=r.top;fillLeft({left:r.left,view:r.view});}catch(e){alert('Could not match that URL: '+e);}};
+  $('run').onclick=()=>run(false);$('sqlonly').onclick=()=>run(true);
+  await loadScreens();
+  api('/api/v2/db').then(d=>{$('db').textContent=d.ok?'QA DB connected':'QA DB offline';$('db').className='pill '+(d.ok?'ok':'bad');$('db').title=d.ok?'Read-only gate OK':d.error;});
+}
+init().catch(e=>{$('out').innerHTML=`<div class="banner ERROR">Studio failed to start: ${esc(e)}</div>`;});
 </script>
+<script src="/static/spec.js"></script>
+<script src="/static/sync.js"></script>
 </body>
 </html>

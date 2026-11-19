@@ -35,6 +35,82 @@
       "unified_db": "../../customers/TRD/lineage/unified_trd.db",
       "pivot_graph": "workspaces/TRD/pivot_graph.json",
       "unified_graph": "../../customers/TRD/lineage/unified_graph.json"
+    },
+    {
+      "id": "GAP",
+      "name": "Gap (GAP Inc.)",
+      "repo_url": "git@github.com:s5-stratos/etl-gap-batch.git",
+      "branch": "etl_assortment_planning",
+      "clone_path": "../etl-gap-batch",
+      "engines": [
+        "vertica",
+        "postgres",
+        "clickhouse"
+      ],
+      "graph_json": "../../customers/GAP/lineage/graph.json",
+      "graph_db": "../../customers/GAP/lineage/unified_gap.db",
+      "batches": {
+        "weekly": {
+          "main_script": "weekly.sh"
+        }
+      },
+      "credential_ref": "default_github",
+      "unified_db": "../../customers/GAP/lineage/unified_gap.db",
+      "pivot_graph": "../../customers/GAP/lineage/pivot_graph.json",
+      "unified_graph": "../../customers/GAP/lineage/unified_graph.json"
+    },
+    {
+      "id": "GAO",
+      "name": "Gap Outlet (GAP Inc.)",
+      "repo_url": "git@github.com:s5-stratos/etl-gao-batch.git",
+      "branch": "etl_assortment_planning_prod",
+      "clone_path": "../etl-gao-batch",
+      "engines": [
+        "vertica",
+        "postgres",
+        "clickhouse"
+      ],
+      "graph_json": "../../customers/GAO/lineage/graph.json",
+      "graph_db": "../../customers/GAO/lineage/unified_gao.db",
+      "batches": {
+        "daily": {
+          "main_script": "daily.sh"
+        },
+        "weekly": {
+          "main_script": "weekly.sh"
+        },
+        "cyclic": {
+          "main_script": "cyclic.sh",
+          "custom": true
+        }
+      },
+      "credential_ref": "default_github",
+      "unified_db": "../../customers/GAO/lineage/unified_gao.db",
+      "pivot_graph": "../../customers/GAO/lineage/pivot_graph.json",
+      "unified_graph": "../../customers/GAO/lineage/unified_graph.json"
+    },
+    {
+      "id": "ONV",
+      "name": "Old Navy (GAP Inc.)",
+      "repo_url": "git@github.com:s5-stratos/etl-onv-batch.git",
+      "branch": "etl_assortment_planning",
+      "clone_path": "../etl-onv-batch",
+      "engines": [
+        "vertica",
+        "postgres",
+        "clickhouse"
+      ],
+      "graph_json": "../../customers/ONV/lineage/graph.json",
+      "graph_db": "../../customers/ONV/lineage/unified_onv.db",
+      "batches": {
+        "weekly": {
+          "main_script": "weekly.sh"
+        }
+      },
+      "credential_ref": "default_github",
+      "unified_db": "../../customers/ONV/lineage/unified_onv.db",
+      "pivot_graph": "../../customers/ONV/lineage/pivot_graph.json",
+      "unified_graph": "../../customers/ONV/lineage/unified_graph.json"
     }
   ]
 }

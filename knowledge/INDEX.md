@@ -126,6 +126,8 @@ with `regen.sh`.
 | `knowledge/runbooks/create-readonly-accounts.md` | Stand up read-only DB users for a new env (incl. CH 21.4 gotchas) |
 | `knowledge/runbooks/local-ui-setup.md` | Reproduce a frontend bug locally (Vite proxy to a client env) |
 | `knowledge/runbooks/ui-repro.md` | Reproduce/verify a UI issue (Chrome interactive + Playwright regression) |
+| `tooling/ui_pilot/` (skill `ui-pilot`) | **Scripted UI repro/verify**: YAML scenario → Playwright on QA → evidence bundle (shots, console, API/pivot calls, verdict). Read-only by default |
+| `tooling/utd_builder/` | Unit test document (.docx) from a JSON spec; `ui_pilot/to_utd.js` builds the spec from bundles |
 | `knowledge/runbooks/capture-prompt.md` | Capture knowledge from another Claude chat into a solution note |
 | `knowledge/runbooks/exp-sftp-cyclic-recovery.md` | EXP cyclic `@here failed cyclic` — partner SFTP delivery failure (reset/timeout to sftp.inside-express.com) — hold cron, notify partner, re-push queued files |
 | `knowledge/runbooks/claude-project-setup.md` | Set up the copilot as a claude.ai Project (away-from-repo use) |

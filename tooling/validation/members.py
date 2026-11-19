@@ -108,7 +108,12 @@ def get_members(client, kind, refresh=False):
     if not refresh and cache.exists() and (time.time() - cache.stat().st_mtime) < CACHE_TTL:
         return json.loads(cache.read_text())
     engine, sql = _kind_sql(cfg, q)
-    rows = _parse_tsv(_run(client, engine, sql, cfg["env"]))
+    try:
+        rows = _parse_tsv(_run(client, engine, sql, cfg["env"]))
+    except Exception:
+        if cache.exists():                       # DB down: serve the last good list
+            return json.loads(cache.read_text())
+        raise
     CACHE_DIR.mkdir(exist_ok=True)
     cache.write_text(json.dumps(rows))
     return rows

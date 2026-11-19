@@ -45,7 +45,7 @@ Pick the recipe by layer (combine for hybrid):
 **Frontend fix**
 - Playwright spec named SUP-XXXX.spec.ts in the assortmentui e2e harness
   asserting the CORRECT behavior (fails pre-fix, passes post-fix).
-- Manual repro of the ticket's exact steps on QA (Chrome), screenshot.
+- Repro the ticket's exact steps on QA with **ui-pilot** (`--mode repro` before, `--mode verify` after); its bundle is the proof and feeds the UTD (`to_utd.js --build`).
 
 **DB fix (trigger/function)**
 - Before/after behavior on a test row; check trigger_depth interactions
@@ -58,6 +58,8 @@ engineer to run what you can't (batch re-runs, env deploys). Proof =
 numbers, outputs, screenshots — not assertions.
 
 ## 3. Post to JIRA
+
+Unit test document: build it with the **utd-builder** skill (screenshots or ui-pilot bundles → minimal .docx).
 
 Draft a validation-results comment: plan, results, artifacts, verdict
 (PASS/FAIL per check). Get user approval, post it. FAIL on any check =
