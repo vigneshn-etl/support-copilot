@@ -85,8 +85,19 @@ def _config(client):
     return f
 
 
+def _metric_map(client):
+    def f():
+        m = HUB / "customers" / client / "metrics"
+        hit = next((m / n for n in ("metric_map_qa.csv", "metric_map.csv") if (m / n).exists()), None)
+        return (bool(hit), str(hit) if hit else "no metric map (screen lists stay empty)",
+                f"python3 tooling/validation/metric_map.py --config-dir \"$(python3 tooling/validation/config_sync.py --dir qa)\" "
+                f"--client {client} --env qa --out customers/{client}/metrics/metric_map_qa.csv (studio.sh does this)")
+    return f
+
+
 def run(client="TRD", quick=False):
     out = [_check("python packages", _deps), _check("git user", _git_user), _check("config", _config(client)),
+           _check("metric map", _metric_map(client)),
            _check("ssh qa-processor", _qa_ssh)]
     if out[-1]["ok"] and not quick:
         out.append(_check("QA read-only gate", _qa_gate(client)))

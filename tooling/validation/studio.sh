@@ -26,6 +26,14 @@ print("    hint:", d.get("hint",""))' "$LOG"
   rm -f "$LOG"
 fi
 
+MDIR="$HERE/../../customers/$CLIENT/metrics"
+CFG="$(python3 "$HERE/config_sync.py" --client "$CLIENT" --dir qa)"
+if [ ! -s "$MDIR/metric_map_qa.csv" ] && [ ! -s "$MDIR/metric_map.csv" ] && [ -d "$CFG" ]; then
+  echo "· building the metric map from QA config (about 4 minutes, first run only)"
+  python3 "$HERE/metric_map.py" --config-dir "$CFG" --client "$CLIENT" --env qa \
+    --out "$MDIR/metric_map_qa.csv" | tail -1 || echo "  ! metric map build failed"
+fi
+
 echo "· setup check"
 python3 "$HERE/doctor.py" --client "$CLIENT" || echo "  ! fix the ✗ items above; the Studio starts anyway (SQL-only works offline)"
 
