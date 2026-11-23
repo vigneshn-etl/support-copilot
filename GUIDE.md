@@ -61,7 +61,7 @@ from the main tables, so you can prove the UI right or wrong.
 | `validate Net Sls U on Style Review for 011 MENS JEANS 2026-W10` | composed CH-correct SQL with provenance |
 | paste a `pivot3/listData` URL | the scope is parsed from the request itself |
 
-*Full UI (Data Validation Studio):* `tooling/validation/studio.sh` → http://localhost:8770. First time: see **Quick start** in `tooling/validation/README.md`; `python3 tooling/validation/doctor.py` checks your setup and says how to fix each gap (the Studio shows the same as a red *Setup* pill).
+*Full UI (Data Validation Studio):* `tooling/validation/studio.sh` → http://localhost:8770. First time: run `tooling/validation/setup.sh` once (see **Quick start** in `tooling/validation/README.md`); `python3 tooling/validation/doctor.py` checks your setup and says how to fix each gap (the Studio shows the same as a red *Setup* pill).
 
 *UI repro / verify (ui-pilot):* say "reproduce SUP-1234 in the UI". I write a short scenario (screens, scope, metric/column, expected values), and Playwright runs it on QA: `--mode repro` before the fix, `--mode verify` after. It captures screenshots, console errors and failed API/pivot calls. You sign in once with `node tooling/ui_pilot/pilot.js login --client <C>`. It's read-only unless you approve writes. See `tooling/ui_pilot/README.md`.
 

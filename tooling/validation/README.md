@@ -2,27 +2,24 @@
 
 ## Quick start (any teammate with this repo cloned)
 
-You need: VPN on; `ssh qa-processor` working with your own key (a `Host qa-processor`
-entry in `~/.ssh/config`); the same ssh user able to reach `internal-dev-ucm-0`;
-GitHub access to `s5-stratos/trd-configs`; the OCI CLI set up for the QA config bucket.
+Connect the VPN, then run once:
 
-1. Create `~/.config/dvs/.env` (never commit it):
+    tooling/validation/setup.sh
 
-       DVS_DB_HOST=localhost
-       DVS_DB_PORT=15432
-       DVS_DB_NAME=ucm
-       DVS_DB_USER=dvs_app
-       DVS_DB_PASSWORD=<get it privately from the DVS owner>
+It checks and sets up everything it can, asking only for what it needs:
+- tools: python3, git, `oci`, `gh` (offers `brew install`);
+- git email, SSH key, the `qa-processor` entry in `~/.ssh/config`, then tests SSH to QA and UCM;
+- `~/.config/dvs/.env`: asks for the `dvs_app` password (hidden input; get it from Vignesh privately);
+- GitHub access to `trd-configs` (SSH, else `gh auth login` over HTTPS) and the OCI QA bucket;
+- Python packages (`ui/requirements.txt`), the TRD QA config and the metric map (about 4 minutes);
+- a final `doctor.py` check, then a list of anything still to fix.
 
-   Optional: `DVS_TUNNEL_SSH=you@internal-dev-ucm-0` if your ssh user there is not the
-   one in your `qa-processor` entry.
-2. Start: `tooling/validation/studio.sh` (venv + deps, QA config clone if missing,
-   setup check, then http://localhost:8770). The UCM tunnel opens by itself with your
-   ssh login and closes when the Studio stops.
-3. Check anytime: `python3 tooling/validation/doctor.py`. Each ✗ comes with the fix.
-4. Regression cases: `python3 tooling/validation/tests/run_cases.py [filter]`.
+It can't grant access: SSH to the servers, GitHub repos and the OCI bucket come from the
+infra/admin team. Re-run `setup.sh` after you get them; it is safe to repeat.
 
-Edits in the Spec tab are recorded under your `git config user.email`.
+Then start the Studio any time with `tooling/validation/studio.sh` (http://localhost:8770).
+Check later with `python3 tooling/validation/doctor.py`. Regression cases:
+`python3 tooling/validation/tests/run_cases.py [filter]`.
 
 ---
 
