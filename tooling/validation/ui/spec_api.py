@@ -141,8 +141,10 @@ def save(file: str, body: dict = Body(...)):
     if errs and not body.get("force"):
         raise HTTPException(422, {"lint": errs})
     try:
-        saved = st.upsert(file, row, user)
+        saved = st.upsert(file, row, user, base_version=body.get("base_version"))
     except ValueError as e:
+        if type(e).__name__ == "Conflict":
+            raise HTTPException(409, str(e))
         raise HTTPException(422, str(e))
     return {"row": saved, "lint": errs}
 

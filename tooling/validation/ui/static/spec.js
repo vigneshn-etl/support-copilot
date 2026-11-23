@@ -128,7 +128,7 @@ function drawDrawer(prefill){
   const showDen=()=>{if(ty&&den)den.style.display=ty.value==='ratio'?'':'none';};if(ty){ty.onchange=showDen;showDen();}
   const formRow=()=>{const o={};new FormData($('sp_form')).forEach((v,k)=>o[k]=v.trim());return o;};
   $('sp_save').onclick=async()=>{
-    try{const r=await api(`/api/v2/spec/${f}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({row:formRow(),user:me()})});
+    try{const r=await api(`/api/v2/spec/${f}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({row:formRow(),user:me(),base_version:SPEC.isNew?null:row.version})});
       SPEC.sel=keyOf2(f,r.row);SPEC.isNew=false;await loadSpec(true);drawTable();drawDrawer();
       $('sp_msgs').innerHTML='<div class="lintmsg" style="color:var(--ok)">✓ saved as draft — approve it to make it the validation rule</div>';
       afterSpecChange&&afterSpecChange();}

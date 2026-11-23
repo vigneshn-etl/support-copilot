@@ -237,6 +237,13 @@ def v2_members(kind: str):
     return rows
 
 
+@app.get("/api/v2/doctor")
+def v2_doctor():
+    """setup checks with fixes (doctor.py); the gate is probed by /api/v2/db."""
+    import doctor
+    return doctor.run(CLIENT, quick=True)
+
+
 @app.get("/api/v2/db")
 def v2_db():
     """quick read-only gate probe (the Studio shows a status pill)."""

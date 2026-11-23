@@ -19,8 +19,8 @@ tenant + environment:
 UCM reflects what's loaded for the env (qa = deployed), so it can differ from
 git; `git_*` columns show the git-based metric_map.csv row for comparison.
 
-Needs the UCM DB tunnel:
-    ssh -N -L 15432:172.16.50.218:5432 vignesh.n@internal-dev-ucm-0
+Needs a UCM login with read access to the app_* schemas, in the .env named by
+UCM_ENV_FILE (DB_NAME/DB_USER/DB_PASSWORD). The ssh tunnel opens itself (core/tunnel.py).
 
 Usage:
   uv run --script metric_map_ucm.py --client TRD --env qa
@@ -38,8 +38,7 @@ HUB = HERE.parent.parent
 sys.path.insert(0, str(HERE))
 import metric_map as mm  # noqa: E402
 
-UCM_ENV = os.environ.get(
-    "UCM_ENV_FILE", "/Users/vigneshn/Desktop/AI World/UCM/unified-config-manager/.env")
+UCM_ENV = os.environ.get("UCM_ENV_FILE", "")
 NO_CFG = Path("/nonexistent-ucm-config")   # includes are pre-inlined; nothing to read from disk
 _FTL_COMMENT = re.compile(r"<#--.*?-->", re.S)
 
@@ -52,7 +51,14 @@ COLS = ["metric_key", "display_name", "column_group", "data_index", "view_formul
 
 # ---------------------------------------------------------------- DB
 def connect():
+    if not UCM_ENV:
+        sys.exit("set UCM_ENV_FILE to a .env with DB_NAME / DB_USER / DB_PASSWORD for UCM")
     load_dotenv(UCM_ENV)
+    from core import tunnel
+    err = tunnel.ensure({"DVS_DB_HOST": os.environ.get("DB_HOST", "localhost"),
+                         "DVS_DB_PORT": os.environ.get("DB_PORT", "15432")})
+    if err:
+        sys.exit(err)
     c = psycopg.connect(host=os.environ.get("DB_HOST", "localhost"),
                         port=int(os.environ.get("DB_PORT", "15432")),
                         dbname=os.environ["DB_NAME"], user=os.environ["DB_USER"],

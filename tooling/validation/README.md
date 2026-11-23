@@ -1,4 +1,32 @@
-# Data-Validation Tooling (POC — TRD / Hindsighting)
+# Data-Validation Tooling (DVS)
+
+## Quick start (any teammate with this repo cloned)
+
+You need: VPN on; `ssh qa-processor` working with your own key (a `Host qa-processor`
+entry in `~/.ssh/config`); the same ssh user able to reach `internal-dev-ucm-0`;
+GitHub access to `s5-stratos/trd-configs`; the OCI CLI set up for the QA config bucket.
+
+1. Create `~/.config/dvs/.env` (never commit it):
+
+       DVS_DB_HOST=localhost
+       DVS_DB_PORT=15432
+       DVS_DB_NAME=ucm
+       DVS_DB_USER=dvs_app
+       DVS_DB_PASSWORD=<get it privately from the DVS owner>
+
+   Optional: `DVS_TUNNEL_SSH=you@internal-dev-ucm-0` if your ssh user there is not the
+   one in your `qa-processor` entry.
+2. Start: `tooling/validation/studio.sh` (venv + deps, QA config clone if missing,
+   setup check, then http://localhost:8770). The UCM tunnel opens by itself with your
+   ssh login and closes when the Studio stops.
+3. Check anytime: `python3 tooling/validation/doctor.py`. Each ✗ comes with the fix.
+4. Regression cases: `python3 tooling/validation/tests/run_cases.py [filter]`.
+
+Edits in the Spec tab are recorded under your `git config user.email`.
+
+---
+
+## Background (POC — TRD / Hindsighting)
 
 Compose an **independent** SQL query that reproduces a UI metric's value from
 the **main tables** (bypassing the pivot's session temp tables), so you can run

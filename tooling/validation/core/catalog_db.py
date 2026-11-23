@@ -49,6 +49,10 @@ COLUMNS = {
 TAIL = ["status", "version", "approved_by", "approved_at", "origin", "notes"]
 
 
+class Conflict(ValueError):
+    pass
+
+
 def settings():
     """connection settings, or None when the DVS database is not configured."""
     vals = {k: os.environ.get(k) for k in _ENV_KEYS}
@@ -61,6 +65,17 @@ def settings():
                 if k in vals and not vals[k]:
                     vals[k] = v
     return vals if all(vals.values()) else None
+
+
+def _tunnel_vals():
+    keys = ("DVS_TUNNEL_SSH", "DVS_TUNNEL_TARGET", "DVS_TUNNEL")
+    vals = {k: os.environ[k] for k in keys if os.environ.get(k)}
+    if ENV_FILE.exists():
+        for line in ENV_FILE.read_text().splitlines():
+            k, _, v = line.partition("=")
+            if k.strip() in keys and k.strip() not in vals:
+                vals[k.strip()] = v.strip().strip('"').strip("'")
+    return vals
 
 
 def configured():
@@ -84,6 +99,10 @@ def connect():
     s = settings()
     if not s:
         raise RuntimeError(f"DVS database not configured: set {', '.join(_ENV_KEYS)} or create {ENV_FILE}")
+    from core import tunnel
+    err = tunnel.ensure({**_tunnel_vals(), **s})      # DVS: own ssh tunnel when the DB is local
+    if err:
+        raise RuntimeError(err)
     return psycopg.connect(host=s["DVS_DB_HOST"], port=int(s["DVS_DB_PORT"]), dbname=s["DVS_DB_NAME"],
                            user=s["DVS_DB_USER"], password=s["DVS_DB_PASSWORD"], sslmode="require",
                            connect_timeout=10, row_factory=dict_row,
@@ -167,8 +186,9 @@ class CatalogDB:
         rows = [to_row(file, r) for r in recs]
         return COLUMNS[file] + TAIL, rows
 
-    def upsert(self, file, row, user):
-        """add or edit; a content change -> version + 1, back to draft. -> saved row"""
+    def upsert(self, file, row, user, base_version=None):
+        """add or edit; a content change -> version + 1, back to draft. -> saved row.
+        base_version = the version the editor loaded; a newer one in the DB refuses the save."""
         table, keys = TABLES[file]
         if any(not str(row.get(k, "")).strip() for k in keys):
             raise ValueError(f"{file}: {', '.join(keys)} required")
@@ -189,6 +209,9 @@ class CatalogDB:
             ref_changed = "qa_ref" in vals and cur.get("qa_ref") != vals["qa_ref"].obj
             if not changed and not notes_changed and not ref_changed:
                 return to_row(file, cur)
+            if base_version and str(cur["version"]) != str(base_version):   # DVS: someone saved first
+                raise Conflict(f"{file}: {self.key(file, row)} is now v{cur['version']} "
+                               f"(by {cur.get('updated_by') or 'someone'}); you edited v{base_version}. Reload and redo.")
             sets = {k: vals[k] for k in changed}
             if notes_changed:
                 sets["notes"] = vals["notes"]
