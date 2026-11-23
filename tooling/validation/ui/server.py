@@ -197,6 +197,15 @@ def _warm():
         v2_ctx()
     except Exception as e:                  # DVS: start anyway; the Setup pill says what to fix
         print(f"WARNING: {e}", file=sys.stderr)
+    import threading
+    threading.Thread(target=lambda: _quiet(spec_api.spec), daemon=True).start()   # DVS: warm the catalog
+
+
+def _quiet(fn):
+    try:
+        fn()
+    except Exception as e:
+        print(f"WARNING: {e}", file=sys.stderr)
 
 _V2 = {}
 

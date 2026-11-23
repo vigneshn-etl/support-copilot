@@ -177,12 +177,15 @@ class CatalogDB:
         cols = [RENAMES.get(file, {}).get(k, k) for k in keys]
         return " AND ".join(f"{c} = %s" for c in cols), [row.get(k) for k in keys]
 
-    def read(self, file):
+    def read(self, file, conn=None):
         table, keys = TABLES[file]
-        with connect() as c:
-            recs = c.execute(f"SELECT * FROM {table} WHERE tenant = %s AND environment = %s "
-                             f"ORDER BY {', '.join(RENAMES.get(file, {}).get(k, k) for k in keys)}",
-                             (self.tenant, self.env)).fetchall()
+        sql = (f"SELECT * FROM {table} WHERE tenant = %s AND environment = %s "
+               f"ORDER BY {', '.join(RENAMES.get(file, {}).get(k, k) for k in keys)}")
+        if conn is not None:
+            recs = conn.execute(sql, (self.tenant, self.env)).fetchall()
+        else:
+            with connect() as c:
+                recs = c.execute(sql, (self.tenant, self.env)).fetchall()
         rows = [to_row(file, r) for r in recs]
         return COLUMNS[file] + TAIL, rows
 
@@ -194,6 +197,7 @@ class CatalogDB:
             raise ValueError(f"{file}: {', '.join(keys)} required")
         vals = to_db(file, row)
         where, params = self._where_key(file, row)
+        invalidate()
         with connect() as c:
             c.execute("SELECT set_config('dvs.user', %s, true)", (user or "unknown",))
             cur = c.execute(f"SELECT * FROM {table} WHERE tenant = %s AND environment = %s AND {where} "
@@ -230,6 +234,7 @@ class CatalogDB:
         table, _ = TABLES[file]
         where, params = self._where_key(file, keyvals)
         extra = ", approved_by = %s, approved_at = now()" if status == "approved" else ""
+        invalidate()
         with connect() as c:
             c.execute("SELECT set_config('dvs.user', %s, true)", (user or "unknown",))
             rec = c.execute(f"UPDATE {table} SET status = %s{extra} WHERE tenant = %s AND environment = %s "
@@ -258,13 +263,46 @@ class CatalogDB:
         return out
 
 
+_CACHE = {}
+_REFRESHING = set()
+CACHE_TTL = 60      # seconds; other people's saves show within this, your own at once
+
+
+def invalidate():
+    _CACHE.clear()
+
+
 def load_spec(tenant, environment="qa", include_drafts=True):
-    """the same structure core.spec.load() returns, from the database."""
+    """the same structure core.spec.load() returns, from the database (cached, see CACHE_TTL)."""
+    import copy, threading, time
+    key = (tenant, environment, include_drafts)
+    hit = _CACHE.get(key)
+    if hit and time.time() - hit[0] >= CACHE_TTL and key not in _REFRESHING:
+        _REFRESHING.add(key)                 # DVS: serve the old copy, refresh in the background
+
+        def bg():
+            try:
+                _CACHE[key] = (time.time(), _load_spec(tenant, environment, include_drafts))
+            except Exception:
+                pass
+            finally:
+                _REFRESHING.discard(key)
+        threading.Thread(target=bg, daemon=True).start()
+    if hit:
+        return copy.deepcopy(hit[1])
+    out = _load_spec(tenant, environment, include_drafts)
+    _CACHE[key] = (time.time(), out)
+    return copy.deepcopy(out)
+
+
+def _load_spec(tenant, environment, include_drafts):
     db = CatalogDB(tenant, environment)
     keyed = {"sources": "source_id", "measures": "measure_id", "metrics": "metric_id", "screens": "pivot"}
     out = {}
+    with connect() as c:                     # DVS: one connection for all tables (VPN round trips)
+        reads = {file: db.read(file, c)[1] for file in TABLES}
     for file in TABLES:
-        _, rows = db.read(file)
+        rows = reads[file]
         rows = [r for r in rows if r.get("status") != "retired"
                 and (include_drafts or r.get("status") in ("approved", "n/a"))]
         if file == "populations":
