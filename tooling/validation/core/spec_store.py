@@ -54,7 +54,7 @@ class SpecStore:
             w.writerow([datetime.datetime.now().isoformat(timespec="seconds"), user, file, key, action,
                         version, json.dumps(before or {}, sort_keys=True), json.dumps(after or {}, sort_keys=True)])
 
-    def upsert(self, file, row, user):
+    def upsert(self, file, row, user, base_version=None):
         """add or edit; content change -> version+1, status draft. -> saved row"""
         cols, rows = self.read(file)
         for c in list(row):

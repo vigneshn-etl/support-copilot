@@ -60,3 +60,6 @@ customers/*/metrics/*_metric_base_column_map_*.xlsx
 customers/*/metrics/qa_import/
 customers/*/metrics/sync_runs/
 tooling/validation/ui/.venv/
+
+# DVS regression run outputs, rewritten on every run
+tooling/validation/tests/results/

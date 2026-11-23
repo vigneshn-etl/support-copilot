@@ -14,7 +14,8 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent / "db"))
 import route_resolver as rr
 
-CONFIG_DIR = os.environ.get("CONFIG_DIR") or "/Users/vigneshn/Desktop/JIRAs/SUP-4153/trd-configs"
+import config_sync as cfgsync
+CONFIG_DIR = os.environ.get("CONFIG_DIR") or str(cfgsync.effective_dir("TRD", "qa") or cfgsync.effective_dir("TRD", "repo") or "")
 
 CASES = [
     # url, expected tab, expected pivot (or model), expected model

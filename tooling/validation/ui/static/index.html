@@ -138,6 +138,7 @@
 <header>
   <b>Data Validation Studio</b><span class="sub" id="client"></span>
   <span class="pill" id="db" title="Read-only QA database (via the gate on qa-processor)">DB …</span>
+  <span class="pill" id="setup" title="Setup check" style="cursor:pointer;display:none"></span>
   <nav class="top" id="toptabs"><button data-v="validate" class="on">Validate</button><button data-v="spec">Spec</button><button data-v="cov">Coverage</button><button data-v="sync">Sync with QA</button></nav>
   <span class="sp"></span>
   <span class="sub">you: <b id="me" style="font-size:12px"></b></span>
@@ -487,6 +488,10 @@ async function init(){
       $('top').value=r.top;S.top=r.top;fillLeft({left:r.left,view:r.view});}catch(e){alert('Could not match that URL: '+e);}};
   $('run').onclick=()=>run(false);$('sqlonly').onclick=()=>run(true);
   await loadScreens();
+  api('/api/v2/doctor').then(rs=>{const bad=rs.filter(r=>!r.ok);if(!bad.length)return;const el=$('setup');
+    el.style.display='';el.className='pill bad';el.textContent=`Setup: ${bad.length} to fix`;
+    el.title=bad.map(r=>`✗ ${r.check}: ${r.detail}${r.fix?'\n  → '+r.fix:''}`).join('\n');
+    el.onclick=()=>alert(el.title);}).catch(()=>{});
   api('/api/v2/db').then(d=>{$('db').textContent=d.ok?'QA DB connected':'QA DB offline';$('db').className='pill '+(d.ok?'ok':'bad');$('db').title=d.ok?'Read-only gate OK':d.error;});
 }
 init().catch(e=>{$('out').innerHTML=`<div class="banner ERROR">Studio failed to start: ${esc(e)}</div>`;});
