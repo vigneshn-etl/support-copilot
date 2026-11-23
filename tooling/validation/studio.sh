@@ -13,7 +13,17 @@ pip install -q -r "$HERE/ui/requirements.txt"
 
 if [ -z "${CONFIG_DIR:-}" ] && [ "$(python3 "$HERE/config_sync.py" --client "$CLIENT" --dir qa)" = "(not synced: qa)" ]; then
   echo "· no QA config yet: cloning + pulling the OCI overlay (needs GitHub + OCI CLI)"
-  python3 "$HERE/config_sync.py" --client "$CLIENT" --sync-env qa >/dev/null || echo "  ! sync failed; using the git clone if present"
+  LOG="$(mktemp)"
+  if ! python3 "$HERE/config_sync.py" --client "$CLIENT" --sync-env qa >"$LOG" 2>&1; then
+    echo "  ! config download failed:"
+    python3 -c 'import json,sys
+try: d=json.load(open(sys.argv[1]))
+except Exception: print(open(sys.argv[1]).read()[-800:]); sys.exit()
+for r in d.get("results",[]):
+    if r["rc"]: print("   ", r["cmd"][:120]); print("     ", (r["err"] or r["out"]).strip()[-400:])
+print("    hint:", d.get("hint",""))' "$LOG"
+  fi
+  rm -f "$LOG"
 fi
 
 echo "· setup check"

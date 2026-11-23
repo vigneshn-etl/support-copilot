@@ -193,7 +193,10 @@ app.include_router(sync_api.router)
 
 @app.on_event("startup")
 def _warm():
-    v2_ctx()
+    try:
+        v2_ctx()
+    except Exception as e:                  # DVS: start anyway; the Setup pill says what to fix
+        print(f"WARNING: {e}", file=sys.stderr)
 
 _V2 = {}
 

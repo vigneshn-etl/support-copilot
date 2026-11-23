@@ -43,7 +43,7 @@ def context(client, cfg_dir=None):
     mdir = HUB / "customers" / client / "metrics"
     cfg = Path(cfg_dir or DEFAULT_CFG.get(client) or "").resolve()
     if not (cfg / "pivot").exists():
-        raise SystemExit(f"config dir not found for {client}: {cfg} (pass --config-dir)")
+        raise RuntimeError(f"config dir not found for {client}: {cfg} (run config_sync.py --sync-env qa or pass --config-dir)")
     dims = json.loads((mdir / "dimensions.json").read_text())
     schema = {t: set(c) for t, c in json.loads((mdir / "ch_schema.json").read_text()).items() if c}
     return {"client": client, "cfg": cfg, "mdir": mdir, "dims": dims, "schema": schema,

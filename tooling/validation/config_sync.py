@@ -179,7 +179,13 @@ def sync_env(client, env, print_cmds=False):
     if fresh.exists():
         shutil.rmtree(fresh)
     fresh.mkdir(parents=True)
-    results = [_run(c) for c in steps]
+    results = []
+    for c in steps:
+        r = _run(c)
+        if r["rc"] != 0 and c[:2] == ["git", "clone"] and c[-2].startswith("git@github.com:"):
+            c = c[:-2] + ["https://github.com/" + c[-2].split(":", 1)[1], c[-1]]   # DVS: no GitHub ssh key -> https (gh login)
+            r = _run(c)
+        results.append(r)
     failed = [r for r in results if r["rc"] != 0]
     if failed:
         shutil.rmtree(fresh, ignore_errors=True)
@@ -228,7 +234,10 @@ def main():
         d = effective_dir(a.client, a.dir)
         print(d or f"(not synced: {a.dir})")
     elif a.sync_env:
-        print(json.dumps(sync_env(a.client, a.sync_env, a.print_cmds), indent=1))
+        res = sync_env(a.client, a.sync_env, a.print_cmds)
+        print(json.dumps(res, indent=1))
+        if res.get("ok") is False:
+            sys.exit(1)
     else:
         print(json.dumps(status(a.client), indent=1))
 
