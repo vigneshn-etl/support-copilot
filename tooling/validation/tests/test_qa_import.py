@@ -369,8 +369,9 @@ def fixture():
 def qa():
     import config_sync as CS
     cfg = CS.effective_dir("TRD", "qa")
-    if not (cfg / "pivot" / "HistoryFit.pivotdefn").exists():
-        print("SKIP qa: TRD QA config not pulled")
+    mapf = QI.HUB / "customers" / "TRD" / "metrics" / "metric_map_qa.csv"
+    if not cfg or not (cfg / "pivot" / "HistoryFit.pivotdefn").exists() or not mapf.exists():   # DVS: fresh clone
+        print("SKIP qa: TRD QA config / metric map not pulled")
         return
     spec = SP.load(QI.HUB / "customers" / "TRD" / "spec")
     rep = QI.translate("TRD", ["HistoryFit", "HistoryFitTYLYTranspose"], spec)
